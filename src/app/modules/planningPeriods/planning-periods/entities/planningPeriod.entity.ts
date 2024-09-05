@@ -8,4 +8,16 @@ export class PlanningPeriod extends BaseModel {
 
   @Column({ type: 'uuid' })
   tenantId: string;
+
+  @Column({ type: 'interval' })
+  intervalLength: string;
+
+  @Column({ type: 'varchar' })
+  intervalType: string;
+
+  @Column({ type: 'interval' })
+  submissionDeadline: string;
+
+  @Column({ type: 'varchar' })
+  actionOnFailure: string;
 }
