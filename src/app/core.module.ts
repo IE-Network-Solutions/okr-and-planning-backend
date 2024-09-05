@@ -6,11 +6,6 @@ import { UsersModule } from './modules/users/users.module';
 import { ClientsModule } from './modules/clients/clients.module';
 @Global()
 @Module({
-  imports: [
-    PermissionModule,
-    ProductsModule,
-    UsersModule,
-    ClientsModule,
-  ],
+  imports: [PermissionModule, ProductsModule, UsersModule, ClientsModule],
 })
-export class CoreModule { }
+export class CoreModule {}
