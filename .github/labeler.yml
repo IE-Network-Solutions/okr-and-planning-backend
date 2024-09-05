@@ -1,0 +1,10 @@
+bug:
+  - '(bug|error|issue)'
+enhancement:
+  - '(improvement|enhancement|feature)'
+documentation:
+  - '(doc|documentation)'
+question:
+  - '(question|help)'
+test:
+  - '(test|testing|tests)'
