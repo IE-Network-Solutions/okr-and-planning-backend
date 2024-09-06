@@ -18,6 +18,6 @@ export class PlanningPeriod extends BaseModel {
   @Column({ type: 'interval' })
   submissionDeadline: string;
 
-  @Column({ type: 'varchar' })
+  @Column({ type: 'varchar', nullable: true })
   actionOnFailure: string;
 }
