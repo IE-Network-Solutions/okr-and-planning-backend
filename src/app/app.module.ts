@@ -8,6 +8,8 @@ import { ThrottlerModule } from '@nestjs/throttler';
 import { SharedModule } from '../core/shared.module';
 import { CoreModule } from './core.module';
 import { AppConfigModule } from '../config/app.config.module';
+import { APP_GUARD } from '@nestjs/core';
+import { TenantGuard } from '../core/guards/tenant.guard';
 
 /** This is a TypeScript module that imports various modules and sets up a TypeORM connection using
 configuration values obtained from a ConfigService. */
@@ -36,6 +38,12 @@ configuration values obtained from a ConfigService. */
     }),
 
     HealthModule,
+  ],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: TenantGuard,
+    },
   ],
 })
 export class AppModule {}
