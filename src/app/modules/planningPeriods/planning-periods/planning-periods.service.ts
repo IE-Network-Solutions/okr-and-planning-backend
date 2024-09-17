@@ -1,17 +1,21 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PlanningPeriod } from './entities/planningPeriod.entity';
+import { PlanningPeriodUser } from './entities/planningPeriodUser.entity';
 import { Repository } from 'typeorm';
 import { CreatePlanningPeriodsDTO } from './dto/create-planningPeriods.dto';
 import { IPaginationOptions, Pagination } from 'nestjs-typeorm-paginate';
 import { PaginationDto } from '@root/src/core/commonDto/pagination-dto';
 import { PaginationService } from '../../../../core/pagination/pagination.service';
+import { AssignUsersDTO } from './dto/assignUser.dto';
 
 @Injectable()
 export class PlanningPeriodsService {
   constructor(
     @InjectRepository(PlanningPeriod)
     private planningPeriodRepository: Repository<PlanningPeriod>,
+    @InjectRepository(PlanningPeriodUser)
+    private planningUserRepository: Repository<PlanningPeriodUser>,
     private readonly paginationService: PaginationService,
   ) {}
   async createPlanningPeriods(
@@ -26,7 +30,7 @@ export class PlanningPeriodsService {
       return await this.planningPeriodRepository.save(period);
     } catch (error) {
       if (error.name === 'EntityNotFoundError') {
-        throw new NotFoundException('No planning period exist');
+        throw new NotFoundException('Error creating the planning period');
       }
       throw error;
     }
@@ -118,6 +122,128 @@ export class PlanningPeriodsService {
       throw new NotFoundException(
         `The specified planning period with id ${id} can not be found`,
       );
+    }
+  }
+  async assignUser(
+    assignUserDto: AssignUsersDTO,
+    tenantId: string,
+  ): Promise<PlanningPeriodUser> {
+    try {
+      const assign = this.planningUserRepository.create({
+        ...assignUserDto,
+        tenantId: tenantId,
+      });
+      return await this.planningUserRepository.save(assign);
+    } catch (error) {
+      if (error.name === 'EntityNotFoundError') {
+        throw new NotFoundException('Error assigning user');
+      }
+      throw error;
+    }
+  }
+  async findAll(
+    paginationOptions: PaginationDto,
+    tenantId: string,
+  ): Promise<Pagination<PlanningPeriodUser>> {
+    try {
+      const options: IPaginationOptions = {
+        page: paginationOptions.page,
+        limit: paginationOptions.limit,
+      };
+      const paginatedData =
+        await this.paginationService.paginate<PlanningPeriodUser>(
+          this.planningUserRepository,
+          'p',
+          options,
+          paginationOptions.orderBy,
+          paginationOptions.orderDirection,
+          { tenantId },
+        );
+      if (!paginatedData) {
+        throw new NotFoundException('No planning period entries found');
+      }
+      return paginatedData;
+    } catch (error) {
+      if (error.name === 'EntityNotFoundError') {
+        throw new NotFoundException('No assigned users found');
+      }
+    }
+  }
+  async findByUser(id: string): Promise<PlanningPeriodUser> {
+    try {
+      const planningPeriodUser = await this.planningUserRepository.findOne({
+        where: {
+          userId: id,
+        },
+      });
+      return planningPeriodUser;
+    } catch (error) {
+      if (error.name === 'EntityNotFoundError') {
+        throw new NotFoundException(
+          'The requested user`s planning period does not exist',
+        );
+      }
+      throw error;
+    }
+  }
+  async findByPeriod(
+    paginationOptions: PaginationDto,
+    id: string,
+  ): Promise<Pagination<PlanningPeriodUser>> {
+    try {
+      const options: IPaginationOptions = {
+        page: paginationOptions.page,
+        limit: paginationOptions.limit,
+      };
+      //   const planningPeriodUser = await this.planningUserRepository.find({
+      //     where: {
+      //       planningPeriodId: id,
+      //     },
+      //   });
+      const planningPeriodUser =
+        await this.paginationService.paginate<PlanningPeriodUser>(
+          this.planningUserRepository,
+          'p',
+          options,
+          paginationOptions.orderBy,
+          paginationOptions.orderDirection,
+          { planningPeriodId: id },
+        );
+      return planningPeriodUser;
+    } catch (error) {
+      if (error.name === 'EntityNotFoundError') {
+        throw new NotFoundException(
+          'The requested planning period does not exist in assignment',
+        );
+      }
+      throw error;
+    }
+  }
+  async updatePlanningPeriodUser(
+    id: string,
+    assignUserDto: AssignUsersDTO,
+  ): Promise<PlanningPeriodUser> {
+    try {
+      const planningUser = await this.planningUserRepository.findOne({
+        where: {
+          userId: id,
+        },
+      });
+      const updatedPlanningUser = this.planningUserRepository.update(
+        planningUser.id,
+        assignUserDto,
+      );
+      if (!updatedPlanningUser) {
+        throw new NotFoundException(
+          `The Planning period that you are updating for user with Id ${id} does not exist`,
+        );
+      }
+      return await this.findByUser(id);
+    } catch (error) {
+      if (error.name === 'EntityNotFoundError') {
+        throw new NotFoundException('There has been an error while updating');
+      }
+      throw error;
     }
   }
 }
