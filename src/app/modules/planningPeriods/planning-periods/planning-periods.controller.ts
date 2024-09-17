@@ -106,7 +106,7 @@ export class PlanningPeriodsController {
     return await this.planningPeriodService.findByPeriod(paginationOptions, id);
   }
 
-  @Patch('/assignUser/update/:userId')
+  @Patch('/assignUser/update/:id')
   async UpdateAssignment(
     @Param('userId') id: string,
     @Body() assignUserDto: AssignUsersDTO,

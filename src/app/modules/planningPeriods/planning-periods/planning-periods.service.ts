@@ -195,11 +195,6 @@ export class PlanningPeriodsService {
         page: paginationOptions.page,
         limit: paginationOptions.limit,
       };
-      //   const planningPeriodUser = await this.planningUserRepository.find({
-      //     where: {
-      //       planningPeriodId: id,
-      //     },
-      //   });
       const planningPeriodUser =
         await this.paginationService.paginate<PlanningPeriodUser>(
           this.planningUserRepository,
@@ -224,10 +219,8 @@ export class PlanningPeriodsService {
     assignUserDto: AssignUsersDTO,
   ): Promise<PlanningPeriodUser> {
     try {
-      const planningUser = await this.planningUserRepository.findOne({
-        where: {
-          userId: id,
-        },
+      const planningUser = await this.planningUserRepository.findOneByOrFail({
+        id,
       });
       const updatedPlanningUser = this.planningUserRepository.update(
         planningUser.id,
