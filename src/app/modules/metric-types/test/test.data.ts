@@ -1,0 +1,97 @@
+import { Pagination } from 'nestjs-typeorm-paginate';
+import { CreateMetricTypeDto } from '../dto/create-metric-type.dto';
+import { MetricType } from '../entities/metric-type.entity';
+
+export const metricTypeData = (): MetricType => {
+  return {
+    id: '8988e162-940a-4ae8-94f1-bfd598d6e9fc',
+    name: 'metric type',
+    description: 'descriptiom',
+    keyResults: null,
+    updatedAt: new Date('2022-10-22 07:11:42'),
+    createdAt: new Date('2022-10-22 07:11:42'),
+    updatedBy: 'selam',
+    createdBy: 'selam',
+  };
+};
+
+export const createMetricType = (): CreateMetricTypeDto => {
+  return {
+    name: 'metric type',
+    description: 'descriptiom',
+  };
+};
+export const deleteMetricTypeData = () => {
+  return {
+    raw: '',
+    affected: 1,
+    generatedMaps: [],
+  };
+};
+
+export const updateMetricTypeDataReturned = () => {
+  return {
+    generatedMaps: [],
+    raw: [],
+    affected: 1,
+  };
+};
+
+export const paginationResultMetricTypeData = (): Pagination<MetricType> => {
+  return {
+    items: [metricTypeData()],
+    meta: {
+      totalItems: 1,
+      itemCount: 1,
+      itemsPerPage: 10,
+      totalPages: 1,
+      currentPage: 1,
+    },
+  };
+};
+
+export const updateMetricTypeData = () => {
+  return {
+    id: '8988e162-940a-4ae8-94f1-bfd598d6e9fc',
+    name: 'metric type',
+    description: 'descriptiom',
+    keyResults: null,
+    updatedAt: new Date('2022-10-22 07:11:42'),
+    createdAt: new Date('2022-10-22 07:11:42'),
+    updatedBy: 'selam',
+    createdBy: 'selam',
+  };
+};
+export const createMetricTypeDataOnCreate = () => {
+  return {
+    id: '8988e162-940a-4ae8-94f1-bfd598d6e9fc',
+    name: 'metric type',
+    description: 'descriptiom',
+    keyResults: null,
+    updatedAt: new Date('2022-10-22 07:11:42'),
+    createdAt: new Date('2022-10-22 07:11:42'),
+    updatedBy: 'selam',
+    createdBy: 'selam',
+  };
+};
+
+export const updateMetricTypeDataOnUpdate = () => {
+  return {
+    id: '8988e162-940a-4ae8-94f1-bfd598d6e9fc',
+    name: 'metric type',
+    description: 'descriptiom',
+    keyResults: null,
+    updatedAt: new Date('2022-10-22 07:11:42'),
+    createdAt: new Date('2022-10-22 07:11:42'),
+    updatedBy: 'selam',
+    createdBy: 'selam',
+  };
+};
+
+export const findOneNotFoundReturnValue = () => {
+  return {
+    statusCode: 404,
+    message: 'MetricType with Id 4567 not found',
+    error: 'Not Found',
+  };
+};

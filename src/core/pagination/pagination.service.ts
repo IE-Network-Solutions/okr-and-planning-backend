@@ -1,10 +1,6 @@
 import { Injectable } from '@nestjs/common';
+import { IPaginationOptions, Pagination } from 'nestjs-typeorm-paginate';
 import { Repository, SelectQueryBuilder } from 'typeorm';
-import {
-  paginate,
-  Pagination,
-  IPaginationOptions,
-} from 'nestjs-typeorm-paginate';
 
 @Injectable()
 export class PaginationService {
@@ -58,7 +54,7 @@ export class PaginationService {
       });
     }
 
-    return paginate<Entity>(qb, opts);
+    return this.paginate<Entity>(qb, opts);
   }
 
   private applyDefaultPaginationOptions(

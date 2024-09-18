@@ -2,13 +2,15 @@ import { Module } from '@nestjs/common';
 // import { CoreModule } from '@app/core.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 // import { AppConfigModule } from '@config/app.config.module';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { HealthModule } from '@app/modules/health/health.module';
+
 import { ThrottlerModule } from '@nestjs/throttler';
 import { SharedModule } from '../core/shared.module';
 import { CoreModule } from './core.module';
 import { AppConfigModule } from '../config/app.config.module';
-
+import { HealthModule } from './modules/health/health.module';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { APP_GUARD } from '@nestjs/core';
+import { TenantGuard } from '../core/guards/tenant.gurad';
 /** This is a TypeScript module that imports various modules and sets up a TypeORM connection using
 configuration values obtained from a ConfigService. */
 @Module({
@@ -36,6 +38,12 @@ configuration values obtained from a ConfigService. */
     }),
 
     HealthModule,
+  ],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: TenantGuard,
+    },
   ],
 })
 export class AppModule {}
