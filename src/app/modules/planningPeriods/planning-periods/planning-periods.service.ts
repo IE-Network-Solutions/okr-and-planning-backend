@@ -195,6 +195,9 @@ export class PlanningPeriodsService {
         page: paginationOptions.page,
         limit: paginationOptions.limit,
       };
+      const planningPeriod = await this.planningPeriodRepository.findOne({
+        where: { id: id },
+      });
       const planningPeriodUser =
         await this.paginationService.paginate<PlanningPeriodUser>(
           this.planningUserRepository,
@@ -202,7 +205,7 @@ export class PlanningPeriodsService {
           options,
           paginationOptions.orderBy,
           paginationOptions.orderDirection,
-          { planningPeriodId: id },
+          { planningPeriod: planningPeriod },
         );
       return planningPeriodUser;
     } catch (error) {

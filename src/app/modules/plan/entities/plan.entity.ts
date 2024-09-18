@@ -39,6 +39,7 @@ export class Plan extends BaseModel {
   @ManyToOne(() => PlanningPeriodUser, (planningUser) => planningUser.id, {
     onDelete: 'SET NULL',
     onUpdate: 'CASCADE',
+    eager: true,
   })
   planningUser: PlanningPeriodUser;
 }

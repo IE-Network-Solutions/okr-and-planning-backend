@@ -32,11 +32,11 @@ export class PlanService {
         parentPlan = await this.planRepository.findOne({
           where: { id: createPlanDto.parentPlanId },
         });
+        if (!parentPlan) {
+          throw new NotFoundException('Parent plan not found');
+        }
       }
 
-      if (!parentPlan) {
-        throw new NotFoundException('Parent plan not found');
-      }
       if (!createPlanDto.parentPlanId) {
         const plan = this.planRepository.create({
           ...createPlanDto,
@@ -56,6 +56,7 @@ export class PlanService {
         planningUser: planningUser,
         isReported: false,
         isValidated: false,
+        createdBy: createPlanDto.userId,
       });
       return await this.planRepository.save(plan);
     } catch (error) {
@@ -117,6 +118,7 @@ export class PlanService {
     try {
       const plan = await this.planRepository.findOneByOrFail({ id });
       return await this.planRepository.findDescendantsTree(plan);
+      // return plan;
     } catch (error) {
       if (error.name === 'EntityNotFoundError') {
         throw new NotFoundException('Error fetching the specified plan');

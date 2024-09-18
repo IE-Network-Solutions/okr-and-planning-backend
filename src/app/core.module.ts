@@ -1,18 +1,18 @@
 import { Global, Module } from '@nestjs/common';
+import { ObjectiveModule } from './modules/objective/objective.module';
+import { MilestonesModule } from './modules/milestones/milestones.module';
+import { MetricTypesModule } from './modules/metric-types/metric-types.module';
+import { KeyResultsModule } from './modules/key-results/key-results.module';
 
-import { PermissionModule } from './modules/permission/permission.module';
-import { ProductsModule } from './modules/products/products.module';
-import { UsersModule } from './modules/users/users.module';
-import { ClientsModule } from './modules/clients/clients.module';
 import { PlanningPeriodsModule } from './modules/planningPeriods/planning-periods/planning-periods.module';
 import { PlanModule } from './modules/plan/plan.module';
 @Global()
 @Module({
   imports: [
-    PermissionModule,
-    ProductsModule,
-    UsersModule,
-    ClientsModule,
+    ObjectiveModule,
+    MilestonesModule,
+    MetricTypesModule,
+    KeyResultsModule,
     PlanningPeriodsModule,
     PlanModule,
   ],
