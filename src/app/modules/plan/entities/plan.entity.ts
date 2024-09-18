@@ -18,13 +18,13 @@ export class Plan extends BaseModel {
   @Column({ type: 'uuid' })
   tenantId: string;
 
-  @Column({ type: 'text' })
+  @Column({ type: 'text', nullable: true })
   description: string;
 
-  @Column({ type: 'boolean' })
+  @Column({ type: 'boolean', nullable: true })
   isValidated: boolean;
 
-  @Column({ type: 'boolean' })
+  @Column({ type: 'boolean', nullable: true })
   isReported: boolean;
 
   @TreeChildren()

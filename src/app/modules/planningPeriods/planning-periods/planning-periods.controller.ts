@@ -18,8 +18,8 @@ import { ApiTags } from '@nestjs/swagger';
 import { PlanningPeriodUser } from './entities/planningPeriodUser.entity';
 import { AssignUsersDTO } from './dto/assignUser.dto';
 
-@Controller('planningPeriods')
-@ApiTags('PlanningPeriods')
+@Controller('planning-periods')
+@ApiTags('Planning-periods')
 export class PlanningPeriodsController {
   constructor(private readonly planningPeriodService: PlanningPeriodsService) {}
   @Post()
@@ -79,7 +79,7 @@ export class PlanningPeriodsController {
     return await this.planningPeriodService.assignUser(assignUserDto, tenantId);
   }
 
-  @Get('/assignUser')
+  @Get('/assignedUser')
   async findAssignedUser(
     @Req() req: Request,
     @Query()
@@ -92,7 +92,7 @@ export class PlanningPeriodsController {
     );
   }
 
-  @Get('/assignUser/:userId')
+  @Get('/assignedUser/:userId')
   async findByUser(@Param('userId') id: string): Promise<PlanningPeriodUser> {
     return await this.planningPeriodService.findByUser(id);
   }

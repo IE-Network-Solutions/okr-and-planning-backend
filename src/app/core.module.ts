@@ -5,6 +5,7 @@ import { ProductsModule } from './modules/products/products.module';
 import { UsersModule } from './modules/users/users.module';
 import { ClientsModule } from './modules/clients/clients.module';
 import { PlanningPeriodsModule } from './modules/planningPeriods/planning-periods/planning-periods.module';
+import { PlanModule } from './modules/plan/plan.module';
 @Global()
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { PlanningPeriodsModule } from './modules/planningPeriods/planning-period
     UsersModule,
     ClientsModule,
     PlanningPeriodsModule,
+    PlanModule,
   ],
 })
 export class CoreModule {}
