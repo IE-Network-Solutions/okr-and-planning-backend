@@ -24,6 +24,9 @@ export class PlanTask extends BaseModel {
   @Column({ type: 'int', nullable: true })
   targetValue: number;
 
+  @Column({ type: 'int', nullable: true })
+  weight: number;
+
   @TreeParent()
   parentTask: PlanTask;
 

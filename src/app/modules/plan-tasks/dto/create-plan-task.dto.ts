@@ -48,6 +48,10 @@ export class CreatePlanTaskDto {
   @IsOptional()
   milestoneId?: string;
 
+  @IsInt()
+  @IsOptional()
+  weight: number;
+
   // Recursive sub-tasks array
   @ValidateNested({ each: true }) // Validates each sub-task recursively
   @Type(() => CreatePlanTaskDto) // Specifies that the type of sub-task is also CreatePlanTaskDto

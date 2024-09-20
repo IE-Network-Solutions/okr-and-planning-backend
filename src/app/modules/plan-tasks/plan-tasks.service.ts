@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { CreatePlanTaskDto } from './dto/create-plan-task.dto';
+import { CreatePlanTasksDto } from './dto/create-plan-tasks.dto';
 import { UpdatePlanTaskDto } from './dto/update-plan-task.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PlanTask } from './entities/plan-task.entity';
@@ -24,79 +24,156 @@ export class PlanTasksService {
     private readonly milestoneService: MilestonesService,
   ) {}
   async create(
-    createPlanTaskDto: CreatePlanTaskDto,
+    createPlanTasksDto: CreatePlanTasksDto,
     tenantId: string,
-    parentTask?: PlanTask,
     level = 0,
-  ): Promise<PlanTask> {
+  ): Promise<Plan[]> {
     try {
-      const planningUser = await this.planningUserRepository.findOne({
-        where: { id: createPlanTaskDto.planningUserId },
-      });
-      let parentPlan: Plan | null = null;
-      if (createPlanTaskDto.parentPlanId) {
-        parentPlan = await this.planRepository.findOne({
-          where: { id: createPlanTaskDto.parentPlanId },
-        });
-        if (!parentPlan) {
-          throw new NotFoundException('Parent plan not found');
+      for (const createPlanTaskDto of createPlanTasksDto) {
+        if (createPlanTaskDto.subTasks.length === 0) {
+          const planningUser = await this.planningUserRepository.findOne({
+            where: { id: createPlanTaskDto.planningUserId },
+          });
+          let parentPlan: Plan | null = null;
+          if (createPlanTaskDto.parentPlanId != null) {
+            parentPlan = await this.planRepository.findOne({
+              where: { id: createPlanTaskDto.parentPlanId },
+            });
+            if (!parentPlan) {
+              throw new NotFoundException('Parent plan not found');
+            }
+          }
+          let plan: Plan | null = null;
+          if (createPlanTaskDto.planId != null) {
+            plan = await this.planRepository.findOne({
+              where: { id: createPlanTaskDto.planId },
+            });
+          } else {
+            const planning = await this.planRepository.create({
+              tenantId: tenantId,
+              createdBy: createPlanTaskDto.userId,
+              level: level,
+              isReported: false,
+              isValidated: false,
+              planningUser: planningUser,
+              parentPlan: parentPlan || null,
+              description: planningUser.planningPeriod.name,
+            });
+            plan = await this.planRepository.save(planning);
+          }
+          const keyResult = await this.keyResultService.findOnekeyResult(
+            createPlanTaskDto.keyResultId,
+          );
+          let getMilestone = null;
+          if (createPlanTaskDto.milestoneId) {
+            getMilestone = await this.milestoneService.findOneMilestone(
+              createPlanTaskDto.milestoneId,
+            );
+          }
+          let parentTask: PlanTask | null = null;
+
+          if (createPlanTaskDto.parentTaskId) {
+            parentTask = await this.taskRepository.findOne({
+              where: { id: createPlanTaskDto.parentTaskId },
+            });
+            if (!parentTask) {
+              throw new NotFoundException('Parent Task could not be found');
+            }
+          }
+
+          const task = this.taskRepository.create({
+            tenantId: tenantId,
+            createdBy: createPlanTaskDto.userId,
+            task: createPlanTaskDto.task,
+            targetValue: createPlanTaskDto.targetValue,
+            parentTask: parentTask || null,
+            priority: createPlanTaskDto.priority,
+            plan: plan,
+            keyResult: keyResult,
+            milestone: getMilestone || null,
+            level: level,
+            weight: createPlanTaskDto.weight,
+          });
+          const final = await this.taskRepository.save(task);
+          return this.findOne(final.plan.id);
         }
-      }
-      let plan: Plan | null = null;
-      if (createPlanTaskDto.planId) {
-        plan = await this.planRepository.findOne({
-          where: { id: createPlanTaskDto.planId },
+        const planningUser = await this.planningUserRepository.findOne({
+          where: { id: createPlanTaskDto.planningUserId },
         });
-      } else {
-        const planning = await this.planRepository.create({
+        let parentPlan: Plan | null = null;
+        if (createPlanTaskDto.parentPlanId) {
+          parentPlan = await this.planRepository.findOne({
+            where: { id: createPlanTaskDto.parentPlanId },
+          });
+          if (!parentPlan) {
+            throw new NotFoundException('Parent plan not found');
+          }
+        }
+        let plan: Plan | null = null;
+        if (createPlanTaskDto.planId != null) {
+          plan = await this.planRepository.findOne({
+            where: { id: createPlanTaskDto.planId },
+          });
+        } else {
+          const planning = await this.planRepository.create({
+            tenantId: tenantId,
+            createdBy: createPlanTaskDto.userId,
+            level: level,
+            isReported: false,
+            isValidated: false,
+            planningUser: planningUser,
+            parentPlan: parentPlan || null,
+            description: planningUser.planningPeriod.name,
+            userId: createPlanTaskDto.userId,
+          });
+          plan = await this.planRepository.save(planning);
+        }
+        const keyResult = await this.keyResultService.findOnekeyResult(
+          createPlanTaskDto.keyResultId,
+        );
+        let getMilestone = null;
+        if (createPlanTaskDto.milestoneId) {
+          getMilestone = await this.milestoneService.findOneMilestone(
+            createPlanTaskDto.milestoneId,
+          );
+        }
+        let parentTask: PlanTask | null = null;
+
+        if (createPlanTaskDto.parentTaskId) {
+          parentTask = await this.taskRepository.findOne({
+            where: { id: createPlanTaskDto.parentTaskId },
+          });
+          if (!parentTask) {
+            throw new NotFoundException('Parent Task could not be found');
+          }
+        }
+
+        const task = this.taskRepository.create({
           tenantId: tenantId,
           createdBy: createPlanTaskDto.userId,
+          task: createPlanTaskDto.task,
+          targetValue: createPlanTaskDto.targetValue,
+          parentTask: parentTask || null,
+          priority: createPlanTaskDto.priority,
+          plan: plan,
+          keyResult: keyResult,
+          milestone: getMilestone || null,
           level: level,
-          isReported: false,
-          isValidated: false,
-          planningUser: planningUser,
-          parentPlan: parentPlan || null,
-          description: planningUser.planningPeriod.name,
+          weight: createPlanTaskDto.weight,
         });
-        plan = await this.planRepository.save(planning);
-      }
-      const keyResult = await this.keyResultService.findOnekeyResult(
-        createPlanTaskDto.keyResultId,
-      );
-      let getMilestone = null;
-      if (createPlanTaskDto.milestoneId) {
-        getMilestone = await this.milestoneService.findOneMilestone(
-          createPlanTaskDto.milestoneId,
-        );
-      }
-      let parentTask: PlanTask | null = null;
-
-      if (createPlanTaskDto.parentTaskId) {
-        parentTask = await this.taskRepository.findOne({
-          where: { id: createPlanTaskDto.parentTaskId },
-        });
-        if (!parentTask) {
-          throw new NotFoundException('Parent Task could not be found');
+        const newTask = await this.taskRepository.save(task);
+        const remaining = createPlanTaskDto.subTasks;
+        for (const rem of remaining) {
+          rem.parentTaskId = newTask.id;
+          rem.planId = newTask.plan.id;
         }
+        await this.create(remaining, tenantId, level + 1);
       }
-
-      const task = this.taskRepository.create({
-        tenantId: tenantId,
-        createdBy: createPlanTaskDto.userId,
-        task: createPlanTaskDto.task,
-        targetValue: createPlanTaskDto.targetValue,
-        parentTask: parentTask || null,
-        priority: createPlanTaskDto.priority,
-        plan: plan,
-        keyResult: keyResult,
-        milestone: getMilestone || null,
-        level: level,
-      });
-      return await this.taskRepository.save(task);
     } catch (error) {
       if (error.name === 'EntityNotFoundError') {
         throw new NotFoundException('Error creating tasks');
       }
+      throw error;
     }
   }
 

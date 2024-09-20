@@ -9,12 +9,11 @@ import {
   Req,
 } from '@nestjs/common';
 import { PlanTasksService } from './plan-tasks.service';
-import { CreatePlanTaskDto } from './dto/create-plan-task.dto';
 import { UpdatePlanTaskDto } from './dto/update-plan-task.dto';
 import { PlanTask } from './entities/plan-task.entity';
 import { Plan } from '../plan/entities/plan.entity';
 import { ApiTags } from '@nestjs/swagger';
-import { plainToInstance } from 'class-transformer';
+import { CreatePlanTasksDto } from './dto/create-plan-tasks.dto';
 
 @Controller('plan-tasks')
 @ApiTags('plan-tasks')
@@ -24,10 +23,9 @@ export class PlanTasksController {
   @Post()
   async create(
     @Req() req: Request,
-    @Body() createPlanTaskDto: CreatePlanTaskDto,
-  ): Promise<PlanTask> {
+    @Body() createPlanTaskDto: CreatePlanTasksDto,
+  ): Promise<Plan[]> {
     const tenantId = req['tenantId'];
-    createPlanTaskDto = plainToInstance(CreatePlanTaskDto, createPlanTaskDto);
     return await this.planTasksService.create(createPlanTaskDto, tenantId);
   }
 
