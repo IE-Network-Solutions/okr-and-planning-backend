@@ -129,9 +129,13 @@ export class PlanningPeriodsService {
     tenantId: string,
   ): Promise<PlanningPeriodUser> {
     try {
+      const planningPeriod = await this.planningPeriodRepository.findOne({
+        where: { id: assignUserDto.planningPeriodId },
+      });
       const assign = this.planningUserRepository.create({
         ...assignUserDto,
         tenantId: tenantId,
+        planningPeriod: planningPeriod,
       });
       return await this.planningUserRepository.save(assign);
     } catch (error) {
@@ -169,9 +173,9 @@ export class PlanningPeriodsService {
       }
     }
   }
-  async findByUser(id: string): Promise<PlanningPeriodUser> {
+  async findByUser(id: string): Promise<PlanningPeriodUser[]> {
     try {
-      const planningPeriodUser = await this.planningUserRepository.findOne({
+      const planningPeriodUser = await this.planningUserRepository.find({
         where: {
           userId: id,
         },
@@ -220,7 +224,7 @@ export class PlanningPeriodsService {
   async updatePlanningPeriodUser(
     id: string,
     assignUserDto: AssignUsersDTO,
-  ): Promise<PlanningPeriodUser> {
+  ): Promise<PlanningPeriodUser[]> {
     try {
       const planningUser = await this.planningUserRepository.findOneByOrFail({
         id,

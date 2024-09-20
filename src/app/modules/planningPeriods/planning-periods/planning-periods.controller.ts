@@ -79,7 +79,7 @@ export class PlanningPeriodsController {
     return await this.planningPeriodService.assignUser(assignUserDto, tenantId);
   }
 
-  @Get('/assignedUser')
+  @Get('/assignment/getAssignedUsers')
   async findAssignedUser(
     @Req() req: Request,
     @Query()
@@ -92,12 +92,12 @@ export class PlanningPeriodsController {
     );
   }
 
-  @Get('/assignedUser/:userId')
-  async findByUser(@Param('userId') id: string): Promise<PlanningPeriodUser> {
+  @Get('assignment/assignedUser/:userId')
+  async findByUser(@Param('userId') id: string): Promise<PlanningPeriodUser[]> {
     return await this.planningPeriodService.findByUser(id);
   }
 
-  @Get('/assignUser/:periodId')
+  @Get('assignment/assignedPeriod/:periodId')
   async findByPeriod(
     @Param('periodId') id: string,
     @Query()
@@ -106,11 +106,11 @@ export class PlanningPeriodsController {
     return await this.planningPeriodService.findByPeriod(paginationOptions, id);
   }
 
-  @Patch('/assignUser/update/:id')
+  @Patch('assignment/assignedUser/update/:id')
   async UpdateAssignment(
     @Param('userId') id: string,
     @Body() assignUserDto: AssignUsersDTO,
-  ): Promise<PlanningPeriodUser> {
+  ): Promise<PlanningPeriodUser[]> {
     return await this.planningPeriodService.updatePlanningPeriodUser(
       id,
       assignUserDto,

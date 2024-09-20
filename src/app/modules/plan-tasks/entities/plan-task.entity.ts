@@ -9,13 +9,12 @@ import {
   TreeChildren,
   TreeParent,
 } from 'typeorm';
+import { KeyResult } from '../../key-results/entities/key-result.entity';
+import { Milestone } from '../../milestones/entities/milestone.entity';
 
 @Entity()
 @Tree('closure-table')
 export class PlanTask extends BaseModel {
-  @Column({ type: 'uuid' })
-  userId: string;
-
   @Column({ type: 'text', nullable: true })
   task: string;
 
@@ -34,9 +33,26 @@ export class PlanTask extends BaseModel {
   @Column({ type: 'int' })
   level: number;
 
-  @ManyToOne(() => Plan, (plan) => plan.id, {
+  @Column({ type: 'uuid' })
+  tenantId: string;
+
+  @ManyToOne(() => Plan, (plan) => plan.tasks, {
     onDelete: 'SET NULL',
     onUpdate: 'CASCADE',
   })
   plan: Plan;
+
+  @ManyToOne(() => KeyResult, (keyResult) => keyResult.id, {
+    onUpdate: 'CASCADE',
+    onDelete: 'SET NULL',
+    nullable: true,
+  })
+  keyResult: KeyResult;
+
+  @ManyToOne(() => Milestone, (milestone) => milestone.id, {
+    onDelete: 'SET NULL',
+    onUpdate: 'CASCADE',
+    nullable: true,
+  })
+  milestone: Milestone;
 }

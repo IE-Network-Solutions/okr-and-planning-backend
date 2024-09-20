@@ -50,7 +50,7 @@ export class PlanService {
       const plan = this.planRepository.create({
         userId: createPlanDto.userId,
         tenantId: tenantId,
-        description: createPlanDto.description,
+        description: planningUser.planningPeriod.name,
         level: createPlanDto.level,
         parentPlan: parentPlan || null,
         planningUser: planningUser,
@@ -118,7 +118,7 @@ export class PlanService {
     try {
       const plan = await this.planRepository.findOneByOrFail({ id });
       return await this.planRepository.findDescendantsTree(plan);
-      // return plan;
+      // return plan
     } catch (error) {
       if (error.name === 'EntityNotFoundError') {
         throw new NotFoundException('Error fetching the specified plan');

@@ -6,28 +6,45 @@ import {
   Patch,
   Param,
   Delete,
+  Req,
 } from '@nestjs/common';
 import { PlanTasksService } from './plan-tasks.service';
 import { CreatePlanTaskDto } from './dto/create-plan-task.dto';
 import { UpdatePlanTaskDto } from './dto/update-plan-task.dto';
+import { PlanTask } from './entities/plan-task.entity';
+import { Plan } from '../plan/entities/plan.entity';
+import { ApiTags } from '@nestjs/swagger';
+import { plainToInstance } from 'class-transformer';
 
 @Controller('plan-tasks')
+@ApiTags('plan-tasks')
 export class PlanTasksController {
   constructor(private readonly planTasksService: PlanTasksService) {}
 
   @Post()
-  create(@Body() createPlanTaskDto: CreatePlanTaskDto) {
-    return this.planTasksService.create(createPlanTaskDto);
+  async create(
+    @Req() req: Request,
+    @Body() createPlanTaskDto: CreatePlanTaskDto,
+  ): Promise<PlanTask> {
+    const tenantId = req['tenantId'];
+    createPlanTaskDto = plainToInstance(CreatePlanTaskDto, createPlanTaskDto);
+    return await this.planTasksService.create(createPlanTaskDto, tenantId);
   }
 
   @Get()
-  findAll() {
-    return this.planTasksService.findAll();
+  async findAll(@Req() req: Request): Promise<Plan[]> {
+    const tenantId = req['tenantId'];
+    return await this.planTasksService.findAll(tenantId);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.planTasksService.findOne(+id);
+  async findOne(@Param('id') id: string): Promise<Plan[]> {
+    return await this.planTasksService.findOne(id);
+  }
+
+  @Get('/user/:id')
+  async findByUser(@Param('id') id: string): Promise<Plan[]> {
+    return await this.planTasksService.findByUser(id);
   }
 
   @Patch(':id')
