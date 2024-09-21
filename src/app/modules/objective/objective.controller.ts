@@ -8,6 +8,7 @@ import {
   Delete,
   Req,
   Query,
+  Put,
 } from '@nestjs/common';
 import { ObjectiveService } from './objective.service';
 import { CreateObjectiveDto } from './dto/create-objective.dto';
@@ -19,7 +20,7 @@ import { ApiTags } from '@nestjs/swagger';
 @Controller('objective')
 @ApiTags('Objective')
 export class ObjectiveController {
-  constructor(private readonly objectiveService: ObjectiveService) {}
+  constructor(private readonly objectiveService: ObjectiveService) { }
 
   @Post()
   async createObjective(
@@ -33,13 +34,15 @@ export class ObjectiveController {
     );
   }
 
-  @Get()
+  @Get(':userId')
   async findAllObjectives(
     @Req() req: Request,
+    @Param('userId') userId: string,
     @Query() paginationOptions?: PaginationDto,
+
   ) {
     const tenantId = req['tenantId'];
-    return this.objectiveService.findAllObjectives(paginationOptions, tenantId);
+    return this.objectiveService.findAllObjectives(userId, tenantId, paginationOptions);
   }
 
   @Get(':id')
@@ -47,17 +50,26 @@ export class ObjectiveController {
     return this.objectiveService.findOneObjective(id);
   }
 
-  @Patch(':id')
+  @Put(':id')
   updateObjective(
     @Req() req: Request,
     @Param('id') id: string,
     @Body() updateObjectiveDto: UpdateObjectiveDto,
   ) {
-    return this.objectiveService.updateObjective(id, updateObjectiveDto);
+    const tenantId = req['tenantId'];
+    return this.objectiveService.updateObjective(id, updateObjectiveDto, tenantId);
   }
 
   @Delete(':id')
   removeObjective(@Req() req: Request, @Param('id') id: string) {
     return this.objectiveService.removeObjective(id);
+  }
+
+  @Get('/user/:userId')
+  calculateUSerOkr(@Req() req: Request, @Param('userId') userId: string, @Query() paginationOptions?: PaginationDto,
+  ) {
+    const tenantId = req['tenantId'];
+    const token = req['token'];
+    return this.objectiveService.calculateUserOkrs(userId, tenantId, token, paginationOptions);
   }
 }

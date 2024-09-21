@@ -1,11 +1,12 @@
 import { Pagination } from 'nestjs-typeorm-paginate';
 import { CreateMetricTypeDto } from '../dto/create-metric-type.dto';
 import { MetricType } from '../entities/metric-type.entity';
+import { NAME } from '../enum/metric-type.enum';
 
 export const metricTypeData = (): MetricType => {
   return {
     id: '8988e162-940a-4ae8-94f1-bfd598d6e9fc',
-    name: 'metric type',
+    name: NAME.MILESTONE,
     description: 'descriptiom',
     keyResults: null,
     updatedAt: new Date('2022-10-22 07:11:42'),
@@ -17,7 +18,7 @@ export const metricTypeData = (): MetricType => {
 
 export const createMetricType = (): CreateMetricTypeDto => {
   return {
-    name: 'metric type',
+    name: NAME.MILESTONE,
     description: 'descriptiom',
   };
 };
@@ -53,7 +54,7 @@ export const paginationResultMetricTypeData = (): Pagination<MetricType> => {
 export const updateMetricTypeData = () => {
   return {
     id: '8988e162-940a-4ae8-94f1-bfd598d6e9fc',
-    name: 'metric type',
+    name: NAME.MILESTONE,
     description: 'descriptiom',
     keyResults: null,
     updatedAt: new Date('2022-10-22 07:11:42'),
@@ -65,7 +66,7 @@ export const updateMetricTypeData = () => {
 export const createMetricTypeDataOnCreate = () => {
   return {
     id: '8988e162-940a-4ae8-94f1-bfd598d6e9fc',
-    name: 'metric type',
+    name: NAME.MILESTONE,
     description: 'descriptiom',
     keyResults: null,
     updatedAt: new Date('2022-10-22 07:11:42'),
@@ -78,7 +79,7 @@ export const createMetricTypeDataOnCreate = () => {
 export const updateMetricTypeDataOnUpdate = () => {
   return {
     id: '8988e162-940a-4ae8-94f1-bfd598d6e9fc',
-    name: 'metric type',
+    name: NAME.MILESTONE,
     description: 'descriptiom',
     keyResults: null,
     updatedAt: new Date('2022-10-22 07:11:42'),

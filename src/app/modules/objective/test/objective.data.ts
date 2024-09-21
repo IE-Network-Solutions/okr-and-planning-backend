@@ -27,7 +27,7 @@ export const createobjectiveData = (): CreateObjectiveDto => {
     userId: 'f823f84b-ad37-445e-ae01-9920ce5c916a',
     deadline: new Date('2022-10-22 07:11:42'),
     allignedKeyResultId: '13f734dc-56c6-4118-87fc-e403a00693c0',
-    keyResult: [],
+    keyResults: [],
   };
 };
 export const delete0bjectiveData = () => {

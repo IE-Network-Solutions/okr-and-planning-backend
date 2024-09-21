@@ -24,5 +24,5 @@ export class CreateObjectiveDto {
   allignedKeyResultId?: string;
   @ValidateNested({ each: true })
   @Type(() => CreateKeyResultDto)
-  keyResult: CreateKeyResultDto[];
+  keyResults: CreateKeyResultDto[];
 }

@@ -8,6 +8,7 @@ import {
   Delete,
   Req,
   Query,
+  Put,
 } from '@nestjs/common';
 import { KeyResultsService } from './key-results.service';
 import { CreateKeyResultDto } from './dto/create-key-result.dto';
@@ -17,7 +18,7 @@ import { KeyResult } from './entities/key-result.entity';
 
 @Controller('key-results')
 export class KeyResultsController {
-  constructor(private readonly keyResultService: KeyResultsService) {}
+  constructor(private readonly keyResultService: KeyResultsService) { }
 
   @Post()
   async createkeyResult(
@@ -45,13 +46,14 @@ export class KeyResultsController {
     return this.keyResultService.findOnekeyResult(id);
   }
 
-  @Patch(':id')
+  @Put(':id')
   updatekeyResult(
     @Req() req: Request,
     @Param('id') id: string,
     @Body() updatekeyResultDto: UpdateKeyResultDto,
   ) {
-    return this.keyResultService.updatekeyResult(id, updatekeyResultDto);
+    const tenantId = req['tenantId'];
+    return this.keyResultService.updatekeyResult(id, updatekeyResultDto, tenantId);
   }
 
   @Delete(':id')
