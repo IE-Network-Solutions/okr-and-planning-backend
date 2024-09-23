@@ -1,4 +1,10 @@
-import { Connection, DataSource, QueryBuilder, QueryRunner, Repository } from 'typeorm';
+import {
+  Connection,
+  DataSource,
+  QueryBuilder,
+  QueryRunner,
+  Repository,
+} from 'typeorm';
 import { Objective } from './entities/objective.entity';
 import { PaginationService } from '@root/src/core/pagination/pagination.service';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
@@ -21,6 +27,8 @@ import { UpdateKeyResultDto } from '../key-results/dto/update-key-result.dto';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { ViewUserAndSupervisorOKRDto } from './dto/view-user-and-supervisor-okr';
+import { FilterObjectiveDto } from './dto/filter-objective.dto';
+import filterEntities from '@root/src/core/utils/filters.utils';
 
 @Injectable()
 export class ObjectiveService {
@@ -34,7 +42,6 @@ export class ObjectiveService {
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
     private readonly connection: Connection,
-
   ) {
     this.orgUrl = this.configService.get<string>('ORG_SERVER');
   }
@@ -50,13 +57,16 @@ export class ObjectiveService {
         ...createObjectiveDto,
         tenantId,
       });
-      const savedObjective = await queryRunner.manager.save(Objective, objective);
+      const savedObjective = await queryRunner.manager.save(
+        Objective,
+        objective,
+      );
       if (savedObjective) {
         await this.keyResultService.createBulkkeyResult(
           createObjectiveDto.keyResults,
           tenantId,
           savedObjective.id,
-          queryRunner
+          queryRunner,
         );
       }
       await queryRunner.commitTransaction();
@@ -73,55 +83,34 @@ export class ObjectiveService {
     userId: string,
     tenantId: string,
     paginationOptions: PaginationDto,
-  ): Promise<any> {
+  ): Promise<Pagination<Objective>> {
     try {
       const options: IPaginationOptions = {
         page: paginationOptions.page,
         limit: paginationOptions.limit,
       };
-      let queryBuilder = await this.objectiveRepository
+      const queryBuilder = await this.objectiveRepository
         .createQueryBuilder('objective')
         .leftJoinAndSelect('objective.keyResults', 'keyResults')
 
-        .leftJoinAndSelect(
-          'keyResults.milestones',
-          'milestones',
-        )
-        .leftJoinAndSelect(
-          'keyResults.metricType',
-          'metricType',
-        )
+        .leftJoinAndSelect('keyResults.milestones', 'milestones')
+        .leftJoinAndSelect('keyResults.metricType', 'metricType')
         .andWhere('objective.tenantId = :tenantId', { tenantId })
         .where('objective.userId = :userId', { userId });
 
-      //queryBuilder.distinctOn(['objective.id'])
+      queryBuilder.distinctOn(['objective.id']);
       const paginatedData = await this.paginationService.paginate<Objective>(
         queryBuilder,
         options,
       );
-      paginatedData.items.forEach((objective) => {
-        let totalProgress = 0;
-        let completedKeyResults = 0;
-        let daysLeft = Math.ceil((new Date(objective.deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+      const calculatedObjectives = await this.calculateObjectiveProgress(
+        paginatedData.items,
+      );
 
-        objective['daysLeft'] = daysLeft
-        objective.keyResults.forEach((keyResult) => {
-          let keyResultProgress = 0;
-          totalProgress = totalProgress + keyResult.progress
-          if (keyResult.progress === 100) {
-            completedKeyResults = completedKeyResults + 1
-          }
-          keyResult.milestones.forEach((milestone) => {
-            if (milestone.status === Status.COMPLETED) {
-              keyResultProgress = keyResultProgress + 1
-            }
-          })
-          keyResult['keyResultProgress'] = keyResultProgress
-        });
-        objective['objectiveProgress'] = totalProgress / objective.keyResults.length;
-        objective['completedKeyResults'] = completedKeyResults;
-      });
-      return paginatedData;
+      return {
+        ...paginatedData,
+        items: calculatedObjectives,
+      };
     } catch (error) {
       throw new BadRequestException(error.message);
     }
@@ -142,46 +131,27 @@ export class ObjectiveService {
   async updateObjective(
     id: string,
     updateObjectiveDto: UpdateObjectiveDto,
-    tenantId: string
+    tenantId: string,
   ): Promise<Objective> {
     const Objective = await this.findOneObjective(id);
     if (!Objective) {
       throw new NotFoundException(`Objective Not Found`);
     }
     let keyResults: UpdateKeyResultDto[] = [];
-    keyResults = updateObjectiveDto.keyResults
-    delete updateObjectiveDto.keyResults
-    // const objectiveTobeUpdated = new UpdateObjectiveDto
-    // objectiveTobeUpdated.title = updateObjectiveDto.title
-    // objectiveTobeUpdated.deadline = updateObjectiveDto.deadline
-    // objectiveTobeUpdated.description = updateObjectiveDto.description
-    // objectiveTobeUpdated.userId = updateObjectiveDto.userId
-    // objectiveTobeUpdated.allignedKeyResultId = updateObjectiveDto.allignedKeyResultId
-
-    await this.objectiveRepository.update(
-      { id },
-      updateObjectiveDto,
-    );
+    keyResults = updateObjectiveDto.keyResults;
+    delete updateObjectiveDto.keyResults;
+    await this.objectiveRepository.update({ id }, updateObjectiveDto);
     if (keyResults.length > 0) {
-      console.log(keyResults, "keyResults")
-      await this.keyResultService.updatekeyResults(
-        keyResults,
-        tenantId,
-        id
-      );
+      await this.keyResultService.updatekeyResults(keyResults, tenantId, id);
     }
 
     return await this.findOneObjective(id);
   }
 
-
-
-
   async updateObjectives(
     id: string,
     updateObjectiveDto: UpdateObjectiveDto,
   ): Promise<Objective> {
-
     const Objective = await this.findOneObjective(id);
     if (!Objective) {
       throw new NotFoundException(`Objective Not Found`);
@@ -205,138 +175,245 @@ export class ObjectiveService {
     return objective;
   }
 
-
-  async calculateUserOkr(userId: string, tenantId: string, paginationOptions?: PaginationDto,)
-    : Promise<ViewUserAndSupervisorOKRDto> {
-    const objectives = await this.findAllObjectives(userId, tenantId, paginationOptions);
-    console.log(objectives.items, "jjjj")
-    // if (!objectives.items) {
-    //   console.log(objectives.items, "bbbbb")
-
-    //   let returnedObject = new ViewUserAndSupervisorOKRDto
-    //   returnedObject.daysLeft = 0,
-    //     returnedObject.okrCompleted = 0
-    //   returnedObject.userOkr = 0
-    //   return returnedObject
-
-    // }
-    let userOkr = 0
-    let completedOkr = 0
-    let daysLeft = 0
+  async calculateUserOkr(
+    userId: string,
+    tenantId: string,
+    paginationOptions?: PaginationDto,
+  ): Promise<ViewUserAndSupervisorOKRDto> {
+    const objectives = await this.findAllObjectives(
+      userId,
+      tenantId,
+      paginationOptions,
+    );
+    let userOkr = 0;
+    let completedOkr = 0;
+    let daysLeft = 0;
 
     for (const objective of objectives.items) {
-      userOkr = userOkr + objective['objectiveProgress']
+      userOkr = userOkr + objective['objectiveProgress'];
       if (objective['completedKeyResults'] === objective.keyResults.length) {
-        completedOkr = completedOkr + 1
+        completedOkr = completedOkr + 1;
+      }
+    }
+    daysLeft = Math.max(...objectives.items.map((item) => item['daysLeft']));
+    const returnedObject = new ViewUserAndSupervisorOKRDto(
+      (returnedObject.daysLeft = daysLeft),
+    );
+    returnedObject.okrCompleted = completedOkr;
+    returnedObject.userOkr = userOkr / objectives.items.length;
+
+    return returnedObject;
+  }
+  async handleUserOkr(
+    userId: string,
+    tenantId: string,
+    token: string,
+    paginationOptions?: PaginationDto,
+  ): Promise<ViewUserAndSupervisorOKRDto> {
+    const userOkr = await this.calculateUserOkr(
+      userId,
+      tenantId,
+      paginationOptions,
+    );
+    const response = await this.getUsers(userId, tenantId);
+    const supervisorOkr = await this.calculateUserOkr(
+      response.reportingTo.id,
+      tenantId,
+      paginationOptions,
+    );
+    const returnedObject = new ViewUserAndSupervisorOKRDto(
+      (returnedObject.daysLeft = userOkr.daysLeft),
+    );
+    returnedObject.okrCompleted = userOkr.okrCompleted;
+    returnedObject.userOkr = userOkr.userOkr;
+    returnedObject.supervisorOkr = supervisorOkr.userOkr;
+    return returnedObject;
+  }
+
+  async objectiveFilter(
+    tenantId: string,
+    userId: string,
+    filterDto?: FilterObjectiveDto,
+    paginationOptions?: PaginationDto,
+  ): Promise<Pagination<Objective>> {
+    try {
+      const options: IPaginationOptions = {
+        page: paginationOptions.page,
+        limit: paginationOptions.limit,
+      };
+
+      const queryBuilder = await this.objectiveRepository
+        .createQueryBuilder('objective')
+        .leftJoinAndSelect('objective.keyResults', 'keyResults')
+
+        .leftJoinAndSelect('keyResults.milestones', 'milestones')
+        .leftJoinAndSelect('keyResults.metricType', 'metricType')
+        .andWhere('objective.tenantId = :tenantId', { tenantId });
+      if (userId) {
+        queryBuilder.andWhere('objective.userId = :userId', { userId });
       }
 
+      if (filterDto.metricTypeId) {
+        queryBuilder.andWhere('keyResults.metricTypeId = :metricTypeId', {
+          metricTypeId: filterDto.metricTypeId,
+        });
+      }
+
+      if (filterDto.departmentId) {
+        queryBuilder.andWhere('objective.departmentId = :departmentId', {
+          departmentId: filterDto.departmentId,
+        });
+      }
+      //   queryBuilder.distinctOn(['objective.id'])
+      const paginatedData = await this.paginationService.paginate<Objective>(
+        queryBuilder,
+        options,
+      );
+      for (const objective of paginatedData.items) {
+        const user = await this.getUsers(objective.userId, tenantId);
+        objective['user'] = user;
+      }
+
+      return paginatedData;
+    } catch (error) {
+      throw new BadRequestException(error.message);
     }
-    daysLeft = Math.max(...objectives.items.map(item => item['daysLeft']));
-    let returnedObject = new ViewUserAndSupervisorOKRDto
-    returnedObject.daysLeft = daysLeft,
-      returnedObject.okrCompleted = completedOkr
-    returnedObject.userOkr = userOkr / objectives.items.length
-
-
-    return returnedObject
-
   }
-  async calculateUserOkrs(userId: string, tenantId: string, token: string, paginationOptions?: PaginationDto,)
 
-    : Promise<ViewUserAndSupervisorOKRDto> {
-    const userOkr = await this.calculateUserOkr(userId, tenantId, paginationOptions)
+  async getTeamOkr(
+    tenantId: string,
+    userId: string,
+    paginationOptions?: PaginationDto,
+  ): Promise<Pagination<Objective>> {
+    try {
+      const options: IPaginationOptions = {
+        page: paginationOptions.page,
+        limit: paginationOptions.limit,
+      };
+      const user = await this.getUsers(userId, tenantId);
+
+      const filterObjective: FilterObjectiveDto = {
+        departmentId: user.employeeJobInformation[0].department.id,
+      };
+      if (filterObjective) {
+        const objectives = await this.objectiveFilter(
+          tenantId,
+          userId,
+          filterObjective,
+          paginationOptions,
+        );
+        const newObjective = await this.calculateObjectiveProgress(
+          objectives.items,
+        );
+
+        return {
+          ...objectives,
+          items: newObjective,
+        };
+      }
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
+  }
+
+  async getCompanyOkr(
+    tenantId: string,
+    userId: string,
+    paginationOptions?: PaginationDto,
+  ): Promise<Pagination<Objective>> {
+    try {
+      const options: IPaginationOptions = {
+        page: paginationOptions.page,
+        limit: paginationOptions.limit,
+      };
+      const paginatedData = await this.findAllObjectivesWithRelations(
+        tenantId,
+        paginationOptions,
+      );
+      const newObjective = await this.calculateObjectiveProgress(
+        paginatedData.items,
+      );
+      const filteredItems = newObjective.filter(
+        (item) => item.userId !== userId,
+      );
+
+      return {
+        ...paginatedData,
+        items: filteredItems,
+      };
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
+  }
+  async getUsers(userId: string, tenantId: string) {
     const response = await this.httpService
-      .get(
-        `http://localhost:8008/api/v1/users/${userId}`,
-        {
-          headers: {
-            tenantid: tenantId
-          },
+      .get(`http://localhost:8008/api/v1/users/${userId}`, {
+        headers: {
+          tenantid: tenantId,
         },
-      )
+      })
       .toPromise();
-    const supervisorOkr = await this.calculateUserOkr(response.data.reportingTo.id, tenantId, paginationOptions)
-    let returnedObject = new ViewUserAndSupervisorOKRDto
-    returnedObject.daysLeft = userOkr.daysLeft,
-      returnedObject.okrCompleted = userOkr.okrCompleted
-    returnedObject.userOkr = userOkr.userOkr
-    returnedObject.supervisorOkr = supervisorOkr.userOkr
+    return response.data;
+  }
+  async calculateObjectiveProgress(objectives: Objective[]) {
+    objectives.forEach((objective) => {
+      let totalProgress = 0;
+      let completedKeyResults = 0;
+      const daysLeft = Math.ceil(
+        (new Date(objective.deadline).getTime() - Date.now()) /
+          (1000 * 60 * 60 * 24),
+      );
 
-    return returnedObject
+      objective['daysLeft'] = daysLeft;
+      objective.keyResults.forEach((keyResult) => {
+        let keyResultProgress = 0;
+        totalProgress = totalProgress + keyResult.progress;
+        if (keyResult.progress === 100) {
+          completedKeyResults = completedKeyResults + 1;
+        }
+        keyResult.milestones.forEach((milestone) => {
+          if (milestone.status === Status.COMPLETED) {
+            keyResultProgress = keyResultProgress + 1;
+          }
+        });
+        keyResult['keyResultProgress'] = keyResultProgress;
+      });
+      objective['objectiveProgress'] =
+        totalProgress / objective.keyResults.length || 0;
+      objective['completedKeyResults'] = completedKeyResults;
+    });
+    return objectives;
+  }
 
+  async findAllObjectivesWithRelations(
+    tenantId: string,
+    paginationOptions: PaginationDto,
+  ): Promise<Pagination<Objective>> {
+    try {
+      const options: IPaginationOptions = {
+        page: paginationOptions.page,
+        limit: paginationOptions.limit,
+      };
+      const queryBuilder = await this.objectiveRepository
+        .createQueryBuilder('objective')
+        .leftJoinAndSelect('objective.keyResults', 'keyResults')
+
+        .leftJoinAndSelect('keyResults.milestones', 'milestones')
+        .leftJoinAndSelect('keyResults.metricType', 'metricType')
+        .where('objective.tenantId = :tenantId', { tenantId });
+
+      // queryBuilder.distinctOn(['objective.id'])
+      const paginatedData = await this.paginationService.paginate<Objective>(
+        queryBuilder,
+        options,
+      );
+      for (const item of paginatedData.items) {
+        try {
+          const user = await this.getUsers(item.userId, tenantId);
+          item['user'] = user;
+        } catch {}
+      }
+      return paginatedData;
+    } catch (error) {}
   }
 }
-
-
-// if (keyResult.metricType.name === NAME.MILESTONE) {
-//   // Calculate progress based on completed milestones
-//   keyResult.milestones.forEach((milestone) => {
-//     if (milestone.status === Status.COMPLETED) {
-//       keyResultProgress += milestone.weight;
-//     }
-//   });
-// } else if (keyResult.metricType.name === NAME.ACHIEVE) {
-//   // Directly use key result progress for ACHIEVE type
-//   keyResultProgress = keyResult.progress;
-// } else {
-//   // Calculate percentage for other metric types
-//   const difference = keyResult.targetValue - keyResult.currentValue;
-//   keyResultProgress = ((difference * 100) / keyResult.targetValue);
-// }
-
-// // Add the progress for the current key result
-// totalProgress += keyResultProgress;
-
-// // Check if key result is completed
-// if (keyResultProgress >= 100) {
-//   completedKeyResults++;
-// }
-
-
-
-
-// for (const data of paginatedData.items) {
-//   let progress
-//   let completedObjective
-//   for (const key of data.keyResults) {
-//     let completedkeyResults
-
-//     if (key.metricType.name === NAME.MILESTONE) {
-//       for (const milestone of key.milestones) {
-//         if (milestone.status === Status.COMPLETED) {
-//           progress = progress + milestone.weight
-//         }
-//         if (key.progress == 100) {
-
-//           completedObjective = completedObjective + 1
-//         }
-
-//       }
-
-//     }
-//     else if (key.metricType.name === NAME.ACHIEVE) {
-//       progress = progress + key.progress
-//       if (key.progress == 100) {
-
-//         completedObjective = completedObjective + 1
-//       }
-
-//     }
-//     else {
-//       let gg = key.targetValue - key.currentValue
-//       let percent = (gg * 100) / key.targetValue
-//       progress = progress + percent
-//       if (key.progress == 100) {
-
-//         completedObjective = completedObjective + 1
-//       }
-
-//     }
-
-//   }
-//   data['objectiveProgress'] = progress / data.keyResults.length
-
-// }
-
-
-// Process each objective for progress and completion calculations

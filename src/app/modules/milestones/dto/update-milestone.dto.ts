@@ -3,7 +3,7 @@ import { CreateMilestoneDto } from './create-milestone.dto';
 import { IsOptional, IsString } from 'class-validator';
 
 export class UpdateMilestoneDto extends PartialType(CreateMilestoneDto) {
-    @IsOptional()
-    @IsString()
-    id?: string
+  @IsOptional()
+  @IsString()
+  id?: string;
 }

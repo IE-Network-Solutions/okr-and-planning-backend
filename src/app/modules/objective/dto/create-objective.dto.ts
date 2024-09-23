@@ -2,10 +2,9 @@ import {
   IsDateString,
   IsOptional,
   IsString,
+  IsUUID,
   ValidateNested,
 } from 'class-validator';
-import { Milestone } from '../../milestones/entities/milestone.entity';
-import { KeyResult } from '../../key-results/entities/key-result.entity';
 import { Type } from 'class-transformer';
 import { CreateKeyResultDto } from '../../key-results/dto/create-key-result.dto';
 
@@ -15,6 +14,9 @@ export class CreateObjectiveDto {
   @IsOptional()
   @IsString()
   description?: string;
+  @IsOptional()
+  @IsUUID()
+  departmentId?: string;
   @IsString()
   userId: string;
   @IsDateString()

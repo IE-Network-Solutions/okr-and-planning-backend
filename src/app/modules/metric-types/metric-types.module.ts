@@ -9,6 +9,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
   imports: [TypeOrmModule.forFeature([MetricType]), PaginationModule],
   controllers: [MetricTypesController],
   providers: [MetricTypesService],
-  exports: [MetricTypesService]
+  exports: [MetricTypesService],
 })
-export class MetricTypesModule { }
+export class MetricTypesModule {}

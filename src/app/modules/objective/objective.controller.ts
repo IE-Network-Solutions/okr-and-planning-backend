@@ -3,7 +3,6 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Param,
   Delete,
   Req,
@@ -16,11 +15,12 @@ import { UpdateObjectiveDto } from './dto/update-objective.dto';
 import { Objective } from './entities/objective.entity';
 import { PaginationDto } from '@root/src/core/commonDto/pagination-dto';
 import { ApiTags } from '@nestjs/swagger';
+import { FilterObjectiveDto } from './dto/filter-objective.dto';
 
 @Controller('objective')
 @ApiTags('Objective')
 export class ObjectiveController {
-  constructor(private readonly objectiveService: ObjectiveService) { }
+  constructor(private readonly objectiveService: ObjectiveService) {}
 
   @Post()
   async createObjective(
@@ -39,10 +39,13 @@ export class ObjectiveController {
     @Req() req: Request,
     @Param('userId') userId: string,
     @Query() paginationOptions?: PaginationDto,
-
   ) {
     const tenantId = req['tenantId'];
-    return this.objectiveService.findAllObjectives(userId, tenantId, paginationOptions);
+    return this.objectiveService.findAllObjectives(
+      userId,
+      tenantId,
+      paginationOptions,
+    );
   }
 
   @Get(':id')
@@ -57,7 +60,11 @@ export class ObjectiveController {
     @Body() updateObjectiveDto: UpdateObjectiveDto,
   ) {
     const tenantId = req['tenantId'];
-    return this.objectiveService.updateObjective(id, updateObjectiveDto, tenantId);
+    return this.objectiveService.updateObjective(
+      id,
+      updateObjectiveDto,
+      tenantId,
+    );
   }
 
   @Delete(':id')
@@ -66,10 +73,63 @@ export class ObjectiveController {
   }
 
   @Get('/user/:userId')
-  calculateUSerOkr(@Req() req: Request, @Param('userId') userId: string, @Query() paginationOptions?: PaginationDto,
+  calculateUSerOkr(
+    @Req() req: Request,
+    @Param('userId') userId: string,
+    @Query() paginationOptions?: PaginationDto,
   ) {
     const tenantId = req['tenantId'];
     const token = req['token'];
-    return this.objectiveService.calculateUserOkrs(userId, tenantId, token, paginationOptions);
+    return this.objectiveService.handleUserOkr(
+      userId,
+      tenantId,
+      token,
+      paginationOptions,
+    );
+  }
+
+  @Get('/objective-filter/:userId')
+  objectiveFilter(
+    @Req() req: Request,
+    @Param('userId') userId: string,
+    @Query() filterDto?: FilterObjectiveDto,
+    @Query() paginationOptions?: PaginationDto,
+  ) {
+    const tenantId = req['tenantId'];
+    return this.objectiveService.objectiveFilter(
+      tenantId,
+      userId,
+      filterDto,
+      paginationOptions,
+    );
+  }
+
+  @Get('/team/:userId')
+  getTeamOkr(
+    @Req() req: Request,
+    @Param('userId') userId: string,
+
+    @Query() paginationOptions?: PaginationDto,
+  ) {
+    const tenantId = req['tenantId'];
+    return this.objectiveService.getTeamOkr(
+      tenantId,
+      userId,
+      paginationOptions,
+    );
+  }
+  @Get('/company/okr/:userId')
+  getCompanyOkr(
+    @Req() req: Request,
+    @Param('userId') userId: string,
+
+    @Query() paginationOptions?: PaginationDto,
+  ) {
+    const tenantId = req['tenantId'];
+    return this.objectiveService.getCompanyOkr(
+      tenantId,
+      userId,
+      paginationOptions,
+    );
   }
 }

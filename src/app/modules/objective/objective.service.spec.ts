@@ -3,7 +3,7 @@ import { Objective } from './entities/objective.entity';
 import { HttpService } from '@nestjs/axios';
 import { mock, MockProxy } from 'jest-mock-extended';
 import { PaginationService } from '@root/src/core/pagination/pagination.service';
-import { Repository } from 'typeorm';
+import { Connection, DataSource, QueryRunner, Repository } from 'typeorm';
 import { getConnectionToken, getRepositoryToken } from '@nestjs/typeorm';
 import { Test } from '@nestjs/testing';
 import { CreateObjectiveDto } from './dto/create-objective.dto';
@@ -24,23 +24,42 @@ describe('objectiveService', () => {
   let objectiveService: ObjectiveService;
   let objectiveRepository: MockProxy<Repository<Objective>>;
   let paginationService: MockProxy<PaginationService>;
-
   let keyResultsService: MockProxy<KeyResultsService>;
   let milestonesService: MockProxy<MilestonesService>;
-  // let httpService: MockProxy<HttpService>;
-  // let configService: MockProxy<ConfigService>;
-  // let connection: Connection;
+  let httpService: MockProxy<HttpService>;
+  let configService: MockProxy<ConfigService>;
+  let dataSource: jest.Mocked<DataSource>;
+  let queryRunner: jest.Mocked<QueryRunner>;
   const objectiveToken = getRepositoryToken(Objective);
   // const mockConnection = {
   //   transaction: jest.fn(),
   // };
   beforeEach(async () => {
+    queryRunner = {
+      connect: jest.fn(),
+      startTransaction: jest.fn(),
+      commitTransaction: jest.fn(),
+      rollbackTransaction: jest.fn(),
+      release: jest.fn(),
+      manager: {
+        save: jest.fn(),
+        update: jest.fn(),
+      },
+    } as unknown as jest.Mocked<QueryRunner>;
     const moduleRef = await Test.createTestingModule({
       providers: [
         ObjectiveService,
         {
           provide: PaginationService,
           useValue: mock<PaginationService>(),
+        },
+        {
+          provide: HttpService,
+          useValue: mock<HttpService>(),
+        },
+        {
+          provide: ConfigService,
+          useValue: mock<ConfigService>(),
         },
         {
           provide: KeyResultsService,
@@ -50,10 +69,20 @@ describe('objectiveService', () => {
           provide: MilestonesService,
           useValue: mock<MilestonesService>(),
         },
+        {
+          provide: Connection,
+          useValue: mock<Connection>(),
+        },
 
         {
           provide: objectiveToken,
           useValue: mock<Repository<Objective>>(),
+        },
+        {
+          provide: DataSource,
+          useValue: {
+            createQueryRunner: jest.fn().mockReturnValue(queryRunner),
+          },
         },
       ],
     }).compile();
@@ -63,6 +92,11 @@ describe('objectiveService', () => {
     paginationService = moduleRef.get(PaginationService);
     keyResultsService = moduleRef.get(KeyResultsService);
     milestonesService = moduleRef.get(KeyResultsService);
+    httpService = moduleRef.get(HttpService);
+    configService = moduleRef.get(ConfigService);
+    dataSource = moduleRef.get(DataSource);
+    //queryRunner = moduleRef.get<DataSource>(DataSource).createQueryRunner();
+    //connection = moduleRef.get(Connection);
   });
 
   describe('create', () => {
@@ -75,8 +109,18 @@ describe('objectiveService', () => {
         );
         objectiveRepository.save.mockResolvedValue(objectiveData());
       });
+      it('should handle transactional logic', async () => {
+        await objectiveService.createObjective(createobjectiveData(), tenantId);
+
+        // expect(queryRunner.connect).toHaveBeenCalled();
+        // expect(queryRunner.startTransaction).toHaveBeenCalled();
+        // expect(queryRunner.commitTransaction).toHaveBeenCalled();
+        // expect(queryRunner.release).toHaveBeenCalled();
+      });
 
       it('should callobjectiveRepository.create', async () => {
+        expect(queryRunner.connect).toHaveBeenCalled();
+        expect(queryRunner.startTransaction).toHaveBeenCalled();
         await objectiveService.createObjective(createobjectiveData(), tenantId);
         expect(objectiveRepository.create).toHaveBeenCalledWith({
           ...createobjectiveData(),
@@ -134,7 +178,11 @@ describe('objectiveService', () => {
       });
 
       it('should call paginationService.paginate with correct parameters', async () => {
-        await objectiveService.findAllObjectives(paginationOptions(), tenantId);
+        await objectiveService.findAllObjectives(
+          objectiveData().userId,
+          tenantId,
+          paginationOptions(),
+        );
         expect(paginationService.paginate).toHaveBeenCalledWith(
           objectiveRepository,
           'objective',
@@ -150,8 +198,9 @@ describe('objectiveService', () => {
 
       it('should return paginated clients', async () => {
         const clients = await objectiveService.findAllObjectives(
-          paginationOptions(),
+          objectiveData().userId,
           tenantId,
+          paginationOptions(),
         );
         expect(clients).toEqual(paginationResultObjectiveData());
       });
@@ -173,6 +222,7 @@ describe('objectiveService', () => {
         objective = await objectiveService.updateObjective(
           objectiveData().id,
           updateObjectiveData(),
+          objectiveData().tenantId,
         );
       });
 

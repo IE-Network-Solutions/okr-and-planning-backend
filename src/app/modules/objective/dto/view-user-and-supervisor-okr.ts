@@ -1,17 +1,12 @@
-import {
-    IsDateString,
-    IsNumber,
-
-} from 'class-validator';
+import { IsNumber } from 'class-validator';
 
 export class ViewUserAndSupervisorOKRDto {
-    @IsNumber()
-    supervisorOkr: number;
-    @IsNumber()
-    userOkr: number;
-    @IsNumber()
-    okrCompleted: number;
-    @IsNumber()
-    daysLeft: number;
-
+  @IsNumber()
+  supervisorOkr: number;
+  @IsNumber()
+  userOkr: number;
+  @IsNumber()
+  okrCompleted: number;
+  @IsNumber()
+  daysLeft: number;
 }

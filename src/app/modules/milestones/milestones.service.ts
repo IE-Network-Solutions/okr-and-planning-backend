@@ -19,8 +19,7 @@ export class MilestonesService {
     private milestoneRepository: Repository<Milestone>,
     private readonly paginationService: PaginationService,
     private readonly connection: Connection, // Inject the database connection
-
-  ) { }
+  ) {}
   async createMilestone(
     createMilestoneDto: CreateMilestoneDto,
     tenantId: string,
@@ -29,18 +28,17 @@ export class MilestonesService {
     try {
       const milestone = queryRunner
         ? queryRunner.manager.create(Milestone, {
-          ...createMilestoneDto,
-          tenantId,
-        })
+            ...createMilestoneDto,
+            tenantId,
+          })
         : this.milestoneRepository.create({
-          ...createMilestoneDto,
-          tenantId,
-        });
+            ...createMilestoneDto,
+            tenantId,
+          });
       return queryRunner
         ? await queryRunner.manager.save(Milestone, milestone)
         : await this.milestoneRepository.save(milestone);
-    }
-    catch (error) {
+    } catch (error) {
       throw new BadRequestException(error.message);
     }
   }
@@ -50,12 +48,15 @@ export class MilestonesService {
     keyResultId: string,
     queryRunner?: QueryRunner,
   ) {
-
     try {
       const keyResults = await Promise.all(
         createMilestoneDto.map(async (mile) => {
           mile.keyResultId = keyResultId;
-          const singleKeyResult = await this.createMilestone(mile, tenantId, queryRunner);
+          const singleKeyResult = await this.createMilestone(
+            mile,
+            tenantId,
+            queryRunner,
+          );
         }),
       );
 
@@ -115,28 +116,23 @@ export class MilestonesService {
       updateMilestoneDto,
     );
 
-
-
     return await this.findOneMilestone(id);
   }
-
 
   async updateMilestones(
     updateMilestoneDto: UpdateMilestoneDto[],
     tenantId: string,
-    keyResultId?: string
+    keyResultId?: string,
   ): Promise<Milestone[]> {
     const milestones = await Promise.all(
       updateMilestoneDto.map(async (mile) => {
         if (!mile.id) {
-          let milestoneTobeCreated = new CreateMilestoneDto
-          milestoneTobeCreated.title = mile.title
-          milestoneTobeCreated.description = mile.description
-          milestoneTobeCreated.weight = mile.weight
-          milestoneTobeCreated.keyResultId = keyResultId
-          milestoneTobeCreated.status = mile.status
-
-
+          const milestoneTobeCreated = new CreateMilestoneDto();
+          milestoneTobeCreated.title = mile.title;
+          milestoneTobeCreated.description = mile.description;
+          milestoneTobeCreated.weight = mile.weight;
+          milestoneTobeCreated.keyResultId = keyResultId;
+          milestoneTobeCreated.status = mile.status;
 
           await this.createMilestone(milestoneTobeCreated, tenantId);
         }
@@ -145,8 +141,7 @@ export class MilestonesService {
       }),
     );
 
-    return milestones
-
+    return milestones;
   }
 
   async removeMilestone(id: string): Promise<Milestone> {

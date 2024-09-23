@@ -12,10 +12,10 @@ import { MetricTypesModule } from '../metric-types/metric-types.module';
     TypeOrmModule.forFeature([KeyResult]),
     PaginationModule,
     MilestonesModule,
-    MetricTypesModule
+    MetricTypesModule,
   ],
   controllers: [KeyResultsController],
   providers: [KeyResultsService],
   exports: [KeyResultsService],
 })
-export class KeyResultsModule { }
+export class KeyResultsModule {}

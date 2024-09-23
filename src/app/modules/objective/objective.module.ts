@@ -14,10 +14,10 @@ import { HttpModule } from '@nestjs/axios';
     PaginationModule,
     MilestonesModule,
     KeyResultsModule,
-    HttpModule.register({})
+    HttpModule.register({}),
   ],
   controllers: [ObjectiveController],
   providers: [ObjectiveService],
   exports: [ObjectiveService],
 })
-export class ObjectiveModule { }
+export class ObjectiveModule {}

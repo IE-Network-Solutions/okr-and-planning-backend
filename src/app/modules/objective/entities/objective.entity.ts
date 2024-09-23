@@ -1,5 +1,5 @@
 import { BaseModel } from '@root/src/database/base.model';
-import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
+import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
 import { KeyResult } from '../../key-results/entities/key-result.entity';
 @Entity()
 export class Objective extends BaseModel {
@@ -9,6 +9,8 @@ export class Objective extends BaseModel {
   description: string;
   @Column({ type: 'uuid' })
   userId: string;
+  @Column({ type: 'uuid', nullable: true })
+  departmentId: string;
   @Column({ type: 'date' })
   deadline: Date;
   @Column({ type: 'uuid', nullable: true })
