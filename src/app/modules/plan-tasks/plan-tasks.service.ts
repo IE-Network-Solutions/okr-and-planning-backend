@@ -1,6 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreatePlanTasksDto } from './dto/create-plan-tasks.dto';
-import { UpdatePlanTaskDto } from './dto/update-plan-task.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PlanTask } from './entities/plan-task.entity';
 import { Plan } from '../plan/entities/plan.entity';
@@ -9,6 +8,7 @@ import { KeyResultsService } from '../key-results/key-results.service';
 import { MilestonesService } from '../milestones/milestones.service';
 import { PaginationService } from '@root/src/core/pagination/pagination.service';
 import { PlanningPeriodUser } from '../planningPeriods/planning-periods/entities/planningPeriodUser.entity';
+import { UpdatePlanTasksDto } from './dto/update-plan-tasks.dto';
 
 @Injectable()
 export class PlanTasksService {
@@ -30,7 +30,7 @@ export class PlanTasksService {
   ): Promise<Plan[]> {
     try {
       for (const createPlanTaskDto of createPlanTasksDto) {
-        if (createPlanTaskDto.subTasks.length === 0) {
+        if (!createPlanTaskDto.subTasks) {
           const planningUser = await this.planningUserRepository.findOne({
             where: { id: createPlanTaskDto.planningUserId },
           });
@@ -58,6 +58,7 @@ export class PlanTasksService {
               planningUser: planningUser,
               parentPlan: parentPlan || null,
               description: planningUser.planningPeriod.name,
+              userId: createPlanTaskDto.userId,
             });
             plan = await this.planRepository.save(planning);
           }
@@ -238,8 +239,89 @@ export class PlanTasksService {
       throw error;
     }
   }
-  update(id: number, updatePlanTaskDto: UpdatePlanTaskDto) {
-    return `This action updates a #${id} planTask`;
+  async update(
+    id: string,
+    updatePlanTasksDto: UpdatePlanTasksDto,
+  ): Promise<Plan[]> {
+    try {
+      for (const updatePlanTaskDto of updatePlanTasksDto) {
+        if (!updatePlanTaskDto.subTasks) {
+          const id = updatePlanTaskDto.id;
+          const task = await this.taskRepository.findOneByOrFail({ id });
+          let parentTasks = null;
+          let parentTask = null;
+          if (task.level !== 0) {
+            parentTasks = await this.taskRepository.findAncestorsTree(task);
+            parentTask = parentTasks.parentTask;
+          }
+          const keyResult = await this.keyResultService.findOnekeyResult(
+            updatePlanTaskDto.keyResultId,
+          );
+          task.keyResult = keyResult;
+          task.level = parentTask ? parentTask.level + 1 : 0;
+          let getMilestone = null;
+          if (updatePlanTaskDto.milestoneId) {
+            getMilestone = await this.milestoneService.findOneMilestone(
+              updatePlanTaskDto.milestoneId,
+            );
+          }
+          task.milestone = getMilestone;
+          task.priority = updatePlanTaskDto.priority
+            ? updatePlanTaskDto.priority
+            : task.priority;
+          task.targetValue = updatePlanTaskDto.targetValue
+            ? updatePlanTaskDto.targetValue
+            : task.targetValue;
+          task.task = updatePlanTaskDto.task
+            ? updatePlanTaskDto.task
+            : task.task;
+          task.weight = updatePlanTaskDto.weight;
+          task.updatedBy = updatePlanTaskDto.userId;
+          const final = await this.taskRepository.save(task);
+          return this.findOne(final.plan.id);
+        }
+        const id = updatePlanTaskDto.id;
+        const task = await this.taskRepository.findOneByOrFail({ id });
+        let parentTasks = null;
+        let parentTask = null;
+        if (task.level !== 0) {
+          parentTasks = await this.taskRepository.findAncestorsTree(task);
+          parentTask = parentTasks.parentTask;
+        }
+        const keyResult = await this.keyResultService.findOnekeyResult(
+          updatePlanTaskDto.keyResultId,
+        );
+        task.keyResult = keyResult;
+        task.level = parentTask ? parentTask.level + 1 : 0;
+        let getMilestone = null;
+        if (updatePlanTaskDto.milestoneId) {
+          getMilestone = await this.milestoneService.findOneMilestone(
+            updatePlanTaskDto.milestoneId,
+          );
+        }
+        task.milestone = getMilestone;
+        task.priority = updatePlanTaskDto.priority
+          ? updatePlanTaskDto.priority
+          : task.priority;
+        task.targetValue = updatePlanTaskDto.targetValue
+          ? updatePlanTaskDto.targetValue
+          : task.targetValue;
+        task.task = updatePlanTaskDto.task ? updatePlanTaskDto.task : task.task;
+        task.weight = updatePlanTaskDto.weight;
+        task.updatedBy = updatePlanTaskDto.userId;
+        const final = await this.taskRepository.save(task);
+        const remaining = updatePlanTaskDto.subTasks;
+        for (const rem of remaining) {
+          rem.parentTaskId = final.id;
+        }
+        this.update(remaining[0].planId, remaining);
+      }
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw new NotFoundException('Error updating records');
+      }
+      throw error;
+    }
   }
 
   remove(id: number) {

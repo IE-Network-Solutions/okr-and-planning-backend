@@ -9,11 +9,10 @@ import {
   Req,
 } from '@nestjs/common';
 import { PlanTasksService } from './plan-tasks.service';
-import { UpdatePlanTaskDto } from './dto/update-plan-task.dto';
-import { PlanTask } from './entities/plan-task.entity';
 import { Plan } from '../plan/entities/plan.entity';
 import { ApiTags } from '@nestjs/swagger';
 import { CreatePlanTasksDto } from './dto/create-plan-tasks.dto';
+import { UpdatePlanTasksDto } from './dto/update-plan-tasks.dto';
 
 @Controller('plan-tasks')
 @ApiTags('plan-tasks')
@@ -46,11 +45,11 @@ export class PlanTasksController {
   }
 
   @Patch(':id')
-  update(
+  async update(
     @Param('id') id: string,
-    @Body() updatePlanTaskDto: UpdatePlanTaskDto,
-  ) {
-    return this.planTasksService.update(+id, updatePlanTaskDto);
+    @Body() updatePlanTaskDto: UpdatePlanTasksDto,
+  ): Promise<Plan[]> {
+    return this.planTasksService.update(id, updatePlanTaskDto);
   }
 
   @Delete(':id')

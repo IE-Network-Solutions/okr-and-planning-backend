@@ -12,7 +12,6 @@ import { Repository } from 'typeorm';
 import { PaginationDto } from '@root/src/core/commonDto/pagination-dto';
 import { IPaginationOptions, Pagination } from 'nestjs-typeorm-paginate';
 import { MilestonesService } from '../milestones/milestones.service';
-import { CreateMilestoneDto } from '../milestones/dto/create-milestone.dto';
 
 @Injectable()
 export class KeyResultsService {

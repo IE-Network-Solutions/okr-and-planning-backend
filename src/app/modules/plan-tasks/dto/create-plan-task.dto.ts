@@ -11,6 +11,10 @@ import { Type } from 'class-transformer';
 
 export class CreatePlanTaskDto {
   @IsString()
+  @IsOptional()
+  id: string;
+
+  @IsString()
   task: string;
 
   @IsInt()
