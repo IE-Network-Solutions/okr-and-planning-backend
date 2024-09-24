@@ -41,7 +41,9 @@ export class KeyResult extends BaseModel {
   @OneToMany(() => Milestone, (mile) => mile.keyResult)
   milestones: Milestone[];
 
-  @ManyToOne(() => MetricType, (metric) => metric.keyResults)
+  @ManyToOne(() => MetricType, (metric) => metric.keyResults, {
+    eager: true,
+  })
   metricType: MetricType;
 
   @OneToMany(() => Objective, (key) => key.allignedKeyResult)

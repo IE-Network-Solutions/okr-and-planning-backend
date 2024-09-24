@@ -29,6 +29,7 @@ export class PlanTasksService {
     level = 0,
   ): Promise<Plan[]> {
     try {
+      let result: any = [];
       for (const createPlanTaskDto of createPlanTasksDto) {
         if (!createPlanTaskDto.subTasks) {
           const planningUser = await this.planningUserRepository.findOne({
@@ -62,6 +63,7 @@ export class PlanTasksService {
             });
             plan = await this.planRepository.save(planning);
           }
+          result.plan = plan.id;
           const keyResult = await this.keyResultService.findOnekeyResult(
             createPlanTaskDto.keyResultId,
           );
@@ -95,8 +97,8 @@ export class PlanTasksService {
             level: level,
             weight: createPlanTaskDto.weight,
           });
-          const final = await this.taskRepository.save(task);
-          return this.findOne(final.plan.id);
+          await this.taskRepository.save(task);
+          result = plan;
         }
         const planningUser = await this.planningUserRepository.findOne({
           where: { id: createPlanTaskDto.planningUserId },
@@ -169,7 +171,9 @@ export class PlanTasksService {
           rem.planId = newTask.plan.id;
         }
         await this.create(remaining, tenantId, level + 1);
+        result = plan;
       }
+      return await this.findOne(result.id);
     } catch (error) {
       if (error.name === 'EntityNotFoundError') {
         throw new NotFoundException('Error creating tasks');
@@ -200,16 +204,17 @@ export class PlanTasksService {
 
   async findOne(id: string): Promise<Plan[]> {
     try {
-      const planWithTasksAndDescendants = await this.planRepository
+      return await this.planRepository
         .createQueryBuilder('plan')
-        .leftJoinAndSelect('plan.tasks', 'task') // Load tasks related to the plan
+        .leftJoinAndSelect('plan.tasks', 'task', 'task.parentTaskId IS NULL') // Load tasks related to the plan
         .leftJoinAndSelect('task.planTask', 'descendants') // Load descendants of the tasks
         .leftJoinAndSelect('plan.planningUser', 'planningUser') // Load the planning period assignment
         .leftJoinAndSelect('planningUser.planningPeriod', 'planningPeriod') // Load the planning period definition
+        .leftJoinAndSelect('task.keyResult', 'keyResult') // Load the key result belonging to the parent task
+        .leftJoinAndSelect('keyResult.metricType', 'metricType') //Load the metric type for the keyResult
+        .leftJoinAndSelect('task.milestone', 'milestone') // Load the key result belonging to the parent task
         .where('plan.id = :id', { id }) // Filter by plan ID
         .getMany();
-
-      return planWithTasksAndDescendants;
     } catch (error) {
       if (error.name === 'EntityNotFoundError') {
         throw new NotFoundException('Error fetching the specified tasks');
@@ -218,15 +223,21 @@ export class PlanTasksService {
     }
   }
 
-  async findByUser(id: string): Promise<Plan[]> {
+  async findByUser(id: string, planningId: string): Promise<Plan[]> {
     try {
       const planWithTasksAndDescendants = await this.planRepository
         .createQueryBuilder('plan')
-        .leftJoinAndSelect('plan.tasks', 'task') // Load tasks related to the plan
+        .leftJoinAndSelect('plan.tasks', 'task', 'task.parentTaskId IS NULL') // Load tasks related to the plan
         .leftJoinAndSelect('task.planTask', 'descendants') // Load descendants of the tasks
         .leftJoinAndSelect('plan.planningUser', 'planningUser') // Load the planning period assignment
         .leftJoinAndSelect('planningUser.planningPeriod', 'planningPeriod') // Load the planning period definition
+        .leftJoinAndSelect('task.keyResult', 'keyResult') // Load the key result belonging to the parent task
+        .leftJoinAndSelect('keyResult.metricType', 'metricType') //Load the metric type for the keyResult
+        .leftJoinAndSelect('task.milestone', 'milestone') // Load the key result belonging to the parent task
         .where('plan.createdBy = :id', { id }) // Filter by plan ID
+        .andWhere('planningPeriod.id = :planningId', {
+          planningId,
+        })
         .getMany();
 
       return planWithTasksAndDescendants;
@@ -239,6 +250,85 @@ export class PlanTasksService {
       throw error;
     }
   }
+
+  async grouper(plans) {
+    return plans.map((plan) => {
+      const groupedTasks = plan.tasks.reduce((acc, task) => {
+        if (task.milestone) {
+          const milestoneId = task.milestone.id;
+          if (!acc[milestoneId]) {
+            acc[milestoneId] = {
+              groupeBy: 'milestone',
+              milestone: task.milestone,
+              tasks: [],
+            };
+          }
+          acc[milestoneId].tasks.push(task);
+        } else if (task.keyResult) {
+          const keyResultId = task.keyResult.id;
+          if (!acc[keyResultId]) {
+            acc[keyResultId] = {
+              groupBy: 'keyResult',
+              keyResult: task.keyResult,
+              tasks: [],
+            };
+          }
+          acc[keyResultId].tasks.push(task);
+        }
+        return acc;
+      }, {});
+      return {
+        ...plan,
+        groupedTasks: Object.values(groupedTasks),
+      };
+    });
+  }
+
+  async findByUsers(id: string, arrayOfUserId: string[]): Promise<Plan[]> {
+    try {
+      if (arrayOfUserId.includes('all')) {
+        return await this.planRepository
+          .createQueryBuilder('plan')
+          .leftJoinAndSelect('plan.tasks', 'task', 'task.parentTaskId IS NULL') // Load tasks related to the plan
+          .leftJoinAndSelect('task.planTask', 'descendants') // Load descendants of the tasks
+          .leftJoinAndSelect('plan.planningUser', 'planningUser') // Load the planning period assignment
+          .leftJoinAndSelect('planningUser.planningPeriod', 'planningPeriod') // Load the planning period definition
+          .leftJoinAndSelect('task.keyResult', 'keyResult') // Load the key result belonging to the parent task
+          .leftJoinAndSelect('keyResult.metricType', 'metricType') // Load the metricType for the key result
+          .leftJoinAndSelect('task.milestone', 'milestone') // Load the key result belonging to the parent task
+          .where('planningPeriod.id = :id', {
+            id,
+          })
+          .orderBy('milestone.id', 'ASC') // Order by milestone for grouping
+          .addOrderBy('keyResult.id', 'ASC') // Order by keyResult for secondary grouping
+          .getMany();
+      }
+      return await this.planRepository
+        .createQueryBuilder('plan')
+        .leftJoinAndSelect('plan.tasks', 'task', 'task.parentTaskId IS NULL') // Load tasks related to the plan
+        .leftJoinAndSelect('task.planTask', 'descendants') // Load descendants of the tasks
+        .leftJoinAndSelect('plan.planningUser', 'planningUser') // Load the planning period assignment
+        .leftJoinAndSelect('planningUser.planningPeriod', 'planningPeriod') // Load the planning period definition
+        .leftJoinAndSelect('task.keyResult', 'keyResult') // Load the key result belonging to the parent task
+        .leftJoinAndSelect('keyResult.metricType', 'metricType') // Load the metricType for the key result
+        .leftJoinAndSelect('task.milestone', 'milestone') // Load the key result belonging to the parent task
+        .where('plan.createdBy IN (:...arrayOfUserId)', { arrayOfUserId })
+        .andWhere('planningPeriod.id = :id', {
+          id,
+        })
+        .orderBy('milestone.id', 'ASC') // Order by milestone for grouping
+        .addOrderBy('keyResult.id', 'ASC') // Order by keyResult for secondary grouping
+        .getMany();
+    } catch (error) {
+      if (error.name === 'EntityNotFoundError') {
+        throw new NotFoundException(
+          'Error fetching the plan for the specified users',
+        );
+      }
+      throw error;
+    }
+  }
+
   async update(
     id: string,
     updatePlanTasksDto: UpdatePlanTasksDto,
@@ -314,7 +404,9 @@ export class PlanTasksService {
         for (const rem of remaining) {
           rem.parentTaskId = final.id;
         }
-        this.update(remaining[0].planId, remaining);
+        if (remaining.length !== 0) {
+          this.update(remaining[0].planId, remaining);
+        }
       }
     } catch (error) {
       if (error instanceof NotFoundException) {

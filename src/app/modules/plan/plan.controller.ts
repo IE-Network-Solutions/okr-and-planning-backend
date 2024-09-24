@@ -3,14 +3,13 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Param,
   Delete,
   Req,
+  Query,
 } from '@nestjs/common';
 import { PlanService } from './plan.service';
 import { CreatePlanDto } from './dto/create-plan.dto';
-import { UpdatePlanDto } from './dto/update-plan.dto';
 import { Plan } from './entities/plan.entity';
 import { ApiTags } from '@nestjs/swagger';
 
@@ -32,9 +31,10 @@ export class PlanController {
   async validate(
     @Req() req: Request,
     @Param('planId') planId: string,
+    @Query('value') value: string,
   ): Promise<Plan> {
     const tenantId = req['tenantId'];
-    return await this.planService.validate(planId, tenantId);
+    return await this.planService.validate(planId, tenantId, value);
   }
 
   @Post('open/:planId')
@@ -56,13 +56,13 @@ export class PlanController {
     return await this.planService.findOne(id);
   }
 
-  @Patch(':id')
-  async update(@Param('id') id: string, @Body() updatePlanDto: UpdatePlanDto) {
-    return await this.planService.update(+id, updatePlanDto);
-  }
+  // @Patch(':id')
+  // async update(@Param('id') id: string, @Body() updatePlanDto: UpdatePlanDto) {
+  //   return await this.planService.update(+id, updatePlanDto);
+  // }
 
   @Delete(':id')
   async remove(@Param('id') id: string) {
-    return await this.planService.remove(+id);
+    return await this.planService.remove(id);
   }
 }

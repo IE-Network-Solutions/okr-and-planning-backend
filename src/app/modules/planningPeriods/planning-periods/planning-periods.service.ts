@@ -117,7 +117,6 @@ export class PlanningPeriodsService {
         );
       }
       return await this.planningPeriodRepository.softRemove({ id });
-      //   return planning;
     } catch (error) {
       throw new NotFoundException(
         `The specified planning period with id ${id} can not be found`,

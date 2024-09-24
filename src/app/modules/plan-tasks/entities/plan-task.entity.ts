@@ -48,7 +48,8 @@ export class PlanTask extends BaseModel {
   @ManyToOne(() => KeyResult, (keyResult) => keyResult.id, {
     onUpdate: 'CASCADE',
     onDelete: 'SET NULL',
-    nullable: true,
+    nullable: false,
+    eager: true,
   })
   keyResult: KeyResult;
 
@@ -56,6 +57,7 @@ export class PlanTask extends BaseModel {
     onDelete: 'SET NULL',
     onUpdate: 'CASCADE',
     nullable: true,
+    eager: true,
   })
   milestone: Milestone;
 }

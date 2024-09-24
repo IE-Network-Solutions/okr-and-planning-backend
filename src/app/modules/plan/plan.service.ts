@@ -1,15 +1,17 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreatePlanDto } from './dto/create-plan.dto';
-import { UpdatePlanDto } from './dto/update-plan.dto';
 import { Plan } from './entities/plan.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, TreeRepository } from 'typeorm';
 import { PaginationService } from '@root/src/core/pagination/pagination.service';
 import { PlanningPeriodUser } from '../planningPeriods/planning-periods/entities/planningPeriodUser.entity';
+import { PlanTask } from '../plan-tasks/entities/plan-task.entity';
 
 @Injectable()
 export class PlanService {
   constructor(
+    @InjectRepository(PlanTask)
+    private taskRepository: TreeRepository<PlanTask>,
     @InjectRepository(Plan)
     private planRepository: TreeRepository<Plan>,
     @InjectRepository(PlanningPeriodUser)
@@ -67,17 +69,28 @@ export class PlanService {
     }
   }
 
-  async validate(planId: string, tenantId: string): Promise<Plan> {
+  async validate(
+    planId: string,
+    tenantId: string,
+    value: string,
+  ): Promise<Plan> {
     try {
       const plan = await this.planRepository.findOne({
         where: { id: planId },
       });
-
-      if (plan.isValidated === true) {
+      let bool: boolean;
+      if (value === 'true') {
+        bool = true;
+      } else {
+        bool = false;
+      }
+      if (plan.isValidated === true && bool === true) {
         throw new NotFoundException('Already validated plan');
+      } else if (plan.isValidated === false && bool === false) {
+        throw new NotFoundException('Already open plan');
       }
       if (plan.tenantId === tenantId) {
-        plan.isValidated = true;
+        plan.isValidated = bool;
       }
       return await this.planRepository.save(plan);
     } catch (error) {
@@ -126,12 +139,27 @@ export class PlanService {
       throw error;
     }
   }
-
-  update(id: number, updatePlanDto: UpdatePlanDto) {
-    return `This action updates a #${id} plan`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} plan`;
+  async remove(id: string) {
+    try {
+      const plan = await this.planRepository.findOneByOrFail({ id });
+      if (!plan) {
+        throw new NotFoundException('Error while deleting the plan');
+      }
+      const tasks = await this.taskRepository.find({
+        where: { plan: { id: plan.id } },
+      });
+      for (const task of tasks) {
+        const id = task.id;
+        await this.taskRepository.softRemove({ id });
+      }
+      return await this.planRepository.softRemove({ id });
+    } catch (error) {
+      if (error.name === 'EntityNotFoundError') {
+        throw new NotFoundException(
+          `The specified plan with id ${id} can not be found`,
+        );
+      }
+      throw error;
+    }
   }
 }

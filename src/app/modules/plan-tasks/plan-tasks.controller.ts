@@ -39,11 +39,21 @@ export class PlanTasksController {
     return await this.planTasksService.findOne(id);
   }
 
-  @Get('/user/:id')
-  async findByUser(@Param('id') id: string): Promise<Plan[]> {
-    return await this.planTasksService.findByUser(id);
+  @Get('/user/:id/:planningId')
+  async findByUser(
+    @Param('id') id: string,
+    @Param('planningId') planningId: string,
+  ): Promise<Plan[]> {
+    return await this.planTasksService.findByUser(id, planningId);
   }
 
+  @Post('/users/:planningId')
+  async findByUsers(
+    @Param('planningId') id: string,
+    @Body() arrayOfUserId: string[],
+  ): Promise<Plan[]> {
+    return await this.planTasksService.findByUsers(id, arrayOfUserId);
+  }
   @Patch(':id')
   async update(
     @Param('id') id: string,
