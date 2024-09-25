@@ -20,7 +20,7 @@ import { FilterObjectiveDto } from './dto/filter-objective.dto';
 @Controller('objective')
 @ApiTags('Objective')
 export class ObjectiveController {
-  constructor(private readonly objectiveService: ObjectiveService) {}
+  constructor(private readonly objectiveService: ObjectiveService) { }
 
   @Post()
   async createObjective(
@@ -88,47 +88,45 @@ export class ObjectiveController {
     );
   }
 
-  @Get('/objective-filter/:userId')
+  @Get('/objective-filter')
   objectiveFilter(
     @Req() req: Request,
-    @Param('userId') userId: string,
-    @Query() filterDto?: FilterObjectiveDto,
-    @Query() paginationOptions?: PaginationDto,
+    @Body() filterDto?: FilterObjectiveDto, @Query() paginationOptions?: PaginationDto,
   ) {
     const tenantId = req['tenantId'];
     return this.objectiveService.objectiveFilter(
       tenantId,
-      userId,
       filterDto,
       paginationOptions,
     );
   }
 
-  @Get('/team/:userId')
+  @Post('/team')
   getTeamOkr(
     @Req() req: Request,
-    @Param('userId') userId: string,
-
+    @Body() filterDto?: FilterObjectiveDto,
     @Query() paginationOptions?: PaginationDto,
+
   ) {
     const tenantId = req['tenantId'];
     return this.objectiveService.getTeamOkr(
       tenantId,
-      userId,
+      filterDto,
       paginationOptions,
     );
   }
-  @Get('/company/okr/:userId')
+  @Post('/company/okr/:userId')
   getCompanyOkr(
     @Req() req: Request,
     @Param('userId') userId: string,
-
+    @Body() filterDto?: FilterObjectiveDto,
     @Query() paginationOptions?: PaginationDto,
   ) {
     const tenantId = req['tenantId'];
     return this.objectiveService.getCompanyOkr(
       tenantId,
       userId,
+      filterDto,
       paginationOptions,
     );
   }

@@ -1,10 +1,19 @@
-import { IsOptional, IsUUID } from 'class-validator';
+import { Type } from 'class-transformer';
+import { ArrayNotEmpty, IsArray, IsOptional, IsString, IsUUID, ValidateNested } from 'class-validator';
+import { UUID } from 'typeorm/driver/mongodb/bson.typings';
 
 export class FilterObjectiveDto {
-  @IsOptional()
-  @IsUUID()
-  metricTypeId?: string;
-  @IsOptional()
-  @IsUUID()
-  departmentId?: string;
+    @IsOptional()
+    @IsString()
+    metricTypeId?: string;
+    @IsOptional()
+    @IsString()
+    userId?: string;
+    @IsOptional()
+    @IsArray()
+    //@ArrayNotEmpty()
+    @IsString({ each: true })
+    users?: string[];
+
+
 }

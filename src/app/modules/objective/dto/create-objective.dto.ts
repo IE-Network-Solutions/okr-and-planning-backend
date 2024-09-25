@@ -14,9 +14,6 @@ export class CreateObjectiveDto {
   @IsOptional()
   @IsString()
   description?: string;
-  @IsOptional()
-  @IsUUID()
-  departmentId?: string;
   @IsString()
   userId: string;
   @IsDateString()

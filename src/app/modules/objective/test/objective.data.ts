@@ -12,7 +12,6 @@ export const objectiveData = (): Objective => {
     allignedKeyResultId: '13f734dc-56c6-4118-87fc-e403a00693c0',
     tenantId: '57577865-7625-4170-a803-a73567e19216',
     keyResults: null,
-    departmentId: 'tyuiu',
     allignedKeyResult: null,
     updatedAt: new Date('2022-10-22 07:11:42'),
     createdAt: new Date('2022-10-22 07:11:42'),

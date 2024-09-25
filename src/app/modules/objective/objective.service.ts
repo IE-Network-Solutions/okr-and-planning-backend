@@ -1,6 +1,7 @@
 import {
   Connection,
   DataSource,
+  In,
   QueryBuilder,
   QueryRunner,
   Repository,
@@ -89,7 +90,7 @@ export class ObjectiveService {
         page: paginationOptions.page,
         limit: paginationOptions.limit,
       };
-      const queryBuilder = await this.objectiveRepository
+      const queryBuilder = this.objectiveRepository
         .createQueryBuilder('objective')
         .leftJoinAndSelect('objective.keyResults', 'keyResults')
 
@@ -196,9 +197,9 @@ export class ObjectiveService {
       }
     }
     daysLeft = Math.max(...objectives.items.map((item) => item['daysLeft']));
-    const returnedObject = new ViewUserAndSupervisorOKRDto(
-      (returnedObject.daysLeft = daysLeft),
-    );
+    const returnedObject = new ViewUserAndSupervisorOKRDto
+    returnedObject.daysLeft = daysLeft
+
     returnedObject.okrCompleted = completedOkr;
     returnedObject.userOkr = userOkr / objectives.items.length;
 
@@ -210,29 +211,37 @@ export class ObjectiveService {
     token: string,
     paginationOptions?: PaginationDto,
   ): Promise<ViewUserAndSupervisorOKRDto> {
-    const userOkr = await this.calculateUserOkr(
-      userId,
-      tenantId,
-      paginationOptions,
-    );
-    const response = await this.getUsers(userId, tenantId);
-    const supervisorOkr = await this.calculateUserOkr(
-      response.reportingTo.id,
-      tenantId,
-      paginationOptions,
-    );
-    const returnedObject = new ViewUserAndSupervisorOKRDto(
-      (returnedObject.daysLeft = userOkr.daysLeft),
-    );
-    returnedObject.okrCompleted = userOkr.okrCompleted;
-    returnedObject.userOkr = userOkr.userOkr;
-    returnedObject.supervisorOkr = supervisorOkr.userOkr;
-    return returnedObject;
+    try {
+      let supervisorOkr
+      const userOkr = await this.calculateUserOkr(
+        userId,
+        tenantId,
+        paginationOptions,
+      );
+      const response = await this.getUsers(userId, tenantId);
+      console.log(response, "response")
+      if (response) {
+        supervisorOkr = await this.calculateUserOkr(
+          response.reportingTo.id,
+          tenantId,
+          paginationOptions,
+        );
+      }
+      const returnedObject = new ViewUserAndSupervisorOKRDto
+      returnedObject.daysLeft = userOkr.daysLeft
+
+      returnedObject.okrCompleted = userOkr.okrCompleted;
+      returnedObject.userOkr = userOkr.userOkr;
+      returnedObject.supervisorOkr = supervisorOkr?.userOkr | 0;
+      return returnedObject;
+    } catch (error) {
+      console.log(error.message, "jjjjj")
+
+    }
   }
 
   async objectiveFilter(
     tenantId: string,
-    userId: string,
     filterDto?: FilterObjectiveDto,
     paginationOptions?: PaginationDto,
   ): Promise<Pagination<Objective>> {
@@ -241,7 +250,7 @@ export class ObjectiveService {
         page: paginationOptions.page,
         limit: paginationOptions.limit,
       };
-
+      console.log(filterDto, " filterDto.users")
       const queryBuilder = await this.objectiveRepository
         .createQueryBuilder('objective')
         .leftJoinAndSelect('objective.keyResults', 'keyResults')
@@ -249,29 +258,43 @@ export class ObjectiveService {
         .leftJoinAndSelect('keyResults.milestones', 'milestones')
         .leftJoinAndSelect('keyResults.metricType', 'metricType')
         .andWhere('objective.tenantId = :tenantId', { tenantId });
-      if (userId) {
-        queryBuilder.andWhere('objective.userId = :userId', { userId });
+
+      if (filterDto && filterDto.users.length > 0) {
+        console.log(filterDto, " filterDto.users3")
+        //  filterDto.users.
+
+        queryBuilder.andWhere('objective.userId IN (:...userIds)', { userIds: filterDto.users });
       }
 
-      if (filterDto.metricTypeId) {
+      if (filterDto && filterDto.userId) {
+        console.log(filterDto, " filterDto.users1")
+
+        const userId = filterDto.userId
+        queryBuilder.andWhere('objective.userId = :userId', { userId });
+
+      }
+
+      if (filterDto && filterDto.metricTypeId) {
+        console.log(filterDto, " filterDto.users2")
+
         queryBuilder.andWhere('keyResults.metricTypeId = :metricTypeId', {
           metricTypeId: filterDto.metricTypeId,
         });
       }
 
-      if (filterDto.departmentId) {
-        queryBuilder.andWhere('objective.departmentId = :departmentId', {
-          departmentId: filterDto.departmentId,
-        });
-      }
-      //   queryBuilder.distinctOn(['objective.id'])
+      queryBuilder.distinctOn(['objective.id'])
       const paginatedData = await this.paginationService.paginate<Objective>(
         queryBuilder,
         options,
       );
+      console.log(paginatedData.items.length, "totototototo")
       for (const objective of paginatedData.items) {
-        const user = await this.getUsers(objective.userId, tenantId);
-        objective['user'] = user;
+        try {
+          const user = await this.getUsers(objective.userId, tenantId);
+          objective['user'] = user;
+        } catch {
+
+        }
       }
 
       return paginatedData;
@@ -280,37 +303,46 @@ export class ObjectiveService {
     }
   }
 
+
+
   async getTeamOkr(
     tenantId: string,
-    userId: string,
+    filterDto?: FilterObjectiveDto | {},
     paginationOptions?: PaginationDto,
   ): Promise<Pagination<Objective>> {
     try {
-      const options: IPaginationOptions = {
-        page: paginationOptions.page,
-        limit: paginationOptions.limit,
-      };
-      const user = await this.getUsers(userId, tenantId);
-
-      const filterObjective: FilterObjectiveDto = {
-        departmentId: user.employeeJobInformation[0].department.id,
-      };
-      if (filterObjective) {
+      if (filterDto && filterDto['users'].length > 0) {
         const objectives = await this.objectiveFilter(
           tenantId,
-          userId,
-          filterObjective,
+          filterDto,
           paginationOptions,
         );
-        const newObjective = await this.calculateObjectiveProgress(
-          objectives.items,
-        );
+        if (objectives.items.length > 0) {
+          const newObjective = await this.calculateObjectiveProgress(
+            objectives.items,
+          );
 
-        return {
-          ...objectives,
-          items: newObjective,
-        };
+
+          return {
+            ...objectives,
+            items: newObjective,
+          };
+        }
+        return objectives
+
+
       }
+      return {
+        items: [],
+        meta: {
+          totalItems: 0,
+          itemCount: 0,
+          itemsPerPage: paginationOptions?.limit || 0,
+          totalPages: 0,
+          currentPage: paginationOptions?.page || 0,
+        },
+      }
+
     } catch (error) {
       throw new BadRequestException(error.message);
     }
@@ -319,28 +351,32 @@ export class ObjectiveService {
   async getCompanyOkr(
     tenantId: string,
     userId: string,
+    filterDto?: FilterObjectiveDto | {},
+
     paginationOptions?: PaginationDto,
   ): Promise<Pagination<Objective>> {
     try {
-      const options: IPaginationOptions = {
-        page: paginationOptions.page,
-        limit: paginationOptions.limit,
-      };
-      const paginatedData = await this.findAllObjectivesWithRelations(
+
+      const paginatedData = await this.objectiveFilter(
         tenantId,
+        filterDto,
         paginationOptions,
       );
-      const newObjective = await this.calculateObjectiveProgress(
-        paginatedData.items,
-      );
-      const filteredItems = newObjective.filter(
-        (item) => item.userId !== userId,
-      );
+      if (paginatedData.items.length > 0) {
+        const newObjective = await this.calculateObjectiveProgress(
+          paginatedData.items,
+        );
+        // const filteredItems = newObjective.filter(
+        //   (item) => item.userId !== userId,
+        // );
 
-      return {
-        ...paginatedData,
-        items: filteredItems,
-      };
+        return {
+          ...paginatedData,
+          items: newObjective,
+        }
+      }
+      return paginatedData
+
     } catch (error) {
       throw new BadRequestException(error.message);
     }
@@ -361,7 +397,7 @@ export class ObjectiveService {
       let completedKeyResults = 0;
       const daysLeft = Math.ceil(
         (new Date(objective.deadline).getTime() - Date.now()) /
-          (1000 * 60 * 60 * 24),
+        (1000 * 60 * 60 * 24),
       );
 
       objective['daysLeft'] = daysLeft;
@@ -411,9 +447,9 @@ export class ObjectiveService {
         try {
           const user = await this.getUsers(item.userId, tenantId);
           item['user'] = user;
-        } catch {}
+        } catch { }
       }
       return paginatedData;
-    } catch (error) {}
+    } catch (error) { }
   }
 }

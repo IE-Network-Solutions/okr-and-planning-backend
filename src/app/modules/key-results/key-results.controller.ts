@@ -18,7 +18,7 @@ import { KeyResult } from './entities/key-result.entity';
 
 @Controller('key-results')
 export class KeyResultsController {
-  constructor(private readonly keyResultService: KeyResultsService) {}
+  constructor(private readonly keyResultService: KeyResultsService) { }
 
   @Post()
   async createkeyResult(
@@ -53,11 +53,7 @@ export class KeyResultsController {
     @Body() updatekeyResultDto: UpdateKeyResultDto,
   ) {
     const tenantId = req['tenantId'];
-    return this.keyResultService.updatekeyResult(
-      id,
-      updatekeyResultDto,
-      tenantId,
-    );
+    return this.keyResultService.updatekeyResult(id, updatekeyResultDto, tenantId);
   }
 
   @Delete(':id')
@@ -71,10 +67,6 @@ export class KeyResultsController {
     @Query() paginationOptions?: PaginationDto,
   ) {
     const tenantId = req['tenantId'];
-    return this.keyResultService.findAllkeyResultsByUser(
-      userId,
-      tenantId,
-      paginationOptions,
-    );
+    return this.keyResultService.findAllkeyResultsByUser(userId, tenantId, paginationOptions,);
   }
 }
