@@ -1,8 +1,11 @@
 import { Module } from '@nestjs/common';
 import { PlanCommentsService } from './plan-comments.service';
 import { PlanCommentsController } from './plan-comments.controller';
+import { PlanComment } from './entities/plan-comment.entity';
+import { TypeOrmModule } from '@nestjs/typeorm';
 
 @Module({
+  imports: [TypeOrmModule.forFeature([PlanComment])],
   controllers: [PlanCommentsController],
   providers: [PlanCommentsService],
 })

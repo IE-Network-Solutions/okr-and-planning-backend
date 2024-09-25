@@ -228,7 +228,7 @@ export class PlanningPeriodsService {
       const planningUser = await this.planningUserRepository.findOneByOrFail({
         id,
       });
-      const updatedPlanningUser = this.planningUserRepository.update(
+      const updatedPlanningUser = await this.planningUserRepository.update(
         planningUser.id,
         assignUserDto,
       );
