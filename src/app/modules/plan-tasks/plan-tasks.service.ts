@@ -213,6 +213,7 @@ export class PlanTasksService {
         .leftJoinAndSelect('task.keyResult', 'keyResult') // Load the key result belonging to the parent task
         .leftJoinAndSelect('keyResult.metricType', 'metricType') //Load the metric type for the keyResult
         .leftJoinAndSelect('task.milestone', 'milestone') // Load the key result belonging to the parent task
+        .leftJoinAndSelect('plan.planComments', 'comments') // Load comments related to the plan
         .where('plan.id = :id', { id }) // Filter by plan ID
         .getMany();
     } catch (error) {
@@ -234,6 +235,7 @@ export class PlanTasksService {
         .leftJoinAndSelect('task.keyResult', 'keyResult') // Load the key result belonging to the parent task
         .leftJoinAndSelect('keyResult.metricType', 'metricType') //Load the metric type for the keyResult
         .leftJoinAndSelect('task.milestone', 'milestone') // Load the key result belonging to the parent task
+        .leftJoinAndSelect('plan.planComments', 'comments') // Load comments related to the plan
         .where('plan.createdBy = :id', { id }) // Filter by plan ID
         .andWhere('planningPeriod.id = :planningId', {
           planningId,
@@ -296,11 +298,12 @@ export class PlanTasksService {
           .leftJoinAndSelect('task.keyResult', 'keyResult') // Load the key result belonging to the parent task
           .leftJoinAndSelect('keyResult.metricType', 'metricType') // Load the metricType for the key result
           .leftJoinAndSelect('task.milestone', 'milestone') // Load the key result belonging to the parent task
+          .leftJoinAndSelect('plan.planComments', 'comments') // Load comments related to the plan
           .where('planningPeriod.id = :id', {
             id,
           })
-          .orderBy('milestone.id', 'ASC') // Order by milestone for grouping
-          .addOrderBy('keyResult.id', 'ASC') // Order by keyResult for secondary grouping
+          .orderBy('plan.createdAt', 'DESC') // Order by milestone for grouping
+          .addOrderBy('task.id', 'DESC') // Order by keyResult for secondary grouping
           .getMany();
       }
       return await this.planRepository
@@ -312,12 +315,13 @@ export class PlanTasksService {
         .leftJoinAndSelect('task.keyResult', 'keyResult') // Load the key result belonging to the parent task
         .leftJoinAndSelect('keyResult.metricType', 'metricType') // Load the metricType for the key result
         .leftJoinAndSelect('task.milestone', 'milestone') // Load the key result belonging to the parent task
+        .leftJoinAndSelect('plan.comments', 'comments') // Load comments related to the plan
         .where('plan.createdBy IN (:...arrayOfUserId)', { arrayOfUserId })
         .andWhere('planningPeriod.id = :id', {
           id,
         })
-        .orderBy('milestone.id', 'ASC') // Order by milestone for grouping
-        .addOrderBy('keyResult.id', 'ASC') // Order by keyResult for secondary grouping
+        .orderBy('plan.createdAt', 'DESC') // Order by milestone for grouping
+        .addOrderBy('task.createdAt', 'DESC') // Order by keyResult for secondary grouping
         .getMany();
     } catch (error) {
       if (error.name === 'EntityNotFoundError') {

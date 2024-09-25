@@ -10,6 +10,7 @@ import {
 } from 'typeorm';
 import { PlanningPeriodUser } from '../../planningPeriods/planning-periods/entities/planningPeriodUser.entity';
 import { PlanTask } from '../../plan-tasks/entities/plan-task.entity';
+import { PlanComment } from '../../plan-comments/entities/plan-comment.entity';
 
 @Entity()
 @Tree('closure-table')
@@ -51,4 +52,11 @@ export class Plan extends BaseModel {
     eager: true,
   })
   tasks: PlanTask[];
+
+  @OneToMany(() => PlanComment, (planComment) => planComment.plan, {
+    onDelete: 'SET NULL',
+    onUpdate: 'CASCADE',
+    eager: true,
+  })
+  comments: PlanComment[];
 }
