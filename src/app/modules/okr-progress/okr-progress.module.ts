@@ -1,9 +1,10 @@
 import { Module } from '@nestjs/common';
 import { OkrProgressService } from './okr-progress.service';
-import { OkrProgressController } from './okr-progress.controller';
+
 
 @Module({
-  controllers: [OkrProgressController],
-  providers: [OkrProgressService]
+
+  providers: [OkrProgressService],
+  exports: [OkrProgressService]
 })
-export class OkrProgressModule {}
+export class OkrProgressModule { }
