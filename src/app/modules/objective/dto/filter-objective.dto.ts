@@ -11,7 +11,6 @@ export class FilterObjectiveDto {
     userId?: string;
     @IsOptional()
     @IsArray()
-    //@ArrayNotEmpty()
     @IsString({ each: true })
     users?: string[];
 

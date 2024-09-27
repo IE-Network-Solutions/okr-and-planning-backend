@@ -30,6 +30,11 @@ import { ConfigService } from '@nestjs/config';
 import { ViewUserAndSupervisorOKRDto } from './dto/view-user-and-supervisor-okr';
 import { FilterObjectiveDto } from './dto/filter-objective.dto';
 import filterEntities from '@root/src/core/utils/filters.utils';
+import { AverageOkrRuleService } from '../average-okr-rule/average-okr-rule.service';
+import { TenantManager } from 'firebase-admin/lib/auth/tenant-manager';
+import { OkrProgressDto } from './dto/okr-progress.dto';
+import { JobInformationDto } from './dto/job-information.dto';
+import { AverageOkrRule } from '../average-okr-rule/entities/average-okr-rule.entity';
 
 @Injectable()
 export class ObjectiveService {
@@ -40,6 +45,7 @@ export class ObjectiveService {
 
     private readonly paginationService: PaginationService,
     private readonly keyResultService: KeyResultsService,
+    private readonly averageOkrRuleService: AverageOkrRuleService,
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
     private readonly connection: Connection,
@@ -62,7 +68,7 @@ export class ObjectiveService {
         Objective,
         objective,
       );
-      if (savedObjective) {
+      if (savedObjective && createObjectiveDto.keyResults.length > 0) {
         await this.keyResultService.createBulkkeyResult(
           createObjectiveDto.keyResults,
           tenantId,
@@ -99,7 +105,7 @@ export class ObjectiveService {
         .andWhere('objective.tenantId = :tenantId', { tenantId })
         .where('objective.userId = :userId', { userId });
 
-      queryBuilder.distinctOn(['objective.id']);
+
       const paginatedData = await this.paginationService.paginate<Objective>(
         queryBuilder,
         options,
@@ -176,35 +182,280 @@ export class ObjectiveService {
     return objective;
   }
 
-  async calculateUserOkr(
-    userId: string,
-    tenantId: string,
-    paginationOptions?: PaginationDto,
-  ): Promise<ViewUserAndSupervisorOKRDto> {
-    const objectives = await this.findAllObjectives(
-      userId,
-      tenantId,
-      paginationOptions,
-    );
-    let userOkr = 0;
-    let completedOkr = 0;
-    let daysLeft = 0;
+  // async calculateAverageOkr(objectives: Objective[]): Promise<OkrProgressDto> {
 
-    for (const objective of objectives.items) {
-      userOkr = userOkr + objective['objectiveProgress'];
-      if (objective['completedKeyResults'] === objective.keyResults.length) {
-        completedOkr = completedOkr + 1;
-      }
-    }
-    daysLeft = Math.max(...objectives.items.map((item) => item['daysLeft']));
-    const returnedObject = new ViewUserAndSupervisorOKRDto
-    returnedObject.daysLeft = daysLeft
+  //   let completedOkr = 0;
+  //   let daysLeft = 0;
 
-    returnedObject.okrCompleted = completedOkr;
-    returnedObject.userOkr = userOkr / objectives.items.length;
+  //   let sumOfTeamObjectiveProgress = 0
+  //   let okr = 0
 
-    return returnedObject;
+
+  //   for (const objective of objectives) {
+  //     sumOfTeamObjectiveProgress = objective['objectiveProgress'] + sumOfTeamObjectiveProgress
+  //     if (objective['completedKeyResults'] === objective.keyResults.length) {
+  //       completedOkr = completedOkr + 1;
+  //     }
+  //   }
+  //   daysLeft = Math.max(...objectives.map((item) => item['daysLeft']));
+  //   okr = (sumOfTeamObjectiveProgress / objectives.length)
+  //   let calculatedOkr = new OkrProgressDto
+  //   calculatedOkr.daysLeft = daysLeft
+  //   calculatedOkr.okr = okr
+  //   calculatedOkr.okrCompleted = completedOkr
+  //   return calculatedOkr
+
+
+  // }
+
+  // async handleUserOkr(
+  //   userId: string,
+  //   tenantId: string,
+  //   token: string,
+  //   paginationOptions?: PaginationDto,
+  // ): Promise<ViewUserAndSupervisorOKRDto> {
+  //   try {
+  //     let supervisorOkr = 0;
+  //     let teamOkr = 0;
+  //     let individualOkr = 0;
+  //     let totalOkr = 0;
+  //     let completedOkr = 0;
+  //     let daysLeft = 0;
+
+
+  //     const response = await this.getUsers(userId, tenantId);
+
+  //     if (response.employeeJobInformation[0].departmentLeadOrNot) {
+  //       let users: string[];
+  //       const departements = await this.getDepartmentsWithUsers(tenantId, token)
+  //       const singledep = departements.find(item => item.id === response.employeeJobInformation[0].departmentId)
+  //       for (const user of singledep.users) {
+  //         users.push(user.id)
+  //       }
+
+  //       const teamObjectives = await this.findUsersObjectives(tenantId, users);
+  //       const individualObjectives = await this.findAllObjectives(userId, tenantId, paginationOptions)
+  //       if (individualObjectives) {
+  //         const individualOKRScore = await this.calculateAverageOkr(individualObjectives.items);
+  //         individualOkr = individualOKRScore.okr;
+  //         daysLeft = individualOKRScore.daysLeft
+  //         completedOkr = individualOKRScore.okrCompleted
+
+  //       }
+  //       if (teamObjectives) {
+  //         const teamOKRScore = await this.calculateAverageOkr(teamObjectives);
+  //         teamOkr = teamOKRScore.okr;
+
+  //       }
+  //       const averageOKrrule = await this.averageOkrRuleService.findOneAverageOkrRuleByTenant(tenantId)
+
+  //       if (averageOKrrule) {
+  //         totalOkr = teamOkr * averageOKrrule.teamOkrPercentage / 100 + individualOkr * averageOKrrule.myOkrPercentage / 100
+  //       }
+  //       else {
+  //         totalOkr = teamOkr * 50 / 100 + individualOkr * 50 / 100;
+  //       }
+
+  //     } else {
+  //       const individualObjectives = await this.findAllObjectives(userId, tenantId, paginationOptions)
+
+  //       const individualOKR = await this.calculateAverageOkr(individualObjectives.items);
+  //       totalOkr = individualOKR.okr;
+  //       daysLeft = individualOKR.daysLeft
+  //       completedOkr = individualOKR.okrCompleted
+  //     }
+
+  //     if (response) {
+  //       const supervisorOkrProgress = await this.findAllObjectives(response.reportingTo.id, tenantId, paginationOptions)
+
+  //       const individualOKR = await this.calculateAverageOkr(supervisorOkrProgress.items);
+
+  //       supervisorOkr = individualOKR.okr
+  //     }
+
+  //     const returnedObject = new ViewUserAndSupervisorOKRDto();
+  //     returnedObject.daysLeft = daysLeft
+  //     returnedObject.okrCompleted = completedOkr;
+  //     returnedObject.userOkr = totalOkr;
+  //     returnedObject.supervisorOkr = supervisorOkr;
+
+  //     return returnedObject;
+  //   } catch (error) {
+  //     console.error('Error calculating OKR:', error.message);
+  //     throw new Error('Failed to calculate OKR');
+  //   }
+  // }
+
+  // async calculateAverageOkr(objectives: Objective[]): Promise<OkrProgressDto> {
+  //   let completedOkr = 0;
+  //   let sumOfTeamObjectiveProgress = 0;
+
+  //   for (const objective of objectives) {
+  //     console.log(objective['objectiveProgress'], "individualObjectives")
+  //     sumOfTeamObjectiveProgress += objective['objectiveProgress'];
+  //     if (objective['completedKeyResults'] === objective.keyResults.length) {
+  //       completedOkr++;
+  //     }
+  //   }
+  //   const daysLeft = Math.max(...objectives.map(item => item['daysLeft']));
+  //   const okr = sumOfTeamObjectiveProgress / objectives.length;
+  //   let calculatedOkr = new OkrProgressDto
+  //   calculatedOkr.daysLeft = daysLeft
+  //   calculatedOkr.okr = okr
+  //   calculatedOkr.okrCompleted = completedOkr
+  //   return calculatedOkr
+  // }
+
+  // async handleUserOkr(
+  //   userId: string,
+  //   tenantId: string,
+  //   token: string,
+  //   paginationOptions?: PaginationDto,
+  // ): Promise<ViewUserAndSupervisorOKRDto> {
+  //   try {
+  //     let supervisorOkr = 0;
+  //     let totalOkr = 0;
+  //     let completedOkr = 0;
+  //     let daysLeft = 0;
+  //     const response = await this.getUsers(userId, tenantId);
+  //     const employeeJobInfo = response.employeeJobInformation[0];
+  //     const averageOKrrule = await this.averageOkrRuleService.findOneAverageOkrRuleByTenant(tenantId);
+  //     if (employeeJobInfo.departmentLeadOrNot) {
+
+  //       const departements = await this.getDepartmentsWithUsers(tenantId, token);
+  //       const department = departements.find(item => item.id === employeeJobInfo.departmentId);
+  //       console.log(department.users, "department")
+  //       const users = department.users
+  //         .filter(user => user.id !== userId)  // Exclude the specific userId
+  //         .map(user => user.id);
+
+  //       console.log(users, "department")
+
+  //       const [teamObjectives, individualObjectives] = await Promise.all([
+  //         this.findUsersObjectives(tenantId, users),
+  //         this.findAllObjectives(userId, tenantId, paginationOptions),
+  //       ]);
+
+  //       if (individualObjectives) {
+  //         console.log(individualObjectives, "individualObjectives")
+  //         const individualOKRScore = await this.calculateAverageOkr(individualObjectives.items);
+  //         totalOkr += individualOKRScore.okr * (averageOKrrule?.myOkrPercentage ?? 50) / 100;
+  //         daysLeft = individualOKRScore.daysLeft;
+  //         completedOkr = individualOKRScore.okrCompleted;
+  //       }
+
+  //       if (teamObjectives) {
+  //         console.log(teamObjectives, "teamObjectives")
+
+  //         const teamOKRScore = await this.calculateAverageOkr(teamObjectives);
+  //         totalOkr += teamOKRScore.okr * (averageOKrrule?.teamOkrPercentage ?? 50) / 100;
+  //       }
+  //     } else {
+  //       const individualObjectives = await this.findAllObjectives(userId, tenantId, paginationOptions);
+  //       const individualOKR = await this.calculateAverageOkr(individualObjectives.items);
+  //       totalOkr = individualOKR.okr;
+  //       daysLeft = individualOKR.daysLeft;
+  //       completedOkr = individualOKR.okrCompleted;
+  //     }
+  //     if (response.reportingTo?.id) {
+  //       const supervisorOkrProgress = await this.supervisorOkr(response.reportingTo?.id, tenantId, token, paginationOptions)
+
+  //       supervisorOkr = supervisorOkrProgress.userOkr;
+  //     }
+  //     const returnedObject = new ViewUserAndSupervisorOKRDto();
+  //     returnedObject.daysLeft = daysLeft
+  //     returnedObject.okrCompleted = completedOkr;
+  //     returnedObject.userOkr = totalOkr;
+  //     returnedObject.supervisorOkr = supervisorOkr;
+
+  //     return returnedObject;
+  //   } catch (error) {
+  //     console.error('Error calculating OKR:', error.message);
+  //     throw new Error('Failed to calculate OKR');
+  //   }
+  // }
+
+  // async supervisorOkr(userId: string,
+  //   tenantId: string,
+  //   token: string,
+  //   paginationOptions?: PaginationDto) {
+  //   let supervisorOkr = 0;
+  //   let totalOkr = 0;
+  //   let completedOkr = 0;
+  //   let daysLeft = 0;
+  //   const response = await this.getUsers(userId, tenantId);
+  //   const employeeJobInfo = response.employeeJobInformation[0];
+  //   const averageOKrrule = await this.averageOkrRuleService.findOneAverageOkrRuleByTenant(tenantId);
+  //   if (employeeJobInfo.departmentLeadOrNot) {
+
+  //     const departements = await this.getDepartmentsWithUsers(tenantId, token);
+  //     const department = departements.find(item => item.id === employeeJobInfo.departmentId);
+  //     console.log(department.users, "department")
+  //     const users = department.users
+  //       .filter(user => user.id !== userId)  // Exclude the specific userId
+  //       .map(user => user.id);
+
+  //     console.log(users, "department")
+
+  //     const [teamObjectives, individualObjectives] = await Promise.all([
+  //       this.findUsersObjectives(tenantId, users),
+  //       this.findAllObjectives(userId, tenantId, paginationOptions),
+  //     ]);
+
+  //     if (individualObjectives) {
+  //       console.log(individualObjectives, "individualObjectives")
+  //       const individualOKRScore = await this.calculateAverageOkr(individualObjectives.items);
+  //       totalOkr += individualOKRScore.okr * (averageOKrrule?.myOkrPercentage ?? 50) / 100;
+  //       daysLeft = individualOKRScore.daysLeft;
+  //       completedOkr = individualOKRScore.okrCompleted;
+  //     }
+
+  //     if (teamObjectives) {
+  //       console.log(teamObjectives, "teamObjectives")
+
+  //       const teamOKRScore = await this.calculateAverageOkr(teamObjectives);
+  //       totalOkr += teamOKRScore.okr * (averageOKrrule?.teamOkrPercentage ?? 50) / 100;
+  //     }
+  //   } else {
+  //     const individualObjectives = await this.findAllObjectives(userId, tenantId, paginationOptions);
+  //     const individualOKR = await this.calculateAverageOkr(individualObjectives.items);
+  //     totalOkr = individualOKR.okr;
+  //     daysLeft = individualOKR.daysLeft;
+  //     completedOkr = individualOKR.okrCompleted;
+  //   }
+
+  //   const returnedObject = new ViewUserAndSupervisorOKRDto();
+  //   returnedObject.daysLeft = daysLeft
+  //   returnedObject.okrCompleted = completedOkr;
+  //   returnedObject.userOkr = totalOkr;
+  //   // returnedObject.supervisorOkr = supervisorOkr;
+
+  //   return returnedObject;
+
+
+  // }
+
+
+
+  async calculateAverageOkr(objectives: Objective[]): Promise<OkrProgressDto> {
+    const completedOkr = objectives.filter(objective =>
+      objective['completedKeyResults'] === objective.keyResults.length
+    ).length;
+
+    const sumOfTeamObjectiveProgress = objectives.reduce((sum, objective) => {
+      console.log(objective['objectiveProgress'], "individualObjectives");
+      return sum + objective['objectiveProgress'];
+    }, 0);
+
+    const daysLeft = Math.max(...objectives.map(item => item['daysLeft']));
+
+    let calculatedOkr = new OkrProgressDto
+    calculatedOkr.daysLeft = daysLeft
+    calculatedOkr.okr = objectives.length ? sumOfTeamObjectiveProgress / objectives.length : 0,
+      calculatedOkr.okrCompleted = completedOkr
+    return calculatedOkr
   }
+
   async handleUserOkr(
     userId: string,
     tenantId: string,
@@ -212,33 +463,116 @@ export class ObjectiveService {
     paginationOptions?: PaginationDto,
   ): Promise<ViewUserAndSupervisorOKRDto> {
     try {
-      let supervisorOkr
-      const userOkr = await this.calculateUserOkr(
+      const response = await this.getUsers(userId, tenantId);
+      const employeeJobInfo = response.employeeJobInformation[0];
+      const averageOKrrule = await this.averageOkrRuleService.findOneAverageOkrRuleByTenant(tenantId);
+
+      const { totalOkr, completedOkr, daysLeft } = await this.calculateUserOKR(
         userId,
         tenantId,
-        paginationOptions,
+        token,
+        employeeJobInfo,
+        averageOKrrule,
+        paginationOptions
       );
-      const response = await this.getUsers(userId, tenantId);
-      console.log(response, "response")
-      if (response) {
-        supervisorOkr = await this.calculateUserOkr(
-          response.reportingTo.id,
-          tenantId,
-          paginationOptions,
-        );
-      }
-      const returnedObject = new ViewUserAndSupervisorOKRDto
-      returnedObject.daysLeft = userOkr.daysLeft
 
-      returnedObject.okrCompleted = userOkr.okrCompleted;
-      returnedObject.userOkr = userOkr.userOkr;
-      returnedObject.supervisorOkr = supervisorOkr?.userOkr | 0;
+      const supervisorOkr = response.reportingTo?.id
+        ? (await this.supervisorOkr(response.reportingTo.id, tenantId, token, paginationOptions)).userOkr
+        : 0;
+      const returnedObject = new ViewUserAndSupervisorOKRDto();
+      returnedObject.daysLeft = daysLeft
+      returnedObject.okrCompleted = completedOkr;
+      returnedObject.userOkr = totalOkr;
+      returnedObject.supervisorOkr = supervisorOkr;
+
       return returnedObject;
     } catch (error) {
-      console.log(error.message, "jjjjj")
-
+      console.error('Error calculating OKR:', error.message);
+      throw new Error('Failed to calculate OKR');
     }
   }
+
+  private async calculateUserOKR(
+    userId: string,
+    tenantId: string,
+    token: string,
+    employeeJobInfo: JobInformationDto,
+    averageOKrrule?: AverageOkrRule,
+    paginationOptions?: PaginationDto
+  ) {
+    let totalOkr = 0;
+    let completedOkr = 0;
+    let daysLeft = 0;
+
+    if (employeeJobInfo.departmentLeadOrNot) {
+      const departments = await this.getDepartmentsWithUsers(tenantId, token);
+      const department = departments.find(item => item.id === employeeJobInfo.departmentId);
+      const users = department.users.filter(user => user.id !== userId).map(user => user.id);
+
+      const [teamObjectives, individualObjectives] = await Promise.all([
+        this.findUsersObjectives(tenantId, users),
+        this.findAllObjectives(userId, tenantId, paginationOptions),
+      ]);
+
+      if (individualObjectives) {
+        const individualOKRScore = await this.calculateAverageOkr(individualObjectives.items);
+        totalOkr += individualOKRScore.okr * (averageOKrrule?.myOkrPercentage ?? 50) / 100;
+        daysLeft = individualOKRScore.daysLeft;
+        completedOkr = individualOKRScore.okrCompleted;
+      }
+
+      if (teamObjectives) {
+        const teamOKRScore = await this.calculateAverageOkr(teamObjectives);
+        totalOkr += teamOKRScore.okr * (averageOKrrule?.teamOkrPercentage ?? 50) / 100;
+      }
+    } else {
+      const individualObjectives = await this.findAllObjectives(userId, tenantId, paginationOptions);
+      const individualOKR = await this.calculateAverageOkr(individualObjectives.items);
+      totalOkr = individualOKR.okr;
+      daysLeft = individualOKR.daysLeft;
+      completedOkr = individualOKR.okrCompleted;
+    }
+
+    return { totalOkr, completedOkr, daysLeft };
+  }
+
+  async supervisorOkr(
+    userId: string,
+    tenantId: string,
+    token: string,
+    paginationOptions?: PaginationDto
+  ): Promise<ViewUserAndSupervisorOKRDto> {
+    const response = await this.getUsers(userId, tenantId);
+    const employeeJobInfo = response.employeeJobInformation[0];
+    const averageOKrrule = await this.averageOkrRuleService.findOneAverageOkrRuleByTenant(tenantId);
+
+    const { totalOkr, completedOkr, daysLeft } = await this.calculateUserOKR(
+      userId,
+      tenantId,
+      token,
+      employeeJobInfo,
+      averageOKrrule,
+      paginationOptions
+    );
+
+    const returnedObject = new ViewUserAndSupervisorOKRDto();
+    returnedObject.daysLeft = daysLeft
+    returnedObject.okrCompleted = completedOkr;
+    returnedObject.userOkr = totalOkr;
+    // returnedObject.supervisorOkr = supervisorOkr;
+
+    return returnedObject;
+  }
+
+
+
+
+
+
+
+
+
+
 
   async objectiveFilter(
     tenantId: string,
@@ -282,7 +616,7 @@ export class ObjectiveService {
         });
       }
 
-      queryBuilder.distinctOn(['objective.id'])
+      // queryBuilder.distinctOn(['objective.id'])
       const paginatedData = await this.paginationService.paginate<Objective>(
         queryBuilder,
         options,
@@ -302,8 +636,6 @@ export class ObjectiveService {
       throw new BadRequestException(error.message);
     }
   }
-
-
 
   async getTeamOkr(
     tenantId: string,
@@ -335,12 +667,14 @@ export class ObjectiveService {
       return {
         items: [],
         meta: {
-          totalItems: 0,
+          total: 0,
           itemCount: 0,
-          itemsPerPage: paginationOptions?.limit || 0,
+          perPage: paginationOptions?.limit || 0,
+          itemsPerPage: paginationOptions?.limit || 0, // Added `itemsPerPage` to match the required type
           totalPages: 0,
           currentPage: paginationOptions?.page || 0,
         },
+
       }
 
     } catch (error) {
@@ -366,7 +700,7 @@ export class ObjectiveService {
         const newObjective = await this.calculateObjectiveProgress(
           paginatedData.items,
         );
-        // const filteredItems = newObjective.filter(
+        // const filtere = newObjective.filter(
         //   (item) => item.userId !== userId,
         // );
 
@@ -391,65 +725,97 @@ export class ObjectiveService {
       .toPromise();
     return response.data;
   }
-  async calculateObjectiveProgress(objectives: Objective[]) {
-    objectives.forEach((objective) => {
+
+  async getDepartmentsWithUsers(tenantId: string, token: string) {
+    const response = await this.httpService
+      .get(`http://localhost:8008/api/v1/users/all/departments`, {
+        headers: {
+          tenantid: tenantId,
+        },
+      })
+      .toPromise();
+    return response.data;
+  }
+  // async calculateObjectiveProgress(objectives: Objective[]) {
+  //   objectives.forEach((objective) => {
+  //     let totalProgress = 0;
+  //     let completedKeyResults = 0;
+  //     const daysLeft = Math.ceil(
+  //       (new Date(objective.deadline).getTime() - Date.now()) /
+  //       (1000 * 60 * 60 * 24),
+  //     );
+
+  //     objective['daysLeft'] = daysLeft;
+  //     objective.keyResults.forEach((keyResult) => {
+  //       let keyResultProgress = 0;
+  //       totalProgress = totalProgress + (keyResult.progress * keyResult.weight) / 100;
+  //       if (keyResult.progress === 100) {
+  //         completedKeyResults = completedKeyResults + 1;
+  //       }
+  //       // keyResult.milestones.forEach((milestone) => {
+  //       //   if (milestone.status === Status.COMPLETED) {
+  //       //     keyResultProgress = keyResultProgress + 1;
+  //       //   }
+  //       // });
+  //       // keyResult['keyResultProgress'] = keyResultProgress;
+  //     });
+  //     objective['objectiveProgress'] =
+  //       totalProgress;
+  //     objective['completedKeyResults'] = completedKeyResults;
+  //   });
+  //   return objectives;
+  // }
+
+  async calculateObjectiveProgress(objectives: Objective[]): Promise<Objective[]> {
+    console.log(objectives.length, "length")
+
+    return objectives.map((objective) => {
       let totalProgress = 0;
       let completedKeyResults = 0;
+
       const daysLeft = Math.ceil(
         (new Date(objective.deadline).getTime() - Date.now()) /
         (1000 * 60 * 60 * 24),
       );
 
-      objective['daysLeft'] = daysLeft;
       objective.keyResults.forEach((keyResult) => {
-        let keyResultProgress = 0;
-        totalProgress = totalProgress + keyResult.progress;
+        console.log(keyResult.progress * keyResult.weight / 100, "each")
+        totalProgress += (keyResult.progress * keyResult.weight) / 100;
+
         if (keyResult.progress === 100) {
-          completedKeyResults = completedKeyResults + 1;
+          console.log(keyResult.progress, "(keyResult.progress")
+          completedKeyResults++;
         }
-        keyResult.milestones.forEach((milestone) => {
-          if (milestone.status === Status.COMPLETED) {
-            keyResultProgress = keyResultProgress + 1;
-          }
-        });
-        keyResult['keyResultProgress'] = keyResultProgress;
       });
-      objective['objectiveProgress'] =
-        totalProgress / objective.keyResults.length || 0;
-      objective['completedKeyResults'] = completedKeyResults;
+
+      return {
+        ...objective,
+        daysLeft,
+        objectiveProgress: totalProgress,
+        completedKeyResults,
+      };
     });
-    return objectives;
   }
 
-  async findAllObjectivesWithRelations(
+
+
+  async findUsersObjectives(
     tenantId: string,
-    paginationOptions: PaginationDto,
-  ): Promise<Pagination<Objective>> {
+    users: string[]
+
+  ): Promise<Objective[]> {
     try {
-      const options: IPaginationOptions = {
-        page: paginationOptions.page,
-        limit: paginationOptions.limit,
-      };
-      const queryBuilder = await this.objectiveRepository
-        .createQueryBuilder('objective')
-        .leftJoinAndSelect('objective.keyResults', 'keyResults')
 
-        .leftJoinAndSelect('keyResults.milestones', 'milestones')
-        .leftJoinAndSelect('keyResults.metricType', 'metricType')
-        .where('objective.tenantId = :tenantId', { tenantId });
-
-      // queryBuilder.distinctOn(['objective.id'])
-      const paginatedData = await this.paginationService.paginate<Objective>(
-        queryBuilder,
-        options,
-      );
-      for (const item of paginatedData.items) {
-        try {
-          const user = await this.getUsers(item.userId, tenantId);
-          item['user'] = user;
-        } catch { }
-      }
-      return paginatedData;
+      const objectives = await this.objectiveRepository.find({
+        where: {
+          userId: In(users),
+          tenantId: tenantId
+        },
+        relations: ['keyResults', 'keyResults.milestones']
+      });
+      console.log(objectives, "teamobbbbb")
+      const objectiveWithProgress = await this.calculateObjectiveProgress(objectives)
+      return objectiveWithProgress
     } catch (error) { }
   }
 }

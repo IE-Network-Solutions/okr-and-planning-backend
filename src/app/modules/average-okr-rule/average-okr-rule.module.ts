@@ -11,6 +11,7 @@ import { PaginationModule } from '@root/src/core/pagination/pagination.module';
     PaginationModule,
   ],
   controllers: [AverageOkrRuleController],
-  providers: [AverageOkrRuleService]
+  providers: [AverageOkrRuleService],
+  exports: [AverageOkrRuleService]
 })
 export class AverageOkrRuleModule { }

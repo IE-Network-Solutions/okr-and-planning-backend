@@ -10,6 +10,7 @@ import {
 import { Objective } from '../../objective/entities/objective.entity';
 import { Milestone } from '../../milestones/entities/milestone.entity';
 import { MetricType } from '../../metric-types/entities/metric-type.entity';
+import { Max, Min } from 'class-validator';
 
 @Entity()
 export class KeyResult extends BaseModel {
@@ -32,6 +33,8 @@ export class KeyResult extends BaseModel {
   @Column({ type: 'int', default: 0 })
   currentValue: number;
   @Column({ type: 'float', nullable: true })
+  @Min(0)
+  @Max(100)
   progress: number;
   @Column({ type: 'uuid' })
   tenantId: string;

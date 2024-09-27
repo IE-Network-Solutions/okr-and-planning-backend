@@ -7,6 +7,7 @@ import { Objective } from './entities/objective.entity';
 import { MilestonesModule } from '../milestones/milestones.module';
 import { KeyResultsModule } from '../key-results/key-results.module';
 import { HttpModule } from '@nestjs/axios';
+import { AverageOkrRuleModule } from '../average-okr-rule/average-okr-rule.module';
 
 @Module({
   imports: [
@@ -14,10 +15,11 @@ import { HttpModule } from '@nestjs/axios';
     PaginationModule,
     MilestonesModule,
     KeyResultsModule,
+    AverageOkrRuleModule,
     HttpModule.register({}),
   ],
   controllers: [ObjectiveController],
   providers: [ObjectiveService],
   exports: [ObjectiveService],
 })
-export class ObjectiveModule {}
+export class ObjectiveModule { }
