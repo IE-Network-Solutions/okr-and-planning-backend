@@ -6,7 +6,6 @@ import {
   IsString,
   ValidateNested,
 } from 'class-validator';
-import { Milestone } from '../../milestones/entities/milestone.entity';
 import { CreateMilestoneDto } from '../../milestones/dto/create-milestone.dto';
 
 export class CreateKeyResultDto {

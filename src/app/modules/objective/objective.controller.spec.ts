@@ -64,14 +64,17 @@ describe('ObjectiveController', () => {
         } as any;
         await objectiveController.findAllObjectives(
           request,
+          objectiveData().userId,
+
           paginationOptions(),
         );
       });
 
       test('then it should call objectiveService', () => {
         expect(objectiveService.findAllObjectives).toHaveBeenCalledWith(
-          paginationOptions(),
+          objectiveData().userId,
           request['tenantId'],
+          paginationOptions(),
         );
       });
 
@@ -79,6 +82,7 @@ describe('ObjectiveController', () => {
         expect(
           await objectiveController.findAllObjectives(
             request,
+            objectiveData().userId,
             paginationOptions(),
           ),
         ).toEqual(paginationResultObjectiveData());
@@ -112,7 +116,6 @@ describe('ObjectiveController', () => {
     let request: Request;
     describe('when updateObjective is called', () => {
       let objective: Objective;
-      let companyProfileImage: Express.Multer.File;
       beforeEach(async () => {
         request = {
           tenantId: '57577865-7625-4170-a803-a73567e19216',
@@ -128,6 +131,7 @@ describe('ObjectiveController', () => {
         expect(objectiveService.updateObjective).toHaveBeenCalledWith(
           objectiveData().id,
           updateObjectiveData(),
+          request['tenantId'],
         );
       });
 

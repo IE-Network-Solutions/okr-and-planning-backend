@@ -6,6 +6,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Objective } from './entities/objective.entity';
 import { MilestonesModule } from '../milestones/milestones.module';
 import { KeyResultsModule } from '../key-results/key-results.module';
+import { HttpModule } from '@nestjs/axios';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { KeyResultsModule } from '../key-results/key-results.module';
     PaginationModule,
     MilestonesModule,
     KeyResultsModule,
+    HttpModule.register({}),
   ],
   controllers: [ObjectiveController],
   providers: [ObjectiveService],

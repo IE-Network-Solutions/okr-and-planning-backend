@@ -1,5 +1,5 @@
 import { BaseModel } from '@root/src/database/base.model';
-import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
+import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
 import { KeyResult } from '../../key-results/entities/key-result.entity';
 @Entity()
 export class Objective extends BaseModel {

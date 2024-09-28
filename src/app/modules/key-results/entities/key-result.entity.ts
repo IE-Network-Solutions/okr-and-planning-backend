@@ -17,21 +17,21 @@ export class KeyResult extends BaseModel {
   objectiveId: string;
   @Column({ type: 'varchar', length: '50' })
   title: string;
-  @Column({ type: 'varchar', length: '50', nullable: true })
+  @Column({ type: 'varchar', length: '255', nullable: true })
   description: string;
   @Column({ type: 'date' })
   deadline: Date;
   @Column({ type: 'varchar', nullable: true })
   metricTypeId: string;
-  @Column({ type: 'int', nullable: true })
+  @Column({ type: 'int', default: 0 })
   initialValue: number;
   @Column({ type: 'int', nullable: true })
   targetValue: number;
   @Column({ type: 'int' })
   weight: number;
-  @Column({ type: 'int', nullable: true })
+  @Column({ type: 'int', default: 0 })
   currentValue: number;
-  @Column({ type: 'int', nullable: true })
+  @Column({ type: 'float', nullable: true })
   progress: number;
   @Column({ type: 'uuid' })
   tenantId: string;

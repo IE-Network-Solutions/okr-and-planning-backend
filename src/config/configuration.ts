@@ -21,4 +21,8 @@ export const configuration = () => ({
     type: process.env.DB_TYPE,
     synchronize: Boolean(process.env.DB_SYNCHRONIZE_ENTITIES),
   },
+
+  orgUrl: {
+    orgUrl: process.env.ORG_SERVER,
+  },
 });

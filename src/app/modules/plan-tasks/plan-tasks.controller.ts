@@ -11,8 +11,8 @@ import {
 import { PlanTasksService } from './plan-tasks.service';
 import { Plan } from '../plan/entities/plan.entity';
 import { ApiTags } from '@nestjs/swagger';
-import { CreatePlanTasksDto } from './dto/create-plan-tasks.dto';
 import { UpdatePlanTasksDto } from './dto/update-plan-tasks.dto';
+import { CreatePlanTasksDto } from './dto/create-plan-tasks.dto';
 
 @Controller('plan-tasks')
 @ApiTags('plan-tasks')
@@ -25,7 +25,10 @@ export class PlanTasksController {
     @Body() createPlanTaskDto: CreatePlanTasksDto,
   ): Promise<Plan[]> {
     const tenantId = req['tenantId'];
-    return await this.planTasksService.create(createPlanTaskDto, tenantId);
+    return await this.planTasksService.create(
+      createPlanTaskDto.tasks,
+      tenantId,
+    );
   }
 
   @Get()

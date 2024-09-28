@@ -2,6 +2,7 @@ import {
   IsArray,
   IsEnum,
   IsInt,
+  IsNotEmpty,
   IsOptional,
   IsString,
   ValidateNested,
@@ -32,7 +33,7 @@ export class CreatePlanTaskDto {
 
   @IsString()
   @IsOptional()
-  planId: string;
+  planId: string | null;
 
   @IsString()
   @IsOptional()
@@ -43,6 +44,7 @@ export class CreatePlanTaskDto {
   parentTaskId?: string;
 
   @IsString()
+  @IsNotEmpty()
   keyResultId: string;
 
   @IsString()
