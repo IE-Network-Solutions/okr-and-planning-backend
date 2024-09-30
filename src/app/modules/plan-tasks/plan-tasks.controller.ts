@@ -57,12 +57,9 @@ export class PlanTasksController {
   ): Promise<Plan[]> {
     return await this.planTasksService.findByUsers(id, arrayOfUserId);
   }
-  @Patch(':id')
-  async update(
-    @Param('id') id: string,
-    @Body() updatePlanTaskDto: UpdatePlanTasksDto,
-  ): Promise<Plan[]> {
-    return this.planTasksService.update(id, updatePlanTaskDto);
+  @Patch()
+  async update(@Body() updatePlanTaskDto: UpdatePlanTasksDto): Promise<Plan[]> {
+    return this.planTasksService.update(updatePlanTaskDto.tasks);
   }
 
   @Delete(':id')

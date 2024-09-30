@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PlanTask } from './entities/plan-task.entity';
 import { Plan } from '../plan/entities/plan.entity';
@@ -7,8 +11,8 @@ import { KeyResultsService } from '../key-results/key-results.service';
 import { MilestonesService } from '../milestones/milestones.service';
 import { PaginationService } from '@root/src/core/pagination/pagination.service';
 import { PlanningPeriodUser } from '../planningPeriods/planning-periods/entities/planningPeriodUser.entity';
-import { UpdatePlanTasksDto } from './dto/update-plan-tasks.dto';
 import { CreatePlanTaskDto } from './dto/create-plan-task.dto';
+import { UpdatePlanTaskDto } from './dto/update-plan-task.dto';
 
 @Injectable()
 export class PlanTasksService {
@@ -30,48 +34,48 @@ export class PlanTasksService {
   ): Promise<Plan[]> {
     try {
       const result: any = [];
+      if (!createPlanTasksDto || createPlanTasksDto.length === 0) {
+        throw new BadRequestException('No tasks provided');
+      }
+      const planningUser = await this.planningUserRepository.findOne({
+        where: { id: createPlanTasksDto[0].planningUserId },
+      });
 
-      for (const createPlanTaskDto of createPlanTasksDto) {
-        const planningUser = await this.planningUserRepository.findOne({
-          where: { id: createPlanTaskDto.planningUserId },
+      let parentPlan: Plan | null = null;
+      if (createPlanTasksDto[0].parentPlanId) {
+        parentPlan = await this.planRepository.findOne({
+          where: { id: createPlanTasksDto[0].parentPlanId },
         });
-
-        let parentPlan: Plan | null = null;
-        if (createPlanTaskDto.parentPlanId) {
-          parentPlan = await this.planRepository.findOne({
-            where: { id: createPlanTaskDto.parentPlanId },
-          });
-          if (!parentPlan) {
-            throw new NotFoundException('Parent plan not found');
-          }
+        if (!parentPlan) {
+          throw new NotFoundException('Parent plan not found');
         }
+      }
 
-        let plan: Plan | null = null;
-        if (createPlanTaskDto.planId) {
-          plan = await this.planRepository.findOne({
-            where: { id: createPlanTaskDto.planId },
-          });
-        } else {
-          const newPlan = this.planRepository.create({
-            tenantId,
-            createdBy: createPlanTaskDto.userId,
-            level,
-            isReported: false,
-            isValidated: false,
-            planningUser,
-            parentPlan,
-            description: planningUser.planningPeriod.name,
-            userId: createPlanTaskDto.userId,
-          });
-          plan = await this.planRepository.save(newPlan);
-        }
-
+      let plan: Plan | null = null;
+      if (createPlanTasksDto[0].planId) {
+        plan = await this.planRepository.findOne({
+          where: { id: createPlanTasksDto[0].planId },
+        });
+      } else {
+        const newPlan = this.planRepository.create({
+          tenantId,
+          createdBy: createPlanTasksDto[0].userId,
+          level,
+          isReported: false,
+          isValidated: false,
+          planningUser,
+          parentPlan,
+          description: planningUser.planningPeriod.name,
+          userId: createPlanTasksDto[0].userId,
+        });
+        plan = await this.planRepository.save(newPlan);
+      }
+      for (const createPlanTaskDto of createPlanTasksDto) {
         const keyResult = createPlanTaskDto.keyResultId
           ? await this.keyResultService.findOnekeyResult(
               createPlanTaskDto.keyResultId,
             )
           : null;
-
         const getMilestone = createPlanTaskDto.milestoneId
           ? await this.milestoneService.findOneMilestone(
               createPlanTaskDto.milestoneId,
@@ -278,12 +282,9 @@ export class PlanTasksService {
     }
   }
 
-  async update(
-    id: string,
-    updatePlanTasksDto: UpdatePlanTasksDto,
-  ): Promise<Plan[]> {
+  async update(updatePlanTasksDto: UpdatePlanTaskDto[]): Promise<Plan[]> {
     try {
-      const updatedPlans: Plan[] = [];
+      const updatedPlans: string[] = [];
 
       for (const updatePlanTaskDto of updatePlanTasksDto) {
         const task = await this.taskRepository.findOneByOrFail({
@@ -316,7 +317,7 @@ export class PlanTasksService {
         }
 
         const finalTask = await this.taskRepository.save(task);
-        updatedPlans.push(finalTask.plan);
+        updatedPlans.push(updatePlanTaskDto.planId);
 
         // Handle subtasks
         if (
@@ -327,15 +328,12 @@ export class PlanTasksService {
             subTaskDto.parentTaskId = finalTask.id; // Set the parent task ID
 
             // Recursively update or create subtasks if needed
-            await this.update(subTaskDto.id, [subTaskDto]); // Assuming subTaskDto has an ID
+            await this.update([subTaskDto]); // Assuming subTaskDto has an ID
           }
         }
       }
-
       // Return the updated plans
-      return updatedPlans.length > 0
-        ? updatedPlans
-        : await this.findOne(updatedPlans[0].id); // Return the updated plan or find it
+      return await this.findOne(updatedPlans[0]); // Return the updated plan or find it
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw new NotFoundException('Error updating records');

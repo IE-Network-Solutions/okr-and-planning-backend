@@ -7,6 +7,5 @@ export class UpdatePlanTaskDto extends PartialType(CreatePlanTaskDto) {
   subTasks?: CreatePlanTaskDto[];
 
   @IsString()
-  @IsOptional()
   id: string;
 }
