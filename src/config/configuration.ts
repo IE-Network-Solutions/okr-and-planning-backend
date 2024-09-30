@@ -25,4 +25,7 @@ export const configuration = () => ({
   apiServer: {
     org_server: process.env.ORG_SERVER,
   },
+  orgUrl: {
+    orgUrl: process.env.ORG_SERVER,
+  },
 });
