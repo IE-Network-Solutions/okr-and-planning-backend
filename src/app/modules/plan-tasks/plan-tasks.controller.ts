@@ -23,7 +23,7 @@ export class PlanTasksController {
   async create(
     @Req() req: Request,
     @Body() createPlanTaskDto: CreatePlanTasksDto,
-  ): Promise<Plan[]> {
+  ): Promise<Plan> {
     const tenantId = req['tenantId'];
     return await this.planTasksService.create(
       createPlanTaskDto.tasks,
@@ -38,7 +38,7 @@ export class PlanTasksController {
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string): Promise<Plan[]> {
+  async findOne(@Param('id') id: string): Promise<Plan> {
     return await this.planTasksService.findOne(id);
   }
 
@@ -58,7 +58,7 @@ export class PlanTasksController {
     return await this.planTasksService.findByUsers(id, arrayOfUserId);
   }
   @Patch()
-  async update(@Body() updatePlanTaskDto: UpdatePlanTasksDto): Promise<Plan[]> {
+  async update(@Body() updatePlanTaskDto: UpdatePlanTasksDto): Promise<Plan> {
     return this.planTasksService.update(updatePlanTaskDto.tasks);
   }
 

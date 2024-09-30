@@ -31,7 +31,7 @@ export class PlanTasksService {
     createPlanTasksDto: CreatePlanTaskDto[],
     tenantId: string,
     level = 0,
-  ): Promise<Plan[]> {
+  ): Promise<Plan> {
     try {
       const result: any = [];
       if (!createPlanTasksDto || createPlanTasksDto.length === 0) {
@@ -151,7 +151,7 @@ export class PlanTasksService {
     }
   }
 
-  async findOne(id: string): Promise<Plan[]> {
+  async findOne(id: string): Promise<Plan> {
     try {
       return await this.planRepository
         .createQueryBuilder('plan')
@@ -164,7 +164,7 @@ export class PlanTasksService {
         .leftJoinAndSelect('task.milestone', 'milestone') // Load the key result belonging to the parent task
         .leftJoinAndSelect('plan.comments', 'comments') // Load comments related to the plan
         .where('plan.id = :id', { id }) // Filter by plan ID
-        .getMany();
+        .getOne();
     } catch (error) {
       if (error.name === 'EntityNotFoundError') {
         throw new NotFoundException('Error fetching the specified tasks');
@@ -282,7 +282,7 @@ export class PlanTasksService {
     }
   }
 
-  async update(updatePlanTasksDto: UpdatePlanTaskDto[]): Promise<Plan[]> {
+  async update(updatePlanTasksDto: UpdatePlanTaskDto[]): Promise<Plan> {
     try {
       const updatedPlans: string[] = [];
 
