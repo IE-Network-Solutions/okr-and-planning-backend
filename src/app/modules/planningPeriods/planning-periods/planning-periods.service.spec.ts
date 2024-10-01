@@ -1,18 +1,42 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
+import { PaginationService } from '@root/src/core/pagination/pagination.service';
+import { mock } from 'jest-mock-extended';
+import { getRepositoryToken } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { PlanningPeriodsService } from './planning-periods.service';
+import { PlanningPeriod } from './entities/planningPeriod.entity';
+import { PlanningPeriodUser } from './entities/planningPeriodUser.entity';
 
 describe('PlanningPeriodsService', () => {
-  let service: PlanningPeriodsService;
+  let planningPeriodsService: PlanningPeriodsService;
 
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [PlanningPeriodsService],
+    const moduleRef = await Test.createTestingModule({
+      providers: [
+        PlanningPeriodsService,
+        {
+          provide: getRepositoryToken(PlanningPeriod),
+          useValue: mock<Repository<PlanningPeriod>>(),
+        },
+        {
+          provide: getRepositoryToken(PlanningPeriodUser),
+          useValue: mock<Repository<PlanningPeriodUser>>(),
+        },
+      
+        {
+          provide: PaginationService,
+          useValue: mock<PaginationService>(),
+        },
+      
+      ],
     }).compile();
 
-    service = module.get<PlanningPeriodsService>(PlanningPeriodsService);
+    planningPeriodsService = moduleRef.get<PlanningPeriodsService>(
+      PlanningPeriodsService,
+    );
   });
 
   it('should be defined', () => {
-    expect(service).toBeDefined();
+    expect(PlanningPeriodsService).toBeDefined();
   });
 });

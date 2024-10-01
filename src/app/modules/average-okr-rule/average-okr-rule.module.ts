@@ -9,5 +9,6 @@ import { PaginationModule } from '@root/src/core/pagination/pagination.module';
   imports: [TypeOrmModule.forFeature([AverageOkrRule]), PaginationModule],
   controllers: [AverageOkrRuleController],
   providers: [AverageOkrRuleService],
+  exports: [AverageOkrRuleService],
 })
 export class AverageOkrRuleModule {}

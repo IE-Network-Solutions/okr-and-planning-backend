@@ -9,7 +9,7 @@ import {
   Query,
   Put,
 } from '@nestjs/common';
-import { ObjectiveService } from './objective.service';
+import { ObjectiveService } from './services/objective.service';
 import { CreateObjectiveDto } from './dto/create-objective.dto';
 import { UpdateObjectiveDto } from './dto/update-objective.dto';
 import { Objective } from './entities/objective.entity';
@@ -79,7 +79,7 @@ export class ObjectiveController {
     @Query() paginationOptions?: PaginationDto,
   ) {
     const tenantId = req['tenantId'];
-    const token = req['token'];
+    const token =  req['token'];
     return this.objectiveService.handleUserOkr(
       userId,
       tenantId,

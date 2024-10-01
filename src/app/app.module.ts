@@ -12,6 +12,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { TenantGuard } from '../core/guards/tenant.gurad';
 import { ObjectiveSubscriber } from './modules/objective/subscribers/objective.subscribers';
+import { AuthGuard } from '../core/guards/auth.guard';
 /** This is a TypeScript module that imports various modules and sets up a TypeORM connection using
 configuration values obtained from a ConfigService. */
 @Module({
@@ -47,6 +48,11 @@ configuration values obtained from a ConfigService. */
       provide: APP_GUARD,
       useClass: TenantGuard,
     },
+    {
+      provide: APP_GUARD,
+      useClass: AuthGuard,
+    }
+   
   ],
 })
 export class AppModule {}

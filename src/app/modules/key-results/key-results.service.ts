@@ -62,15 +62,17 @@ export class KeyResultsService {
             tenantId,
             queryRunner,
           );
-
-          await this.milestonesService.createBulkMilestone(
-            key.milestones,
-            tenantId,
-            singleKeyResult.id,
-            queryRunner,
-          );
+          if (singleKeyResult && singleKeyResult.milestones.length > 0) {
+            await this.milestonesService.createBulkMilestone(
+              key.milestones,
+              tenantId,
+              singleKeyResult.id,
+              queryRunner,
+            );
+          }
         }),
       );
+
       return keyResults;
     } catch (error) {
       throw new BadRequestException(error.message);
@@ -127,12 +129,20 @@ export class KeyResultsService {
       keyResultTobeUpdated.initialValue = updatekeyResultDto.initialValue;
       keyResultTobeUpdated.targetValue = updatekeyResultDto.targetValue;
       keyResultTobeUpdated.weight = updatekeyResultDto.weight;
+      keyResultTobeUpdated.progress = updatekeyResultDto.progress;
+      keyResultTobeUpdated.currentValue = updatekeyResultDto.currentValue;
+
+      //  keyResultTobeUpdated['lastUpdateValue'] = updatekeyResultDto['lastUpdateValue'];
+
       await this.keyResultRepository.update(
         { id },
 
         keyResultTobeUpdated,
       );
-      if (updatekeyResultDto.milestones.length > 0) {
+      if (
+        updatekeyResultDto.milestones &&
+        updatekeyResultDto.milestones.length > 0
+      ) {
         await this.milestonesService.updateMilestones(
           updatekeyResultDto.milestones,
           tenantId,

@@ -5,14 +5,15 @@ import { NAME } from '../enum/metric-type.enum';
 
 export const metricTypeData = (): MetricType => {
   return {
-    id: '8988e162-940a-4ae8-94f1-bfd598d6e9fc',
-    name: NAME.MILESTONE,
-    description: 'descriptiom',
-    keyResults: null,
-    updatedAt: new Date('2022-10-22 07:11:42'),
-    createdAt: new Date('2022-10-22 07:11:42'),
+    id: 'cbec99d6-41bf-405a-bb39-2458bed0538c',
+    createdAt: new Date('2024-09-20T04:51:24.825Z'),
+    updatedAt: new Date('2024-09-20T04:51:24.825Z'),
+    deletedAt: null,
     updatedBy: 'selam',
     createdBy: 'selam',
+    name: NAME.CURRENCY,
+    description: 'Currency',
+    keyResults: null,
   };
 };
 
