@@ -18,13 +18,13 @@ export class PaginationService {
     options: IPaginationOptions,
     orderBy?: string,
     orderDirection?: 'ASC' | 'DESC',
-    filter?: Partial<Entity>, // Add filter parameter
+    filter?: Partial<Entity>,
   ): Promise<Pagination<Entity>>;
 
   async paginate<Entity>(
     qb: SelectQueryBuilder<Entity>,
     options: IPaginationOptions,
-    filter?: Partial<Entity>, // Add filter parameter
+    filter?: Partial<Entity>,
   ): Promise<Pagination<Entity>>;
 
   // Single implementation
@@ -34,7 +34,7 @@ export class PaginationService {
     options?: IPaginationOptions,
     orderBy = 'createdAt',
     orderDirection: 'ASC' | 'DESC' = 'DESC',
-    filter?: Partial<Entity>, // Add filter parameter
+    filter?: Partial<Entity>,
   ): Promise<Pagination<Entity>> {
     let qb: SelectQueryBuilder<Entity>;
     let opts: IPaginationOptions;
@@ -51,6 +51,13 @@ export class PaginationService {
       );
     }
 
+    // Ensure page and limit are numbers to prevent type errors
+    const page = Number(opts.page);
+    const limit = Number(opts.limit);
+
+    // Prevent relations from being paginated
+    qb.skip((page - 1) * limit).take(limit);
+
     // Apply filter if provided
     if (filter) {
       Object.keys(filter).forEach((key) => {
@@ -58,7 +65,18 @@ export class PaginationService {
       });
     }
 
-    return paginate<Entity>(qb, opts);
+    const [items, total] = await qb.getManyAndCount();
+
+    return {
+      items,
+      meta: {
+        totalItems: total,
+        itemCount: items.length,
+        itemsPerPage: limit,
+        totalPages: Math.ceil(total / limit),
+        currentPage: page,
+      },
+    };
   }
 
   private applyDefaultPaginationOptions(

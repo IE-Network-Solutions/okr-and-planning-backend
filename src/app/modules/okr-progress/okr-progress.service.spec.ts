@@ -1,18 +1,41 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { OkrProgressService } from './okr-progress.service';
+import { PaginationService } from '@root/src/core/pagination/pagination.service';
+import { mock } from 'jest-mock-extended';
+import { MetricTypesService } from '../metric-types/metric-types.service';
+import { MilestonesService } from '../milestones/milestones.service';
+import { KeyResultsService } from '../key-results/key-results.service';
 
-describe('OkrProgressService', () => {
-  let service: OkrProgressService;
-
+describe('keyResultsService', () => {
+  let okrProgressService: OkrProgressService;
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [OkrProgressService],
+    const moduleRef = await Test.createTestingModule({
+      providers: [
+        OkrProgressService,
+        {
+          provide: PaginationService,
+          useValue: mock<PaginationService>(),
+        },
+
+        {
+          provide: MilestonesService,
+          useValue: mock<MilestonesService>(),
+        },
+        {
+          provide: KeyResultsService,
+          useValue: mock<KeyResultsService>(),
+        },
+        {
+          provide: MetricTypesService,
+          useValue: mock<MetricTypesService>(),
+        },
+      ],
     }).compile();
 
-    service = module.get<OkrProgressService>(OkrProgressService);
+    okrProgressService = moduleRef.get<OkrProgressService>(OkrProgressService);
   });
 
   it('should be defined', () => {
-    expect(service).toBeDefined();
+    expect(okrProgressService).toBeDefined();
   });
 });

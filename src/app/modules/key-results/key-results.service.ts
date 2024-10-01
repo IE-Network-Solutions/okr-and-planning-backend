@@ -24,7 +24,7 @@ export class KeyResultsService {
     private readonly milestonesService: MilestonesService,
     private readonly metricTypeService: MetricTypesService,
     private readonly connection: Connection, // Inject the database connection
-  ) { }
+  ) {}
   async createkeyResult(
     createkeyResultDto: CreateKeyResultDto,
     tenantId: string,
@@ -33,13 +33,13 @@ export class KeyResultsService {
     try {
       const keyResult = queryRunner
         ? queryRunner.manager.create(KeyResult, {
-          ...createkeyResultDto,
-          tenantId,
-        })
+            ...createkeyResultDto,
+            tenantId,
+          })
         : this.keyResultRepository.create({
-          ...createkeyResultDto,
-          tenantId,
-        });
+            ...createkeyResultDto,
+            tenantId,
+          });
       return queryRunner
         ? await queryRunner.manager.save(KeyResult, keyResult)
         : await this.keyResultRepository.save(keyResult);
@@ -71,7 +71,6 @@ export class KeyResultsService {
             );
           }
         }),
-
       );
 
       return keyResults;
@@ -130,12 +129,20 @@ export class KeyResultsService {
       keyResultTobeUpdated.initialValue = updatekeyResultDto.initialValue;
       keyResultTobeUpdated.targetValue = updatekeyResultDto.targetValue;
       keyResultTobeUpdated.weight = updatekeyResultDto.weight;
+      keyResultTobeUpdated.progress = updatekeyResultDto.progress;
+      keyResultTobeUpdated.currentValue = updatekeyResultDto.currentValue;
+
+      //  keyResultTobeUpdated['lastUpdateValue'] = updatekeyResultDto['lastUpdateValue'];
+
       await this.keyResultRepository.update(
         { id },
 
         keyResultTobeUpdated,
       );
-      if (updatekeyResultDto.milestones.length > 0) {
+      if (
+        updatekeyResultDto.milestones &&
+        updatekeyResultDto.milestones.length > 0
+      ) {
         await this.milestonesService.updateMilestones(
           updatekeyResultDto.milestones,
           tenantId,

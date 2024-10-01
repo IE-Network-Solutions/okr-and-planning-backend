@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { ObjectiveService } from './objective.service';
+import { ObjectiveService } from './services/objective.service';
 import { ObjectiveController } from './objective.controller';
 import { PaginationModule } from '@root/src/core/pagination/pagination.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -8,6 +8,8 @@ import { MilestonesModule } from '../milestones/milestones.module';
 import { KeyResultsModule } from '../key-results/key-results.module';
 import { HttpModule } from '@nestjs/axios';
 import { AverageOkrRuleModule } from '../average-okr-rule/average-okr-rule.module';
+import { GetFromOrganizatiAndEmployeInfoService } from './services/get-data-from-org.service';
+import { AverageOkrCalculation } from './services/average-okr-calculation.service';
 
 @Module({
   imports: [
@@ -19,7 +21,11 @@ import { AverageOkrRuleModule } from '../average-okr-rule/average-okr-rule.modul
     HttpModule.register({}),
   ],
   controllers: [ObjectiveController],
-  providers: [ObjectiveService],
+  providers: [
+    ObjectiveService,
+    GetFromOrganizatiAndEmployeInfoService,
+    AverageOkrCalculation,
+  ],
   exports: [ObjectiveService],
 })
-export class ObjectiveModule { }
+export class ObjectiveModule {}

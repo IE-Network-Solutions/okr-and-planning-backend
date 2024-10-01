@@ -6,12 +6,9 @@ import { AverageOkrRule } from './entities/average-okr-rule.entity';
 import { PaginationModule } from '@root/src/core/pagination/pagination.module';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([AverageOkrRule]),
-    PaginationModule,
-  ],
+  imports: [TypeOrmModule.forFeature([AverageOkrRule]), PaginationModule],
   controllers: [AverageOkrRuleController],
   providers: [AverageOkrRuleService],
-  exports: [AverageOkrRuleService]
+  exports: [AverageOkrRuleService],
 })
-export class AverageOkrRuleModule { }
+export class AverageOkrRuleModule {}

@@ -3,6 +3,7 @@ import { ObjectiveModule } from './modules/objective/objective.module';
 import { MilestonesModule } from './modules/milestones/milestones.module';
 import { MetricTypesModule } from './modules/metric-types/metric-types.module';
 import { KeyResultsModule } from './modules/key-results/key-results.module';
+import { OkrProgressModule } from './modules/okr-progress/okr-progress.module';
 
 @Global()
 @Module({
@@ -11,6 +12,7 @@ import { KeyResultsModule } from './modules/key-results/key-results.module';
     MilestonesModule,
     MetricTypesModule,
     KeyResultsModule,
+    OkrProgressModule,
   ],
 })
 export class CoreModule {}

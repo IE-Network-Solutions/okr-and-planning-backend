@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateAverageOkrRuleDto } from './dto/create-average-okr-rule.dto';
 import { UpdateAverageOkrRuleDto } from './dto/update-average-okr-rule.dto';
 import { AverageOkrRule } from './entities/average-okr-rule.entity';
@@ -15,12 +19,14 @@ export class AverageOkrRuleService {
     private averageOkrRuleRepository: Repository<AverageOkrRule>,
 
     private readonly paginationService: PaginationService,
-  ) { }
+  ) {}
   async createAverageOkrRule(
     createAverageOkrRuleDto: CreateAverageOkrRuleDto,
     tenantId: string,
   ): Promise<AverageOkrRule> {
-    const AverageOkrRule = this.averageOkrRuleRepository.create(createAverageOkrRuleDto);
+    const AverageOkrRule = this.averageOkrRuleRepository.create(
+      createAverageOkrRuleDto,
+    );
 
     return await this.averageOkrRuleRepository.save(AverageOkrRule);
   }
@@ -35,14 +41,15 @@ export class AverageOkrRuleService {
         limit: paginationOptions.limit,
       };
 
-      const paginatedData = await this.paginationService.paginate<AverageOkrRule>(
-        this.averageOkrRuleRepository,
-        'AverageOkrRule',
-        options,
-        paginationOptions.orderBy,
-        paginationOptions.orderDirection,
-        { tenantId }
-      );
+      const paginatedData =
+        await this.paginationService.paginate<AverageOkrRule>(
+          this.averageOkrRuleRepository,
+          'AverageOkrRule',
+          options,
+          paginationOptions.orderBy,
+          paginationOptions.orderDirection,
+          { tenantId },
+        );
 
       return paginatedData;
     } catch (error) {
@@ -52,9 +59,10 @@ export class AverageOkrRuleService {
 
   async findOneAverageOkrRule(id: string): Promise<AverageOkrRule> {
     try {
-      const AverageOkrRule = await this.averageOkrRuleRepository.findOneByOrFail({
-        id,
-      });
+      const AverageOkrRule =
+        await this.averageOkrRuleRepository.findOneByOrFail({
+          id,
+        });
       return AverageOkrRule;
     } catch (error) {
       throw new NotFoundException(`AverageOkrRule with Id ${id} not found`);
@@ -88,16 +96,16 @@ export class AverageOkrRuleService {
     return AverageOkrRule;
   }
 
-  async findOneAverageOkrRuleByTenant(tenantId: string): Promise<AverageOkrRule> {
+  async findOneAverageOkrRuleByTenant(
+    tenantId: string,
+  ): Promise<AverageOkrRule> {
     try {
       const AverageOkrRule = await this.averageOkrRuleRepository.findOne({
-        where: { tenantId: tenantId }
+        where: { tenantId: tenantId },
       });
       return AverageOkrRule;
     } catch (error) {
       throw new NotFoundException(`AverageOkrRule Not found`);
     }
   }
-
-
 }

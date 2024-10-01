@@ -32,6 +32,8 @@ export class KeyResult extends BaseModel {
   weight: number;
   @Column({ type: 'int', default: 0 })
   currentValue: number;
+  @Column({ type: 'int', default: 0 })
+  lastUpdateValue: number;
   @Column({ type: 'float', nullable: true })
   @Min(0)
   @Max(100)

@@ -1,37 +1,33 @@
-import { IsBoolean, IsDateString, IsString } from "class-validator";
+import { IsBoolean, IsDateString, IsString } from 'class-validator';
 
 export class JobInformationDto {
+  @IsString()
+  jobTitle?: string;
 
-    @IsString()
-    jobTitle?: string;
+  @IsString()
+  branchId?: string;
 
+  @IsBoolean()
+  isPositionActive?: boolean;
 
-    @IsString()
-    branchId?: string;
+  @IsDateString()
+  effectiveStartDate?: Date;
 
-    @IsBoolean()
-    isPositionActive?: boolean;
+  @IsDateString()
+  effectiveEndDate?: Date;
 
+  @IsString()
+  employementTypeId?: string;
 
-    @IsDateString()
-    effectiveStartDate?: Date;
+  @IsString()
+  departmentId?: string;
 
-    @IsDateString()
-    effectiveEndDate?: Date;
+  @IsBoolean()
+  departmentLeadOrNot?: boolean;
 
+  @IsString()
+  workScheduleId?: string;
 
-    @IsString()
-    employementTypeId?: string;
-
-    @IsString()
-    departmentId?: string;
-
-    @IsBoolean()
-    departmentLeadOrNot?: boolean;
-
-    @IsString()
-    workScheduleId?: string;
-
-    @IsString()
-    userId?: string;
+  @IsString()
+  userId?: string;
 }

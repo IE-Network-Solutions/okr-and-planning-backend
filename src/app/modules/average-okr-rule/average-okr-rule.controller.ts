@@ -1,4 +1,14 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Req, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Req,
+  Query,
+} from '@nestjs/common';
 import { AverageOkrRuleService } from './average-okr-rule.service';
 import { CreateAverageOkrRuleDto } from './dto/create-average-okr-rule.dto';
 import { UpdateAverageOkrRuleDto } from './dto/update-average-okr-rule.dto';
@@ -7,7 +17,7 @@ import { AverageOkrRule } from './entities/average-okr-rule.entity';
 
 @Controller('average-okr-rule')
 export class AverageOkrRuleController {
-  constructor(private readonly averageOkrRuleService: AverageOkrRuleService) { }
+  constructor(private readonly averageOkrRuleService: AverageOkrRuleService) {}
   @Post()
   async createAverageOkrRule(
     @Req() req: Request,
@@ -43,7 +53,10 @@ export class AverageOkrRuleController {
     @Param('id') id: string,
     @Body() updateAverageOkrRuleDto: UpdateAverageOkrRuleDto,
   ) {
-    return this.averageOkrRuleService.updateAverageOkrRule(id, updateAverageOkrRuleDto);
+    return this.averageOkrRuleService.updateAverageOkrRule(
+      id,
+      updateAverageOkrRuleDto,
+    );
   }
 
   @Delete(':id')
