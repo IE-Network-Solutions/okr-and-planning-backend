@@ -282,15 +282,18 @@ export class PlanTasksService {
     }
   }
 
-  async update(updatePlanTasksDto: UpdatePlanTaskDto[]): Promise<Plan> {
+  // eslint-disable-next-line prettier/prettier
+  async update(updatePlanTasksDto: UpdatePlanTaskDto[], tenantId: string): Promise<Plan> {
     try {
       const updatedPlans: string[] = [];
 
       for (const updatePlanTaskDto of updatePlanTasksDto) {
+        if (!updatePlanTaskDto.id) {
+          await this.create([updatePlanTaskDto], tenantId);
+        }
         const task = await this.taskRepository.findOneByOrFail({
           id: updatePlanTaskDto.id,
         });
-
         // Handle parent task and level
         const parentTasks =
           task.level !== 0
@@ -328,7 +331,7 @@ export class PlanTasksService {
             subTaskDto.parentTaskId = finalTask.id; // Set the parent task ID
 
             // Recursively update or create subtasks if needed
-            await this.update([subTaskDto]); // Assuming subTaskDto has an ID
+            await this.update([subTaskDto], tenantId); // Assuming subTaskDto has an ID
           }
         }
       }

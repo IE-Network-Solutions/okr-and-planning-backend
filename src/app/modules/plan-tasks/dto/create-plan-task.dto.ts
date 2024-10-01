@@ -3,6 +3,7 @@ import {
   IsEnum,
   IsInt,
   IsNotEmpty,
+  IsNumber,
   IsOptional,
   IsString,
   ValidateNested,
@@ -18,7 +19,7 @@ export class CreatePlanTaskDto {
   @IsString()
   task: string;
 
-  @IsInt()
+  @IsNumber()
   @IsOptional()
   targetValue?: number;
 

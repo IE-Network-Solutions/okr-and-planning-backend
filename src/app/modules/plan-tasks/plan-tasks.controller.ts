@@ -58,8 +58,12 @@ export class PlanTasksController {
     return await this.planTasksService.findByUsers(id, arrayOfUserId);
   }
   @Patch()
-  async update(@Body() updatePlanTaskDto: UpdatePlanTasksDto): Promise<Plan> {
-    return this.planTasksService.update(updatePlanTaskDto.tasks);
+  async update(
+    @Body() updatePlanTaskDto: UpdatePlanTasksDto,
+    @Req() req: Request,
+  ): Promise<Plan> {
+    const tenantId = req['tenantId'];
+    return this.planTasksService.update(updatePlanTaskDto.tasks, tenantId);
   }
 
   @Delete(':id')

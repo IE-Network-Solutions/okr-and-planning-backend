@@ -21,7 +21,7 @@ export class PlanTask extends BaseModel {
   @Column({ type: 'enum', enum: Priority, default: Priority.MEDIUM })
   priority: Priority;
 
-  @Column({ type: 'int', nullable: true })
+  @Column({ type: 'bigint', nullable: true })
   targetValue: number;
 
   @Column({ type: 'int', nullable: true })
