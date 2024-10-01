@@ -188,7 +188,6 @@ export class ObjectiveService {
     paginationOptions?: PaginationDto,
   ): Promise<ViewUserAndSupervisorOKRDto> {
     try {
-      console.log(token, 'bbbbb');
       const response =
         await this.getFromOrganizatiAndEmployeInfoService.getUsers(
           userId,
