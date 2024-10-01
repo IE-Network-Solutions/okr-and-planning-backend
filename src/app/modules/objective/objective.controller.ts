@@ -79,7 +79,7 @@ export class ObjectiveController {
     @Query() paginationOptions?: PaginationDto,
   ) {
     const tenantId = req['tenantId'];
-    const token =  req['token'];
+    const token = req['token'];
     return this.objectiveService.handleUserOkr(
       userId,
       tenantId,

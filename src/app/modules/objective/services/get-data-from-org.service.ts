@@ -12,12 +12,12 @@ export class GetFromOrganizatiAndEmployeInfoService {
   ) {
     this.orgUrl = this.configService.get<string>('ORG_SERVER');
   }
-  async getUsers(userId: string, tenantId: string,token?:string) {
+  async getUsers(userId: string, tenantId: string, token?: string) {
     const response = await this.httpService
       .get(`${this.orgUrl}/users/${userId}`, {
         headers: {
           tenantid: tenantId,
-          token:token
+          token: token,
         },
       })
       .toPromise();

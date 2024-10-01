@@ -31,9 +31,7 @@ describe('PlanningPeriodsController', () => {
           useValue: {
             paginate: jest.fn(),
           },
-          
         },
-        
       ],
     }).compile();
 

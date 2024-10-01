@@ -38,7 +38,6 @@ describe('PlanTasksController', () => {
           useValue: {
             paginate: jest.fn(),
           },
-          
         },
         {
           provide: MilestonesService,
@@ -51,12 +50,9 @@ describe('PlanTasksController', () => {
       ],
     }).compile();
 
-    planTasksController = moduleRef.get<PlanTasksController>(
-      PlanTasksController,
-    );
-    planTasksService = moduleRef.get<PlanTasksService>(
-      PlanTasksService,
-    );
+    planTasksController =
+      moduleRef.get<PlanTasksController>(PlanTasksController);
+    planTasksService = moduleRef.get<PlanTasksService>(PlanTasksService);
     planTaskRepository = moduleRef.get<Repository<PlanTask>>(
       getRepositoryToken(PlanTask),
     );

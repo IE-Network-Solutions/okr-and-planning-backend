@@ -188,14 +188,14 @@ export class ObjectiveService {
     paginationOptions?: PaginationDto,
   ): Promise<ViewUserAndSupervisorOKRDto> {
     try {
-      console.log(token,"bbbbb")
+      console.log(token, 'bbbbb');
       const response =
         await this.getFromOrganizatiAndEmployeInfoService.getUsers(
           userId,
           tenantId,
-          token
+          token,
         );
-    
+
       const employeeJobInfo = response.employeeJobInformation[0];
       const averageOKrrule =
         await this.averageOkrRuleService.findOneAverageOkrRuleByTenant(
