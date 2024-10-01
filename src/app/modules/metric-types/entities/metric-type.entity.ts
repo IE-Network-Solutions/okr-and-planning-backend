@@ -5,7 +5,7 @@ import { NAME } from '../enum/metric-type.enum';
 
 @Entity()
 export class MetricType extends BaseModel {
-  @Column({ type: 'varchar' })
+  @Column({ type: 'varchar', nullable: true })
   name: NAME;
   @Column({ type: 'varchar', length: '255' })
   description: string;

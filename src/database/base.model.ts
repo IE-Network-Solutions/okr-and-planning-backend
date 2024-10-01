@@ -21,9 +21,9 @@ export class BaseModel {
   @DeleteDateColumn()
   deletedAt?: Date;
 
-  @Column({ type: 'uuid', nullable: true })
+  @Column({ nullable: true })
   createdBy?: string;
 
-  @Column({ type: 'uuid', nullable: true })
+  @Column({ nullable: true })
   updatedBy?: string;
 }
