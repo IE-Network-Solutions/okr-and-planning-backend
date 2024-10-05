@@ -28,7 +28,7 @@ async function bootstrap() {
 
   app.use(helmet());
   app.enableCors();
-  
+
   try {
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount(configService) as any),

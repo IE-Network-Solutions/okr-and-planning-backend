@@ -34,7 +34,7 @@ export class KeyResult extends BaseModel {
   currentValue: number;
   @Column({ type: 'int', default: 0 })
   lastUpdateValue: number;
-  @Column({ type: 'float', nullable: true })
+  @Column({ type: 'float', default: 0, nullable: true })
   @Min(0)
   @Max(100)
   progress: number;

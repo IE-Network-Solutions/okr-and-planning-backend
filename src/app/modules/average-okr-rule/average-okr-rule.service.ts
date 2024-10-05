@@ -24,9 +24,10 @@ export class AverageOkrRuleService {
     createAverageOkrRuleDto: CreateAverageOkrRuleDto,
     tenantId: string,
   ): Promise<AverageOkrRule> {
-    const AverageOkrRule = this.averageOkrRuleRepository.create(
-      createAverageOkrRuleDto,
-    );
+    const AverageOkrRule = this.averageOkrRuleRepository.create({
+      ...createAverageOkrRuleDto,
+      tenantId,
+    });
 
     return await this.averageOkrRuleRepository.save(AverageOkrRule);
   }

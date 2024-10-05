@@ -22,12 +22,11 @@ describe('PlanningPeriodsService', () => {
           provide: getRepositoryToken(PlanningPeriodUser),
           useValue: mock<Repository<PlanningPeriodUser>>(),
         },
-      
+
         {
           provide: PaginationService,
           useValue: mock<PaginationService>(),
         },
-      
       ],
     }).compile();
 

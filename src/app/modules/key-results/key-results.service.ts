@@ -51,12 +51,14 @@ export class KeyResultsService {
     createkeyResultDto: CreateKeyResultDto[],
     tenantId: string,
     objectiveId: string,
+    userId: string,
     queryRunner?: QueryRunner,
   ) {
     try {
       const keyResults = await Promise.all(
         createkeyResultDto.map(async (key) => {
           key.objectiveId = objectiveId;
+          key['createdBy'] = userId;
           const singleKeyResult = await this.createkeyResult(
             key,
             tenantId,
@@ -67,6 +69,7 @@ export class KeyResultsService {
               key.milestones,
               tenantId,
               singleKeyResult.id,
+              userId,
               queryRunner,
             );
           }

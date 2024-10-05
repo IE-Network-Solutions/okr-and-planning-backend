@@ -34,9 +34,7 @@ describe('PlanService', () => {
       ],
     }).compile();
 
-    planService = moduleRef.get<PlanService>(
-      PlanService,
-    );
+    planService = moduleRef.get<PlanService>(PlanService);
   });
 
   it('should be defined', () => {

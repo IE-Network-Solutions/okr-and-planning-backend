@@ -7,7 +7,6 @@ import { PlanCommentsService } from './plan-comments.service';
 import { Plan } from '../plan/entities/plan.entity';
 import { PlanComment } from './entities/plan-comment.entity';
 
-
 describe('PlanCommentsService', () => {
   let planCommentsService: PlanCommentsService;
 
@@ -26,9 +25,8 @@ describe('PlanCommentsService', () => {
       ],
     }).compile();
 
-    planCommentsService = moduleRef.get<PlanCommentsService>(
-      PlanCommentsService,
-    );
+    planCommentsService =
+      moduleRef.get<PlanCommentsService>(PlanCommentsService);
   });
 
   it('should be defined', () => {

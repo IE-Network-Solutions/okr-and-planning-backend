@@ -5,4 +5,6 @@ export class CreateAverageOkrRuleDto {
   myOkrPercentage: number;
   @IsNumber()
   teamOkrPercentage: number;
+  @IsString()
+  title: string;
 }

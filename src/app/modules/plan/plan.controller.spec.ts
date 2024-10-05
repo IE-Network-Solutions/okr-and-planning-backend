@@ -40,12 +40,8 @@ describe('PlanController', () => {
       ],
     }).compile();
 
-    planController = moduleRef.get<PlanController>(
-      PlanController,
-    );
-    planRepository = moduleRef.get<Repository<Plan>>(
-      getRepositoryToken(Plan),
-    );
+    planController = moduleRef.get<PlanController>(PlanController);
+    planRepository = moduleRef.get<Repository<Plan>>(getRepositoryToken(Plan));
     jest.clearAllMocks();
   });
 
