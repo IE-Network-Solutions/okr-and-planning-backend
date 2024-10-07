@@ -8,6 +8,11 @@ import { PlanningPeriodsModule } from './modules/planningPeriods/planning-period
 import { PlanModule } from './modules/plan/plan.module';
 import { OkrProgressModule } from './modules/okr-progress/okr-progress.module';
 
+import { ReprimandLogModule } from './modules/reprimandLog/reprimand-log.module';
+import { AppreciationModule } from './modules/appreciationLog/appreciation.module';
+import { CarbonCopyLog } from './modules/carbonCopyLlog/entities/carbon-copy-log.entity';
+import { RecognitionTypeModule } from './modules/recognitionType/recognition-type.module';
+import { DashboardModule } from './modules/dashboard/dashboard.module';
 @Global()
 @Module({
   imports: [
@@ -19,6 +24,12 @@ import { OkrProgressModule } from './modules/okr-progress/okr-progress.module';
     PlanModule,
     PlanTasksModule,
     OkrProgressModule,
+    RecognitionTypeModule,
+    ReprimandLogModule,
+    AppreciationModule,
+    CarbonCopyLog,
+    DashboardModule,
   ],
 })
 export class CoreModule {}
+

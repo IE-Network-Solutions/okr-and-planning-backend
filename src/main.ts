@@ -26,6 +26,13 @@ async function bootstrap() {
 
   app.useGlobalPipes(new ValidationPipe());
 
+  try {
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount(configService) as any),
+    });
+  } catch (error) {
+    throw error;
+  }
   app.use(helmet());
   app.enableCors();
 

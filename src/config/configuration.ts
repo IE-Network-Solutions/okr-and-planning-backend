@@ -34,7 +34,10 @@ export const configuration = () => ({
     private_key: process.env.PRIVATE_KEY,
     client_email: process.env.CLIENT_EMAIL,
   },
-
+  externalUrls: {
+    orgStructureUrl: process.env.ORG_AND_EMP_URL,
+    fileServerUrl: process.env.FILE_SERVER_URL,
+  },
   orgUrl: {
     orgUrl: process.env.ORG_SERVER,
   },

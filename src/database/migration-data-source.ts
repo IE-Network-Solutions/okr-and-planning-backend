@@ -1,4 +1,3 @@
-// src/db/data-source.ts
 import { config } from 'dotenv';
 import { DataSource, DataSourceOptions } from 'typeorm';
 
