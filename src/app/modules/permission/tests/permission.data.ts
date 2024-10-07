@@ -1,5 +1,4 @@
 import { CreatePermissionDto } from '../dto/create-permission.dto';
-import { Permission } from '../entities/permission.entity';
 
 export const permissionData = () => {
   return {

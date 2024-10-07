@@ -1,9 +1,7 @@
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 
-import { mockDeep, MockProxy } from 'jest-mock-extended';
-
-import { NotFoundException } from '@nestjs/common';
+import { MockProxy } from 'jest-mock-extended';
 
 import { Repository } from 'typeorm';
 import { ClientsService } from './clients.service';

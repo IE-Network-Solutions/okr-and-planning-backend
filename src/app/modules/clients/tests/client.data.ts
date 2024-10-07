@@ -1,11 +1,6 @@
-import { Pagination } from 'nestjs-typeorm-paginate';
-import { productData } from '../../products/tests/product.data';
-import { Client } from '../entities/client.entity';
 import { CreateClientDto } from '../dto/create-client.dto';
 
 export const clientData = () => {
-  //  let data = productData()
-
   return {
     id: '1',
     name: 'Product 1',
