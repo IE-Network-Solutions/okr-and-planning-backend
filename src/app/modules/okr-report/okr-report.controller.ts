@@ -1,45 +1,39 @@
 import { Body, Controller, Delete, Get, Headers, Param, Post, Req } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { OkrReportService } from './okr-report.service';
-import { ReportDTO } from './dto/create-report.dto';
-import { get } from 'https';
+import { UUID } from 'crypto';
+import { CreateReportDTO } from './dto/create-report.dto';
 
 @Controller('okr-report')
 @ApiTags('okr-report')
 export class OkrReportController {
-constructor(
-    private readonly okrReportService: OkrReportService,
-    ) {}
-    @Post()
-    create(
-      @Body() createReportDto: ReportDTO,
-      @Headers('tenantId') tenantId: string,     ) {
-      return this.okrReportService.createReport(
-        createReportDto,
-        tenantId,
-      );
+  constructor(private readonly reportService: OkrReportService) {}
+
+  @Post('/create-report')
+  async createReport(
+    @Body() reportData: CreateReportDTO,
+    @Headers('tenantId') tenantId: UUID, // Expecting tenantId from headers
+    @Param('userId') userId: string, // Extract the planningPeriodId from the route
+  ):Promise<any> {
+      return await this.reportService.createReportWithTasks(reportData);
     }
-  // GET endpoint to fetch all reports filtered by tenantId
-  @Post('/by-planning-period/:planningPeriodId') // Expecting planningPeriodId from the URL
-  async getAllReports(
-    @Req() request: Request,
-    @Body() userIds: string[], // Expecting userIds to be an array of strings
-    @Headers('tenantId') tenantId: string, // Expecting tenantId from headers
-    @Param('planningPeriodId') planningPeriodId: string // Extract planningPeriodId from the URL
-  ): Promise<any[]> {
-    // Early return if userIds is null or an empty array
-    if (!userIds || userIds.length === 0) {
-      return []; 
+    
+    @Post('/by-planning-period/:planningPeriodId') // Expecting planningPeriodId from the URL
+    async getAllReports(
+      @Body() userIds: (string | 'all')[], // Expecting userIds to be an array of strings or 'all'
+      @Headers('tenantId') tenantId: UUID, // Expecting tenantId from headers
+      @Param('planningPeriodId') planningPeriodId: string, // Extract the planningPeriodId from the route
+    ): Promise<any> { 
+      
+      if (!userIds || userIds.length === 0) {
+        return []; // Return empty array if no userIds provided
+      }
+      return this.reportService.getAllReportsByTenantAndPeriod(tenantId, userIds, planningPeriodId);
     }
-  
-    // Pass tenantId, userIds, and planningPeriodId to your service method
-    return this.okrReportService.getAllReportsByTenantAndPeriod(tenantId, userIds, planningPeriodId);
-  }
-    // DELETE endpoint to delete a report by id
     @Delete(':id')
     async deleteReport(
       @Param('id') id: string, 
-      @Headers('tenantId') tenantId: string): Promise<void> {
-      return this.okrReportService.deleteReport(id, tenantId);
+      @Headers('tenantId') tenantId: UUID): Promise<void> {
+      return this.reportService.deleteReport(id, tenantId);
     }
 }

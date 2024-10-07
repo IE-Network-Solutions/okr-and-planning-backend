@@ -14,6 +14,10 @@ export class FailureReason extends BaseModel {
   @Column()
   tenantId: string; // This stores the foreign key for Tenant
 
-  @OneToOne(() => ReportTask, (reportTask) => reportTask.failureReason)
+  @OneToOne(() => ReportTask, (reportTask) => reportTask.failureReason,{
+    onDelete: 'SET NULL',
+    onUpdate: 'CASCADE',
+    // eager: true,
+  })
   reportTask: ReportTask;
 }

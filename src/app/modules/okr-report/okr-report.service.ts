@@ -1,103 +1,84 @@
 import {  Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Report } from './entities/okr-report.entity';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { ReportTask } from '../okr-report-task/entities/okr-report-task.entity';
-import { FailureReason } from '../failure-reason/entities/failure-reason.entity';
-import { ReportDTO } from './dto/create-report.dto';
+import { CreateReportDTO } from './dto/create-report.dto';
+import { UUID } from 'crypto';
+import { ReportStatusEnum } from '@root/src/core/interfaces/reportStatus.type';
 
 @Injectable()
 export class OkrReportService {
-
-
       constructor(
-        @InjectRepository(Report) private reportRepo: Repository<Report>,
-        @InjectRepository(ReportTask) private reportTaskRepo: Repository<ReportTask>,
-        @InjectRepository(FailureReason) private failureReasonRepo: Repository<FailureReason>,
+        @InjectRepository(Report) private reportRepository: Repository<Report>,
+        @InjectRepository(ReportTask) private reportTaskRepository: Repository<ReportTask>,
+        
       ) {}
     
-      async createReport(reportDto: any,tenantId:string): Promise<Report> {
-        const report = this.reportRepo.create({
-          user: { id: reportDto.userId },
-          plan: { id: reportDto.planId },
-          status: reportDto.status,
-          reportScore: reportDto.reportScore,
-          tenant: { id: reportDto.tenantId },
+      async createReportWithTasks(
+        reportData: CreateReportDTO, // Data for the Report entity
+      ): Promise<any> {
+        // Step 1: Create the Report entity
+        const report = this.reportRepository.create({
+          // status: ReportStatusEnum[`${reportData.reportScore}`],
+          reportScore: reportData.reportScore,
+          reportTitle: reportData.reportTitle,
+          tenantId: reportData?.tenantId,
+          userId: reportData?.userId,
+          planId: reportData.planId,
         });
-    
-        const savedReport = await this.reportRepo.save(report);
-    
-        // Loop through the tasks and create ReportTask entries
-        for (const taskDto of reportDto.tasks) {
-          let failureReason = null;
-    
-          // Check if a failure reason exists
-          if (taskDto.failureReason) {
-            failureReason = await this.failureReasonRepo.save({
-              id: taskDto.failureReason.id,
-              name: taskDto.failureReason.name,
-              description: taskDto.failureReason.description,
-              tenant: { id: taskDto.failureReason.tenantId },
-            });
-          }
-    
-          // Save the report task
-          await this.reportTaskRepo.save({
-            id: taskDto.id,
-            report: savedReport,
-            planTask: { id: taskDto.planTaskId },
-            failureReason,
-            actualValue: taskDto.actualValue,
-            isAchieved: taskDto.isAchieved,
-            customReason: taskDto.customReason,
-            tenant: { id: taskDto.tenantId },
-          });
-        }
-    
-        return savedReport;
+      
+        // Step 2: Save the Report entity
+        const savedReport = await this.reportRepository.save(report);
+      
+       
+      
+        // Step 5: Return the saved report and its associated tasks
+        return {
+          report: savedReport,
+        };
       }
-async getAllReportsByTenantAndPeriod(tenantId: string, userIds: string[],planningPeriodId:string): Promise<any[]> {
-  // Fetch reports that match the tenantId and userIds
+      
 
-  const reports = await this.reportRepo.createQueryBuilder('report')
-  .leftJoinAndSelect('report.reportTask', 'report_task') // Join with report_task
-  .where('report.tenantId = :tenantId', { tenantId })
-  .andWhere('report.userId IN (:...userIds)', { userIds })
-  .getMany();
+      async getAllReportsByTenantAndPeriod(
+        tenantId: UUID, 
+        userIds: string[], 
+        planningPeriodId: string
+      ): Promise<any> {
+        // Use queryBuilder to fetch reports with complex filtering
+        const reports = await this.reportRepository
+        .createQueryBuilder('report') // Start from the 'report' entity
+        .leftJoinAndSelect('report.reportTask', 'reportTask') // Join 'reportTask'
+        .leftJoinAndSelect('reportTask.planTask', 'planTask') // Join 'planTask'
+        .leftJoinAndSelect('planTask.plan', 'plan') // Join 'plan'
+        .leftJoinAndSelect('plan.planningUser', 'planningUser') // Join 'planningUser'
+        .leftJoinAndSelect('planTask.keyResult', 'keyResult') // Join 'keyResult'
+        .leftJoinAndSelect('planTask.milestone', 'milestone') // Join 'milestone'
+      
+        // Apply filtering conditions
+        .where('report.tenantId = :tenantId', { tenantId }) // Filter by tenantId
+        .andWhere(userIds.includes('all') ? '1=1' : 'report.userId IN (:...userIds)', userIds.includes('all') ? {} : { userIds }) 
+        .andWhere('planningUser.planningPeriodId = :planningPeriodId', { planningPeriodId }) // Filter by planningPeriodId
+      
+        // Order by createdAt in descending order (latest first)
+        .orderBy('report.createdAt', 'DESC')
+      
+        .getMany(); // Fetch the results
+      
 
-// Structure the data by grouping reports under each user
-const groupedResults = userIds.map(id => {
-  const userReports = reports.filter(report => report.userId === id);
-  return {
-    userId: id,
-    reports: userReports.map(report => ({
-      id: report.id,
-      createdAt: report.createdAt,
-      updatedAt: report.updatedAt,
-      deletedAt: report.deletedAt,
-      status: report.status,
-      reportScore: report.reportScore,
-      reportTitle: report.reportTitle,
-      tenantId: report.tenantId,
-      userId: report.userId,
-      tasks: report.reportTask // Fetch and include all reportTask attributes
-    }))
-  };
-});
-
-return groupedResults;
-}
+        return reports;
+      }
       
 
         // Method to delete a report by id and tenantId
-  async deleteReport(id: string, tenantId: string): Promise<void> {
-    const report = await this.reportRepo.findOne({
-      where: { id, tenant: { id: tenantId } },  // Ensure the tenantId matches
+  async deleteReport(id: string, tenantId: UUID): Promise<void> {
+    const report = await this.reportRepository.findOne({
+      where: {tenantId: tenantId  },  // Ensure the tenantId matches
     });
 
     if (!report) {
       throw new NotFoundException(`Report with ID not found`);
     }
-    await this.reportRepo.remove(report);
+    await this.reportRepository.remove(report);
   }
 }

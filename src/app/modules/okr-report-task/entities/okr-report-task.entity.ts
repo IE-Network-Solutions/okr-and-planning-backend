@@ -4,7 +4,8 @@ import { ReportStatusEnum } from '@root/src/core/interfaces/reportStatus.type';
 import { ReportComment } from '../../report-comments/entities/report-comment.entity';
 import { Report } from '../../okr-report/entities/okr-report.entity';
 import { FailureReason } from '../../failure-reason/entities/failure-reason.entity';
-import { Plan } from '../../okr-report/entities/mock-plan.entity';
+import { Plan } from '../../plan/entities/plan.entity';
+import { PlanTask } from '../../plan-tasks/entities/plan-task.entity';
 
 @Entity()
 export class ReportTask extends BaseModel {
@@ -24,25 +25,41 @@ export class ReportTask extends BaseModel {
   customReason: string;
 
   // Many reports can belong to one Task
-  @ManyToOne(() => Report, (report) => report.reportTask)
+  @ManyToOne(() => Report, (report) => report.reportTask,{
+    onDelete: 'SET NULL',
+    onUpdate: 'CASCADE',
+    // eager: true,
+  })
   report: Report;
 
   @Column({ nullable: true })
   reportId: string;
 
-  @ManyToOne(() => Plan, (plan) => plan.planTask)
-  planTask: Plan;
+  @ManyToOne(() => PlanTask, (plan) => plan.planTask,{
+    onDelete: 'SET NULL',
+    onUpdate: 'CASCADE',
+    // eager: true,
+  })
+  planTask: PlanTask;
 
   @Column({ nullable: true })
   planTaskId: string;
 
-  @ManyToOne(() => FailureReason, (failureReason) => failureReason.reportTask)
+  @ManyToOne(() => FailureReason, (failureReason) => failureReason.reportTask,{
+    onDelete: 'SET NULL',
+    onUpdate: 'CASCADE',
+    // eager: true,
+  })
   failureReason: FailureReason;
 
   @Column({ nullable: true })
   failureReasonId: string;
 
   // One report can have many comments
-  @OneToMany(() => ReportComment, (reportComment) => reportComment.report, { cascade: true })
+  @OneToMany(() => ReportComment, (reportComment) => reportComment.report, {
+    onDelete: 'SET NULL',
+    onUpdate: 'CASCADE',
+    // eager: true,
+  })
   comments: ReportComment[];
 }

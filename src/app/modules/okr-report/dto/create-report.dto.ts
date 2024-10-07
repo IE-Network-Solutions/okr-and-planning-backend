@@ -1,30 +1,28 @@
-import { IsEnum, IsInt, IsUUID } from 'class-validator';
+import { IsEnum, IsInt, IsString, IsUUID } from 'class-validator';
 import { ReportTaskDTO } from '../../okr-report-task/dto/create-okr-report-task.dto';
+import { ReportStatusEnum } from '@root/src/core/interfaces/reportStatus.type';
 
-enum ReportStatusEnum {
-  DRAFT = 'Draft',
-  APPROVED = 'Approved',
-  // Add other statuses as needed
-}
 
-export class ReportDTO {
-//   @IsUUID()
-//   id?: string;
 
-  @IsUUID()
-  userId: string;
+export class CreateReportDTO {
+  @IsString()
+  reportTitle: string;
 
-  @IsUUID()
-  planId: string;
+  @IsString()
+  userId?: string;
 
-  @IsEnum(ReportStatusEnum)
-  status: ReportStatusEnum;
+  @IsString()
+  planId?: string;
 
-  @IsInt()
-  reportScore: number;
+  // @IsString(ReportStatusEnum)
+  @IsString()
+  status?: ReportStatusEnum;
 
-  @IsUUID()
+  @IsString()
+  reportScore?: string;
+
+  @IsString()
   tenantId: string;
 
-  tasks: ReportTaskDTO[];  // An array of tasks for the report
+  tasks?: ReportTaskDTO[]; // An array of tasks for the report
 }

@@ -1,33 +1,38 @@
 import { IsBoolean, IsOptional, IsString, IsUUID } from 'class-validator';
 import { CreateFailureReasonDto } from '../../failure-reason/dto/create-failure-reason.dto';
+type Status = 'Done' | 'Not Done'; // Define the allowed status values
 
 export class ReportTaskDTO {
-  @IsUUID()
-  id: string;
+  [key: string]: {
+    status: Status;
+    failureReasonId?: string;
+    isAchieved?: boolean;
+    reason?: string;
+    failureReason?: CreateFailureReasonDto;
+  };
+  // @IsString()
+  // planTaskId: string;
 
-  @IsUUID()
-  reportId: string;
+  // @IsString()
+  // status?: string;
 
-  @IsUUID()
-  planTaskId: string;
+  // @IsOptional()
+  // @IsString()
+  // failureReasonId?: string;
 
-  @IsOptional()
-  @IsUUID()
-  failureReasonId?: string;
+  // @IsString()
+  // actualValue?: string;
 
-  @IsString()
-  actualValue: string;
+  // @IsBoolean()
+  // isAchieved?: boolean;
 
-  @IsBoolean()
-  isAchieved: boolean;
+  // @IsOptional()
+  // @IsString()
+  // customReason?: string;
 
-  @IsOptional()
-  @IsString()
-  customReason?: string;
+  // @IsString()
+  // tenantId: string;
 
-  @IsUUID()
-  tenantId: string;
-
-  @IsOptional()
-  failureReason?: CreateFailureReasonDto;  // Optional field for failure reason details
+  // @IsOptional()
+  // failureReason?: CreateFailureReasonDto;  // Optional field for failure reason details
 }

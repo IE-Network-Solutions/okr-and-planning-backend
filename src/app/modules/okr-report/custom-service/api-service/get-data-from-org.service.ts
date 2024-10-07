@@ -42,4 +42,39 @@ export class OrgEmployeeInformationApiService {
       );
     }
   }
+
+
+  async groupReportTasksByKeyResult(reports: any[]):Promise<any> {
+    return reports.map((report) => {
+      const groupedTasks = report.reportTask.reduce((acc, task) => {
+        // Extract keyResultId and planTaskId from each reportTask
+        const keyResultId = task.planTask?.keyResult?.id;
+        const planTaskId = task.planTask?.id;
+  
+        // Create a unique key combining keyResultId and planTaskId
+        const groupKey = `${keyResultId}-${planTaskId}`;
+  
+        // If this group key doesn't exist, initialize it
+        if (!acc[groupKey]) {
+          acc[groupKey] = {
+            keyResult: task.planTask?.keyResult,
+            tasks: [],
+          };
+        }
+  
+        // Push the current task into the corresponding group
+        acc[groupKey].tasks.push(task);
+  
+        return acc;
+      }, {});
+  
+      // Convert the grouped tasks into an array of key results
+      const keyResultKey = Object.values(groupedTasks);
+  
+      return {
+        ...report,
+        keyResultKey, // Add the grouped key results to the report object
+      };
+    });
+  }
 }

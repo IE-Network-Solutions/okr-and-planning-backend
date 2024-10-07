@@ -35,7 +35,19 @@ export class PlanTask extends BaseModel {
 
   @Column({ type: 'int' })
   level: number;
+//////////////// ahmed changes  ////////////////////////
 
+  @Column({ type: 'text',nullable:true })
+  status: string;
+
+  @Column({ type: 'boolean',default:false })
+  achieveMK: boolean;
+
+  @Column({ type: 'int',default:0 })
+  actualValue : number;
+
+
+  ///////////////////////////////
   @Column({ type: 'uuid' })
   tenantId: string;
 
@@ -53,6 +65,9 @@ export class PlanTask extends BaseModel {
   })
   keyResult: KeyResult;
 
+  @Column()
+  keyResultId:string;
+
   @ManyToOne(() => Milestone, (milestone) => milestone.id, {
     onDelete: 'SET NULL',
     onUpdate: 'CASCADE',
@@ -60,4 +75,8 @@ export class PlanTask extends BaseModel {
     eager: true,
   })
   milestone: Milestone;
+
+  @Column({nullable:true})
+  milestoneId:string;
+
 }
