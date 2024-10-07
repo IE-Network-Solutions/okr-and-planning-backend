@@ -3,13 +3,12 @@ import {
   IsEnum,
   IsInt,
   IsNotEmpty,
-  IsNumber,
   IsOptional,
   IsString,
   ValidateNested,
 } from 'class-validator';
 import { Priority } from '../entities/priority.enum';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 
 export class CreatePlanTaskDto {
   @IsString()
@@ -19,9 +18,9 @@ export class CreatePlanTaskDto {
   @IsString()
   task: string;
 
-  @IsNumber()
   @IsOptional()
-  targetValue?: number;
+  @Transform(({ value }) => (value ? BigInt(value) : undefined))
+  targetValue?: bigint;
 
   @IsEnum(Priority)
   priority: Priority;

@@ -283,7 +283,10 @@ export class PlanTasksService {
   }
 
   // eslint-disable-next-line prettier/prettier
-  async update(updatePlanTasksDto: UpdatePlanTaskDto[], tenantId: string): Promise<Plan> {
+  async update(
+    updatePlanTasksDto: UpdatePlanTaskDto[],
+    tenantId: string,
+  ): Promise<Plan> {
     try {
       const updatedPlans: string[] = [];
 

@@ -39,10 +39,7 @@ configuration values obtained from a ConfigService. */
       }),
       inject: [ConfigService],
     }),
-
-    HealthModule,
   ],
-
   providers: [
     {
       provide: APP_GUARD,
@@ -53,5 +50,7 @@ configuration values obtained from a ConfigService. */
       useClass: AuthGuard,
     },
   ],
+
+  
 })
 export class AppModule {}
