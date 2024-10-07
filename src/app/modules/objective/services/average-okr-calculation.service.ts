@@ -25,6 +25,9 @@ export class AverageOkrCalculation {
       ? sumOfTeamObjectiveProgress / objectives.length
       : 0),
       (calculatedOkr.okrCompleted = completedOkr);
+    calculatedOkr.keyResultcount = objectives.flatMap(
+      (item) => item.keyResults,
+    ).length;
     return calculatedOkr;
   }
 
