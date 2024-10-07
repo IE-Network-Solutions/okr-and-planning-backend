@@ -1,4 +1,9 @@
-import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import * as admin from 'firebase-admin';
 
@@ -15,7 +20,8 @@ export class AuthGuard implements CanActivate {
       return true;
     }
     const token = request.headers.authorization;
-    const newToken = token?.split(' ')[1];
+
+    const newToken = token.split(' ')[1];
 
     if (!token) {
       return false;
@@ -23,11 +29,13 @@ export class AuthGuard implements CanActivate {
 
     try {
       const decodedToken = await admin.auth().verifyIdToken(newToken);
+      //console.log(decodedToken,"token")
       request.user = decodedToken;
+      request.token = token;
 
       return true;
     } catch (error) {
-      return false;
+      throw new UnauthorizedException('Invalid or expired token');
     }
   }
 }

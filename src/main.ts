@@ -34,9 +34,15 @@ async function bootstrap() {
     throw error;
   }
   app.use(helmet());
-  app.enableCors({
-    origin: '*',
-  });
+  app.enableCors();
+
+  try {
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount(configService) as any),
+    });
+  } catch (error) {
+    throw error;
+  }
   setupSwagger(app);
   app.use(cookieParser());
 

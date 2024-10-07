@@ -8,7 +8,8 @@ export default async function filterEntities<T>(
   queryBuilder: SelectQueryBuilder<T>,
   filters: FilterOptions,
   anyRepository: any,
-  filterableFields: string[],
+  filterableFields?: string[],
+  comparisonDto?: any,
 ): Promise<SelectQueryBuilder<T>> {
   const metadata: EntityMetadata = anyRepository.metadata;
   const tableAlias = queryBuilder.alias || metadata.tableName;
@@ -40,6 +41,15 @@ export default async function filterEntities<T>(
         }
       }
     }
+  }
+  if (comparisonDto) {
+    Object.entries(comparisonDto).forEach(([column, value], index) => {
+      if (value !== undefined) {
+        queryBuilder.andWhere(`${tableAlias}.${column} = :value${index}`, {
+          [`value${index}`]: value,
+        });
+      }
+    });
   }
   const searchString = filters.searchString?.toLowerCase();
   if (searchString && filterableFields.length > 0) {
