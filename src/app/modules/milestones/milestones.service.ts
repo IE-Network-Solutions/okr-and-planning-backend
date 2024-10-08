@@ -46,12 +46,14 @@ export class MilestonesService {
     createMilestoneDto: CreateMilestoneDto[],
     tenantId: string,
     keyResultId: string,
+    userId: string,
     queryRunner?: QueryRunner,
   ) {
     try {
       const keyResults = await Promise.all(
         createMilestoneDto.map(async (mile) => {
           mile.keyResultId = keyResultId;
+          mile['createdBy'] = userId;
           const singleKeyResult = await this.createMilestone(
             mile,
             tenantId,

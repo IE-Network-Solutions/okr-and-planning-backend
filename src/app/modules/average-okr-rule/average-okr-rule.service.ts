@@ -24,9 +24,10 @@ export class AverageOkrRuleService {
     createAverageOkrRuleDto: CreateAverageOkrRuleDto,
     tenantId: string,
   ): Promise<AverageOkrRule> {
-    const AverageOkrRule = this.averageOkrRuleRepository.create(
-      createAverageOkrRuleDto,
-    );
+    const AverageOkrRule = this.averageOkrRuleRepository.create({
+      ...createAverageOkrRuleDto,
+      tenantId,
+    });
 
     return await this.averageOkrRuleRepository.save(AverageOkrRule);
   }
@@ -94,5 +95,18 @@ export class AverageOkrRuleService {
     }
     await this.averageOkrRuleRepository.softRemove({ id });
     return AverageOkrRule;
+  }
+
+  async findOneAverageOkrRuleByTenant(
+    tenantId: string,
+  ): Promise<AverageOkrRule> {
+    try {
+      const AverageOkrRule = await this.averageOkrRuleRepository.findOne({
+        where: { tenantId: tenantId },
+      });
+      return AverageOkrRule;
+    } catch (error) {
+      throw new NotFoundException(`AverageOkrRule Not found`);
+    }
   }
 }

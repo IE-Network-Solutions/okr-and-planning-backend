@@ -8,6 +8,7 @@ import {
   Delete,
   Req,
   Query,
+  Put,
 } from '@nestjs/common';
 import { AverageOkrRuleService } from './average-okr-rule.service';
 import { CreateAverageOkrRuleDto } from './dto/create-average-okr-rule.dto';
@@ -47,7 +48,7 @@ export class AverageOkrRuleController {
     return this.averageOkrRuleService.findOneAverageOkrRule(id);
   }
 
-  @Patch(':id')
+  @Put(':id')
   updateAverageOkrRule(
     @Req() req: Request,
     @Param('id') id: string,

@@ -8,7 +8,7 @@ export const keyResultData = (): KeyResult => {
     objectiveId: '60ae2e8d-2904-40d0-ba3d-7e5ec7625774',
 
     title: 'key result',
-
+    lastUpdateValue: 0,
     description: 'key result',
 
     deadline: new Date('2022-10-22 07:11:42'),

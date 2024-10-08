@@ -11,6 +11,13 @@ import { ReportCommentsModule } from './modules/report-comments/report-comments.
 import { OkrReportModule } from './modules/okr-report/okr-report.module';
 import { OkrReportTaskModule } from './modules/okr-report-task/okr-report-task.module';
 import { FailureReasonModule } from './modules/failure-reason/failure-reason.module';
+import { OkrProgressModule } from './modules/okr-progress/okr-progress.module';
+
+import { ReprimandLogModule } from './modules/reprimandLog/reprimand-log.module';
+import { AppreciationModule } from './modules/appreciationLog/appreciation.module';
+import { CarbonCopyLog } from './modules/carbonCopyLlog/entities/carbon-copy-log.entity';
+import { RecognitionTypeModule } from './modules/recognitionType/recognition-type.module';
+import { DashboardModule } from './modules/dashboard/dashboard.module';
 @Global()
 @Module({
   imports: [
@@ -26,6 +33,13 @@ import { FailureReasonModule } from './modules/failure-reason/failure-reason.mod
     OkrReportModule,
     OkrReportTaskModule,
     FailureReasonModule,
+    OkrProgressModule,
+    RecognitionTypeModule,
+    ReprimandLogModule,
+    AppreciationModule,
+    CarbonCopyLog,
+    DashboardModule,
   ],
 })
 export class CoreModule {}
+

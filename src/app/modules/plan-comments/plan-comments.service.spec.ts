@@ -1,18 +1,35 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
+import { PaginationService } from '@root/src/core/pagination/pagination.service';
+import { mock } from 'jest-mock-extended';
+import { getRepositoryToken } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { PlanCommentsService } from './plan-comments.service';
+import { Plan } from '../plan/entities/plan.entity';
+import { PlanComment } from './entities/plan-comment.entity';
 
 describe('PlanCommentsService', () => {
-  let service: PlanCommentsService;
+  let planCommentsService: PlanCommentsService;
 
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [PlanCommentsService],
+    const moduleRef = await Test.createTestingModule({
+      providers: [
+        PlanCommentsService,
+        {
+          provide: getRepositoryToken(PlanComment),
+          useValue: mock<Repository<PlanComment>>(),
+        },
+        {
+          provide: getRepositoryToken(Plan),
+          useValue: mock<Repository<Plan>>(),
+        },
+      ],
     }).compile();
 
-    service = module.get<PlanCommentsService>(PlanCommentsService);
+    planCommentsService =
+      moduleRef.get<PlanCommentsService>(PlanCommentsService);
   });
 
   it('should be defined', () => {
-    expect(service).toBeDefined();
+    expect(planCommentsService).toBeDefined();
   });
 });

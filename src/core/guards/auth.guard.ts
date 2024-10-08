@@ -20,6 +20,7 @@ export class AuthGuard implements CanActivate {
       return true;
     }
     const token = request.headers.authorization;
+
     const newToken = token.split(' ')[1];
 
     if (!token) {
@@ -28,6 +29,7 @@ export class AuthGuard implements CanActivate {
 
     try {
       const decodedToken = await admin.auth().verifyIdToken(newToken);
+      //console.log(decodedToken,"token")
       request.user = decodedToken;
       request.token = token;
 

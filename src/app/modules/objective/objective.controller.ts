@@ -9,7 +9,7 @@ import {
   Query,
   Put,
 } from '@nestjs/common';
-import { ObjectiveService } from './objective.service';
+import { ObjectiveService } from './services/objective.service';
 import { CreateObjectiveDto } from './dto/create-objective.dto';
 import { UpdateObjectiveDto } from './dto/update-objective.dto';
 import { Objective } from './entities/objective.entity';
@@ -38,12 +38,14 @@ export class ObjectiveController {
   async findAllObjectives(
     @Req() req: Request,
     @Param('userId') userId: string,
+    @Query() filterDto?: FilterObjectiveDto,
     @Query() paginationOptions?: PaginationDto,
   ) {
     const tenantId = req['tenantId'];
     return this.objectiveService.findAllObjectives(
       userId,
       tenantId,
+      filterDto,
       paginationOptions,
     );
   }

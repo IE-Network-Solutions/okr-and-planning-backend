@@ -1,20 +1,65 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
+import { getRepositoryToken } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { PaginationService } from '@root/src/core/pagination/pagination.service';
 import { PlanTasksController } from './plan-tasks.controller';
 import { PlanTasksService } from './plan-tasks.service';
+import { PlanTask } from './entities/plan-task.entity';
+import { PlanningPeriodUser } from '../planningPeriods/planning-periods/entities/planningPeriodUser.entity';
+import { Plan } from '../plan/entities/plan.entity';
+import { MilestonesService } from '../milestones/milestones.service';
+import { KeyResultsService } from '../key-results/key-results.service';
+import { mock } from 'jest-mock-extended';
 
 describe('PlanTasksController', () => {
-  let controller: PlanTasksController;
+  let planTasksController: PlanTasksController;
+  let planTasksService: PlanTasksService;
+  let planTaskRepository: Repository<PlanTask>;
 
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    const moduleRef = await Test.createTestingModule({
       controllers: [PlanTasksController],
-      providers: [PlanTasksService],
+      providers: [
+        PlanTasksService,
+        {
+          provide: getRepositoryToken(PlanTask),
+          useClass: Repository,
+        },
+        {
+          provide: getRepositoryToken(PlanningPeriodUser),
+          useClass: Repository,
+        },
+        {
+          provide: getRepositoryToken(Plan),
+          useClass: Repository,
+        },
+        {
+          provide: PaginationService,
+          useValue: {
+            paginate: jest.fn(),
+          },
+        },
+        {
+          provide: MilestonesService,
+          useValue: mock<MilestonesService>(),
+        },
+        {
+          provide: KeyResultsService,
+          useValue: mock<KeyResultsService>(),
+        },
+      ],
     }).compile();
 
-    controller = module.get<PlanTasksController>(PlanTasksController);
+    planTasksController =
+      moduleRef.get<PlanTasksController>(PlanTasksController);
+    planTasksService = moduleRef.get<PlanTasksService>(PlanTasksService);
+    planTaskRepository = moduleRef.get<Repository<PlanTask>>(
+      getRepositoryToken(PlanTask),
+    );
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {
-    expect(controller).toBeDefined();
+    expect(planTasksController).toBeDefined();
   });
 });

@@ -1,23 +1,36 @@
 version: '3'
 services:
-  db:
+  okrdb:
     image: postgres
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: postgres
     ports:
-      - "5432:5432"
+      - '5434:5432'
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-  app:
+      - okr_postgres_data:/var/lib/postgresql/data
+  dbadminokrweb:
+    image: dpage/pgadmin4
+    container_name: dbadminokrweb
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - '5050:80'
+    depends_on:
+      - okrdb
+  okrapp:
     build:
       context: ./
       dockerfile: Dockerfile
       target: development
     ports:
-      - "3000:3000"
+      - '5000:5000'
     depends_on:
-      - db
+      - okrdb
+    env_file: .env
+    volumes:
+      - ./:/app
 volumes:
-  postgres_data:
+  okr_postgres_data:

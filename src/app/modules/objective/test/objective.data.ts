@@ -1,6 +1,6 @@
-import { Objective } from '../entities/Objective.entity';
-import { CreateObjectiveDto } from '../dto/create-Objective.dto';
+import { CreateObjectiveDto } from '../dto/create-objective.dto';
 import { Pagination } from 'nestjs-typeorm-paginate';
+import { Objective } from '../entities/objective.entity';
 
 export const objectiveData = (): Objective => {
   return {
