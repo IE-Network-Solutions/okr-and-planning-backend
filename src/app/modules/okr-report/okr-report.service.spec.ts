@@ -1,18 +1,46 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
+import { mock } from 'jest-mock-extended';
+import { getRepositoryToken } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { OkrReportService } from './okr-report.service';
+import { Report } from './entities/okr-report.entity';
+import { ReportTask } from '../okr-report-task/entities/okr-report-task.entity';
+import { Plan } from '../plan/entities/plan.entity';
+import { PlanTask } from '../plan-tasks/entities/plan-task.entity';
 
 describe('OkrReportService', () => {
-  let service: OkrReportService;
+  let okrReportService: OkrReportService;
+
 
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [OkrReportService],
+    const moduleRef = await Test.createTestingModule({
+      providers: [
+        OkrReportService,
+        {
+          provide: getRepositoryToken(Report),
+          useValue: mock<Repository<Report>>(),
+        },
+        {
+          provide: getRepositoryToken(ReportTask),
+          useValue: mock<Repository<ReportTask>>(),
+        },
+        {
+          provide: getRepositoryToken(Plan),
+          useValue: mock<Repository<Plan>>(),
+        },
+        {
+          provide: getRepositoryToken(PlanTask),
+          useValue: mock<Repository<PlanTask>>(),
+        },
+      ],
     }).compile();
 
-    service = module.get<OkrReportService>(OkrReportService);
+    okrReportService = moduleRef.get<OkrReportService>(
+      OkrReportService,
+    );
   });
 
   it('should be defined', () => {
-    expect(service).toBeDefined();
+    expect(okrReportService).toBeDefined();
   });
 });

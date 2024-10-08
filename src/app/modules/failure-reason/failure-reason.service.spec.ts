@@ -1,18 +1,30 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
+import { mock } from 'jest-mock-extended';
+import { getRepositoryToken } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { FailureReasonService } from './failure-reason.service';
+import { FailureReason } from './entities/failure-reason.entity';
 
 describe('FailureReasonService', () => {
-  let service: FailureReasonService;
+  let failureReasonService: FailureReasonService;
 
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [FailureReasonService],
+    const moduleRef = await Test.createTestingModule({
+      providers: [
+        FailureReasonService,
+        {
+          provide: getRepositoryToken(FailureReason),
+          useValue: mock<Repository<FailureReason>>(),
+        },
+      ],
     }).compile();
 
-    service = module.get<FailureReasonService>(FailureReasonService);
+    failureReasonService = moduleRef.get<FailureReasonService>(
+      FailureReasonService,
+    );
   });
 
   it('should be defined', () => {
-    expect(service).toBeDefined();
+    expect(failureReasonService).toBeDefined();
   });
 });

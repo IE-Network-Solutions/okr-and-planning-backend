@@ -5,7 +5,6 @@ import { In, Repository } from 'typeorm';
 import { ReportTask } from '../okr-report-task/entities/okr-report-task.entity';
 import { CreateReportDTO } from './dto/create-report.dto';
 import { UUID } from 'crypto';
-import { ReportStatusEnum } from '@root/src/core/interfaces/reportStatus.type';
 
 @Injectable()
 export class OkrReportService {
