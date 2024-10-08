@@ -5,10 +5,10 @@ import { FailureReasonService } from './failure-reason.service';
 import { FailureReasonController } from './failure-reason.controller';
 import { FailureReason } from './entities/failure-reason.entity';
 
-describe('AverageOkrRuleController', () => {
+describe('FailureReasonController', () => {
   let failureReasonController: FailureReasonController;
   let failureReasonService: FailureReasonService;
-  let FailureReasonRepository: Repository<FailureReason>;
+  let failureReasonRepository: Repository<FailureReason>;
 
   beforeEach(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -28,7 +28,7 @@ describe('AverageOkrRuleController', () => {
     failureReasonService = moduleRef.get<FailureReasonService>(
       FailureReasonService,
     );
-    FailureReasonRepository = moduleRef.get<Repository<FailureReason>>(
+    failureReasonRepository = moduleRef.get<Repository<FailureReason>>(
       getRepositoryToken(FailureReason),
     );
     jest.clearAllMocks();
