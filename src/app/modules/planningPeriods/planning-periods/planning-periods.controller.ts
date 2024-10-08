@@ -17,12 +17,14 @@ import { Pagination } from 'nestjs-typeorm-paginate';
 import { ApiTags } from '@nestjs/swagger';
 import { PlanningPeriodUser } from './entities/planningPeriodUser.entity';
 import { AssignUsersDTO } from './dto/assignUser.dto';
+import { ExcludeAuthGuard } from '@root/src/core/guards/exclud.guard';
 
 @Controller('planning-periods')
 @ApiTags('Planning-periods')
 export class PlanningPeriodsController {
   constructor(private readonly planningPeriodService: PlanningPeriodsService) {}
   @Post()
+  @ExcludeAuthGuard()
   async createPlanningPeriod(
     @Req() req: Request,
     @Body() createPlanningPeriodsDto: CreatePlanningPeriodsDTO,
@@ -66,6 +68,7 @@ export class PlanningPeriodsController {
   }
 
   @Delete(':id')
+  @ExcludeAuthGuard()
   async removePlanningPeriod(@Param('id') id: string): Promise<PlanningPeriod> {
     return await this.planningPeriodService.removePlanningPeriod(id);
   }
