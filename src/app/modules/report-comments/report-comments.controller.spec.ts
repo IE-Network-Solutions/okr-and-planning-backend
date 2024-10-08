@@ -9,7 +9,7 @@ import { Report } from '../okr-report/entities/okr-report.entity';
 describe('ReportCommentsController', () => {
   let reportCommentsController: ReportCommentsController;
   let reportCommentsService: ReportCommentsService;
-  let ReportCommentRepository: Repository<ReportComment>;
+  let reportCommentRepository: Repository<ReportComment>;
 
   beforeEach(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -33,7 +33,7 @@ describe('ReportCommentsController', () => {
     reportCommentsService = moduleRef.get<ReportCommentsService>(
       ReportCommentsService,
     );
-    ReportCommentRepository = moduleRef.get<Repository<ReportComment>>(
+    reportCommentRepository = moduleRef.get<Repository<ReportComment>>(
       getRepositoryToken(ReportComment),
     );
     jest.clearAllMocks();
