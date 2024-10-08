@@ -5,16 +5,16 @@ import axios from 'axios';
 export class OrgEmployeeInformationApiService {
   
   // It's better to initialize the ORG_SERVER directly from the environment variable
-  private ORG_SERVER = process.env.ORG_SERVER;
+  private orgServer = process.env.ORG_SERVER;
 
   async getUserInfo(tenantId: string, userIds: string[]): Promise<any> {
-    if (!this.ORG_SERVER) {
+    if (!this.orgServer) {
       throw new HttpException('ORG_SERVER URL not defined', HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     try {
       // Make a GET request to the external API, passing tenantId in headers
-      const response = await axios.get(`${this.ORG_SERVER}/users/info/user-info`, {
+      const response = await axios.get(`${this.orgServer}/users/info/user-info`, {
         headers: {
           tenantId: tenantId, // Add tenantId to headers
         },
@@ -26,7 +26,6 @@ export class OrgEmployeeInformationApiService {
       // Return the response data
       return response.data;
     } catch (error) {
-      console.error('Error fetching user info:', error);
 
       // Handle different response errors (if Axios provides one)
       if (error.response) {
