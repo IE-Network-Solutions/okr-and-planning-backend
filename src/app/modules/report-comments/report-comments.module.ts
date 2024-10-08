@@ -6,7 +6,7 @@ import { ReportComment } from './entities/report-comment.entity';
 import { Report } from '../okr-report/entities/okr-report.entity';
 @Module({
   imports: [
-    TypeOrmModule.forFeature([ReportComment, Report]) // Ensure all required repositories are included
+    TypeOrmModule.forFeature([ReportComment, Report]), // Ensure all required repositories are included
   ],
   providers: [ReportCommentsService],
   controllers: [ReportCommentsController],

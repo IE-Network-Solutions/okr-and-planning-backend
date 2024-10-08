@@ -9,6 +9,5 @@ import { FailureReason } from './entities/failure-reason.entity';
   controllers: [FailureReasonController],
   providers: [FailureReasonService],
   exports: [FailureReasonService],
-
 })
 export class FailureReasonModule {}

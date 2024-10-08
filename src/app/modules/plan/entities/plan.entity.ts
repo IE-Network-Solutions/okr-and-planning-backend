@@ -18,10 +18,10 @@ import { Report } from '../../okr-report/entities/okr-report.entity';
 @Entity()
 @Tree('closure-table')
 export class Plan extends BaseModel {
-  @Column({ type: 'uuid',nullable:true })
+  @Column({ type: 'uuid', nullable: true })
   userId: string;
 
-  @Column({ type: 'uuid',nullable:true })
+  @Column({ type: 'uuid', nullable: true })
   tenantId: string;
 
   @Column({ type: 'text', nullable: true })
@@ -39,7 +39,7 @@ export class Plan extends BaseModel {
   @TreeParent()
   parentPlan: Plan;
 
-  @Column({ type: 'int',nullable:true })
+  @Column({ type: 'int', nullable: true })
   level: number;
 
   @ManyToOne(() => PlanningPeriodUser, (planningUser) => planningUser.id, {
@@ -49,8 +49,7 @@ export class Plan extends BaseModel {
   })
   planningUser: PlanningPeriodUser;
 
-  
-  @Column({ type: 'uuid',nullable:true })
+  @Column({ type: 'uuid', nullable: true })
   planningUserId: string;
 
   @OneToMany(() => PlanTask, (planTask) => planTask.plan, {

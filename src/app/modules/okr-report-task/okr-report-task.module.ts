@@ -10,9 +10,17 @@ import { Plan } from '../plan/entities/plan.entity';
 import { OkrReportService } from '../okr-report/okr-report.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([ReportTask,Report,PlanTask,PlanningPeriodUser,Plan])],
+  imports: [
+    TypeOrmModule.forFeature([
+      ReportTask,
+      Report,
+      PlanTask,
+      PlanningPeriodUser,
+      Plan,
+    ]),
+  ],
   controllers: [OkrReportTaskController],
-  providers: [OkrReportTaskService,OkrReportService],
+  providers: [OkrReportTaskService, OkrReportService],
   exports: [OkrReportTaskService],
 })
 export class OkrReportTaskModule {}

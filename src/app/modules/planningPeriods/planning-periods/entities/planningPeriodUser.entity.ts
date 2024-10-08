@@ -19,6 +19,4 @@ export class PlanningPeriodUser extends BaseModel {
     eager: true,
   })
   planningPeriod: PlanningPeriod;
-
-
 }

@@ -4,12 +4,13 @@ import { CreateReportCommentDto } from './dto/create-report-coment.dto';
 
 @Controller('report-comments')
 export class ReportCommentsController {
-
   constructor(private readonly reportCommentService: ReportCommentsService) {}
 
   @Post()
   async createComment(@Body() createReportCommentDto: CreateReportCommentDto) {
-    return await this.reportCommentService.createComment(createReportCommentDto);
+    return await this.reportCommentService.createComment(
+      createReportCommentDto,
+    );
   }
 
   @Get('report/:reportId')

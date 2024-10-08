@@ -1,5 +1,12 @@
 import { BaseModel } from '@root/src/database/base.model';
-import { Entity, Column, ManyToOne, OneToOne, JoinColumn, OneToMany } from 'typeorm';
+import {
+  Entity,
+  Column,
+  ManyToOne,
+  OneToOne,
+  JoinColumn,
+  OneToMany,
+} from 'typeorm';
 import { ReportStatusEnum } from '@root/src/core/interfaces/reportStatus.type';
 import { ReportComment } from '../../report-comments/entities/report-comment.entity';
 import { Report } from '../../okr-report/entities/okr-report.entity';
@@ -12,20 +19,20 @@ export class ReportTask extends BaseModel {
   @Column()
   status: ReportStatusEnum;
 
-  @Column()
+  @Column({ nullable: true })
   actualValue: string;
 
   @Column()
   isAchived: boolean;
 
-  @Column({nullable: true})
+  @Column({ nullable: true })
   tenantId: string; // This stores the foreign key for Tenant
 
-  @Column()
+  @Column({ nullable: true })
   customReason: string;
 
   // Many reports can belong to one Task
-  @ManyToOne(() => Report, (report) => report.reportTask,{
+  @ManyToOne(() => Report, (report) => report.reportTask, {
     onDelete: 'SET NULL',
     onUpdate: 'CASCADE',
     // eager: true,
@@ -35,7 +42,7 @@ export class ReportTask extends BaseModel {
   @Column({ nullable: true })
   reportId: string;
 
-  @ManyToOne(() => PlanTask, (plan) => plan.planTask,{
+  @ManyToOne(() => PlanTask, (plan) => plan.planTask, {
     onDelete: 'SET NULL',
     onUpdate: 'CASCADE',
     // eager: true,
@@ -45,7 +52,7 @@ export class ReportTask extends BaseModel {
   @Column({ nullable: true })
   planTaskId: string;
 
-  @ManyToOne(() => FailureReason, (failureReason) => failureReason.reportTask,{
+  @ManyToOne(() => FailureReason, (failureReason) => failureReason.reportTask, {
     onDelete: 'SET NULL',
     onUpdate: 'CASCADE',
     // eager: true,

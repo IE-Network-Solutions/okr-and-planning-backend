@@ -7,6 +7,7 @@ export class ReportTaskDTO {
     status: Status;
     failureReasonId?: string;
     isAchieved?: boolean;
+    actualValue?: number | null;
     reason?: string;
     failureReason?: CreateFailureReasonDto;
   };
