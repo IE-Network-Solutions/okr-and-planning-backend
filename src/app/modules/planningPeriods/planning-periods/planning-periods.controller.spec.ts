@@ -1,4 +1,4 @@
-import { Test } from '@nestjs/testing';
+import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { PaginationService } from '@root/src/core/pagination/pagination.service';
@@ -14,37 +14,32 @@ describe('PlanningPeriodsController', () => {
   let planningPeriodRepository: Repository<PlanningPeriod>;
 
   beforeEach(async () => {
-    const moduleRef = await Test.createTestingModule({
+    const moduleRef: TestingModule = await Test.createTestingModule({
       controllers: [PlanningPeriodsController],
       providers: [
         PlanningPeriodsService,
         {
           provide: getRepositoryToken(PlanningPeriod),
-          useClass: Repository,
+          useValue: mock<Repository<PlanningPeriod>>(), // Use mock for the repository
         },
         {
           provide: getRepositoryToken(PlanningPeriodUser),
-          useClass: Repository,
+          useValue: mock<Repository<PlanningPeriodUser>>(), // Use mock for the repository
         },
         {
           provide: PaginationService,
           useValue: {
-            paginate: jest.fn(),
+            paginate: jest.fn(), // Mock the paginate method
           },
         },
       ],
     }).compile();
 
-    planningPeriodsController = moduleRef.get<PlanningPeriodsController>(
-      PlanningPeriodsController,
-    );
-    planningPeriodsService = moduleRef.get<PlanningPeriodsService>(
-      PlanningPeriodsService,
-    );
-    planningPeriodRepository = moduleRef.get<Repository<PlanningPeriod>>(
-      getRepositoryToken(PlanningPeriod),
-    );
-    jest.clearAllMocks();
+    planningPeriodsController = moduleRef.get<PlanningPeriodsController>(PlanningPeriodsController);
+    planningPeriodsService = moduleRef.get<PlanningPeriodsService>(PlanningPeriodsService);
+    planningPeriodRepository = moduleRef.get<Repository<PlanningPeriod>>(getRepositoryToken(PlanningPeriod));
+    
+    jest.clearAllMocks(); // Clear mocks before each test
   });
 
   it('should be defined', () => {

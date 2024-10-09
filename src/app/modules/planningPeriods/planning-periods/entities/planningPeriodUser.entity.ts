@@ -10,6 +10,9 @@ export class PlanningPeriodUser extends BaseModel {
   @Column({ type: 'uuid' })
   tenantId: string;
 
+  @Column({ type: 'uuid' })
+  planningPeriodId: string;
+
   @ManyToOne(() => PlanningPeriod, (planningPeriod) => planningPeriod.id, {
     onDelete: 'SET NULL',
     onUpdate: 'CASCADE',

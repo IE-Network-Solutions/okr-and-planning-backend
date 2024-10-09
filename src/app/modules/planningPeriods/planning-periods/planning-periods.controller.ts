@@ -8,16 +8,21 @@ import {
   Delete,
   Query,
   Req,
+  Headers,
 } from '@nestjs/common';
 import { PlanningPeriodsService } from './planning-periods.service';
 import { CreatePlanningPeriodsDTO } from './dto/create-planningPeriods.dto';
 import { PlanningPeriod } from './entities/planningPeriod.entity';
 import { PaginationDto } from '@root/src/core/commonDto/pagination-dto';
 import { Pagination } from 'nestjs-typeorm-paginate';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiHeader, ApiTags } from '@nestjs/swagger';
 import { PlanningPeriodUser } from './entities/planningPeriodUser.entity';
 import { AssignUsersDTO } from './dto/assignUser.dto';
+
 import { ExcludeAuthGuard } from '@root/src/core/guards/exclud.guard';
+
+import { UUID } from 'crypto';
+
 
 @Controller('planning-periods')
 @ApiTags('Planning-periods')
@@ -96,7 +101,15 @@ export class PlanningPeriodsController {
   }
 
   @Get('assignment/assignedUser/:userId')
-  async findByUser(@Param('userId') id: string): Promise<PlanningPeriodUser[]> {
+  @ApiHeader({
+    name: 'tenantId',
+    description: 'Tenant ID for the current request',
+    required: true,
+  })
+  async findByUser(
+    @Param('userId') id: string,
+    @Headers('tenantId') tenantId: UUID,
+  ): Promise<PlanningPeriodUser[]> {
     return await this.planningPeriodService.findByUser(id);
   }
 
