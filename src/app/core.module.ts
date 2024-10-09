@@ -42,4 +42,3 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
   ],
 })
 export class CoreModule {}
-
