@@ -10,6 +10,7 @@ export const configuration = () => ({
     description: process.env.APP_DESCRIPTION,
     version: process.env.APP_VERSION,
     isProduction: Boolean(process.env.APP_IS_PRODUCTION),
+
   },
 
   db: {
@@ -20,6 +21,9 @@ export const configuration = () => ({
     password: process.env.DB_PASSWORD,
     type: process.env.DB_TYPE,
     synchronize: Boolean(process.env.DB_SYNCHRONIZE_ENTITIES),
+  },
+  apiServer: {
+    org_server: process.env.ORG_SERVER,
   },
   firebase: {
     type: process.env.TYPE,

@@ -4,6 +4,7 @@ import {
   Entity,
   ManyToOne,
   OneToMany,
+  OneToOne,
   Tree,
   TreeChildren,
   TreeParent,
@@ -11,14 +12,16 @@ import {
 import { PlanningPeriodUser } from '../../planningPeriods/planning-periods/entities/planningPeriodUser.entity';
 import { PlanTask } from '../../plan-tasks/entities/plan-task.entity';
 import { PlanComment } from '../../plan-comments/entities/plan-comment.entity';
+import { ReportTask } from '../../okr-report-task/entities/okr-report-task.entity';
+import { Report } from '../../okr-report/entities/okr-report.entity';
 
 @Entity()
 @Tree('closure-table')
 export class Plan extends BaseModel {
-  @Column({ type: 'uuid' })
+  @Column({ type: 'uuid', nullable: true })
   userId: string;
 
-  @Column({ type: 'uuid' })
+  @Column({ type: 'uuid', nullable: true })
   tenantId: string;
 
   @Column({ type: 'text', nullable: true })
@@ -36,7 +39,7 @@ export class Plan extends BaseModel {
   @TreeParent()
   parentPlan: Plan;
 
-  @Column({ type: 'int' })
+  @Column({ type: 'int', nullable: true })
   level: number;
 
   @ManyToOne(() => PlanningPeriodUser, (planningUser) => planningUser.id, {
@@ -45,6 +48,9 @@ export class Plan extends BaseModel {
     eager: true,
   })
   planningUser: PlanningPeriodUser;
+
+  @Column({ type: 'uuid', nullable: true })
+  planningUserId: string;
 
   @OneToMany(() => PlanTask, (planTask) => planTask.plan, {
     onDelete: 'SET NULL',
@@ -59,4 +65,10 @@ export class Plan extends BaseModel {
     eager: true,
   })
   comments: PlanComment[];
+
+  @OneToOne(() => Report, (report) => report.plan)
+  report: Report;
+
+  @OneToOne(() => ReportTask, (reportTask) => reportTask.planTask)
+  planTask: ReportTask;
 }
