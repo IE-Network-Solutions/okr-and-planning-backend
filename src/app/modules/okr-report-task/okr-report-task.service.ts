@@ -236,7 +236,7 @@ export class OkrReportTaskService {
           planningPeriodId,
         }) // Filter by planningPeriodId
         .andWhere('plan.isValidated = :isValidated', { isValidated: true }) // Check if isValidated is true
-        .andWhere('plan.isReported IS NULL') // Check if isReported is null
+        .andWhere('(plan.isReported IS NULL OR plan.isReported = false)') // Check if isReported is null
         .getMany();
 
       return reportTasks;
