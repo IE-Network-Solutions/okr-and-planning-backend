@@ -8,6 +8,14 @@ import { PlanTask } from '../plan-tasks/entities/plan-task.entity';
 import { PlanningPeriodUser } from '../planningPeriods/planning-periods/entities/planningPeriodUser.entity';
 import { Plan } from '../plan/entities/plan.entity';
 import { OkrReportService } from '../okr-report/okr-report.service';
+import { OkrProgressService } from '../okr-progress/okr-progress.service';
+import { KeyResultsService } from '../key-results/key-results.service';
+import { MetricTypesService } from '../metric-types/metric-types.service';
+import { MilestonesService } from '../milestones/milestones.service';
+import { KeyResult } from '../key-results/entities/key-result.entity';
+import { PaginationService } from '@root/src/core/pagination/pagination.service';
+import { MetricType } from '../metric-types/entities/metric-type.entity';
+import { Milestone } from '../milestones/entities/milestone.entity';
 
 @Module({
   imports: [
@@ -17,10 +25,20 @@ import { OkrReportService } from '../okr-report/okr-report.service';
       PlanTask,
       PlanningPeriodUser,
       Plan,
+      KeyResult,
+      MetricType,
+      Milestone
     ]),
   ],
   controllers: [OkrReportTaskController],
-  providers: [OkrReportTaskService, OkrReportService],
+  providers: [
+    OkrReportTaskService,
+    OkrReportService,
+    OkrProgressService,
+    KeyResultsService,
+    MetricTypesService,
+    PaginationService,
+    MilestonesService],
   exports: [OkrReportTaskService],
 })
 export class OkrReportTaskModule {}
