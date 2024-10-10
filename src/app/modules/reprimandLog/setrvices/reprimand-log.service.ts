@@ -155,6 +155,7 @@ export class ReprimandLogService {
     const reprimand = await this.reprimandRepository
       .createQueryBuilder('reprimandLog')
       .leftJoinAndSelect('reprimandLog.type', 'reprimandType')
+      .leftJoinAndSelect('reprimandLog.carbonCopies', 'carbonCopies')
       .where('reprimandLog.id = :id', { id })
       .getOne();
 
