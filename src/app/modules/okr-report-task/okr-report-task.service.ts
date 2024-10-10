@@ -124,7 +124,7 @@ export class OkrReportTaskService {
         (reportTask.status = value.status as ReportStatusEnum);
       reportTask.isAchived = value?.isAchieved ?? false;
       reportTask.tenantId = tenantId || null;
-      reportTask.actualValue = `${value?.actualValue}` ?? null;
+      reportTask.actualValue = value?.actualValue ? `${value?.actualValue}`:null;
       reportTask.customReason = value?.reason || null;
       reportTask.failureReasonId = value?.failureReasonId || null;
       return reportTask;
