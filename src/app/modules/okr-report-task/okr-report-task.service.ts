@@ -178,12 +178,14 @@ export class OkrReportTaskService {
     return reportScore; // Return the calculated report score
   }
 
+
   async getUnReportedPlanTasks(
     userId: string,
     planningPeriodId: string,
     tenantId: string,
   ): Promise<any> {
     try {
+
       // Fetch all plan tasks where reports have not been created yet
       const unreportedTasks = await this.planTaskRepository
         .createQueryBuilder('planTask')
@@ -196,7 +198,7 @@ export class OkrReportTaskService {
         .leftJoinAndSelect('plan.planningUser', 'planningUser') // Add relation to planningUser from the Plan entity
 
         // Fetch unreported plan tasks based on userId, tenantId, and planningPeriodId
-        .where('plan.isReported = :isReported', { isReported: false })
+        .where('plan.isReported = :isReported OR plan.isReported IS NULL', { isReported: false })
         .andWhere('plan.tenantId = :tenantId', { tenantId })
         .andWhere('plan.userId = :userId', { userId })
         .andWhere('planningUser.planningPeriodId = :planningPeriodId', {
