@@ -201,9 +201,7 @@ export class OkrReportTaskService {
         .where('plan.isReported = :isReported OR plan.isReported IS NULL', { isReported: false })
         .andWhere('plan.tenantId = :tenantId', { tenantId })
         .andWhere('plan.userId = :userId', { userId })
-        .andWhere('planningUser.planningPeriodId = :planningPeriodId', {
-          planningPeriodId,
-        })
+        .andWhere('planningPeriod.id = :planningPeriodId', { planningPeriodId }) // Use the relation to access the planningPeriod ID
         .getMany();
 
       return unreportedTasks;
