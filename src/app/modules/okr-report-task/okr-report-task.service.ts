@@ -198,12 +198,11 @@ export class OkrReportTaskService {
         .leftJoinAndSelect('plan.planningUser', 'planningUser') // Add relation to planningUser from the Plan entity
 
         // Fetch unreported plan tasks based on userId, tenantId, and planningPeriodId
-        .where('plan.isReported = :isReported OR plan.isReported IS NULL', { isReported: false })
-        .andWhere('plan.tenantId = :tenantId', { tenantId })
-        .andWhere('plan.userId = :userId', { userId })
-        .andWhere('planningUser.planningPeriodId = :planningPeriodId', {
-          planningPeriodId,
-        })
+        .andWhere('planTask.tenantId = :tenantId', { tenantId })
+        .andWhere('planningUser.userId = :userId', { userId })
+        .andWhere('planningUser.planningPeriodId = :planningPeriodId', { planningPeriodId }) // Use the relation to access the planningPeriod ID
+        .andWhere('plan.isReported = :isReported OR plan.isReported IS NULL', { isReported: false })
+
         .getMany();
 
       return unreportedTasks;
