@@ -15,14 +15,14 @@ import { CreatePlanningPeriodsDTO } from './dto/create-planningPeriods.dto';
 import { PlanningPeriod } from './entities/planningPeriod.entity';
 import { PaginationDto } from '@root/src/core/commonDto/pagination-dto';
 import { Pagination } from 'nestjs-typeorm-paginate';
-import { ApiHeader, ApiTags } from '@nestjs/swagger';
+import { ApiTags } from '@nestjs/swagger';
 import { PlanningPeriodUser } from './entities/planningPeriodUser.entity';
 import { AssignUsersDTO } from './dto/assignUser.dto';
 
 import { ExcludeAuthGuard } from '@root/src/core/guards/exclud.guard';
 
 import { UUID } from 'crypto';
-
+import { PlannnigPeriodUserDto } from './dto/planningPeriodUser.dto';
 
 @Controller('planning-periods')
 @ApiTags('Planning-periods')
@@ -31,6 +31,16 @@ export class PlanningPeriodsController {
   @Post()
   @ExcludeAuthGuard()
   async createPlanningPeriod(
+    @Req() req: Request,
+    @Body() createPlanningPeriodsDto: CreatePlanningPeriodsDTO,
+  ): Promise<PlanningPeriod> {
+    const tenantId = req['tenantId'];
+    return await this.planningPeriodService.createPlanningPeriods(
+      createPlanningPeriodsDto,
+      tenantId,
+    );
+  }
+  async createPlanningPeriodUser(
     @Req() req: Request,
     @Body() createPlanningPeriodsDto: CreatePlanningPeriodsDTO,
   ): Promise<PlanningPeriod> {
@@ -78,6 +88,16 @@ export class PlanningPeriodsController {
     return await this.planningPeriodService.removePlanningPeriod(id);
   }
 
+  @Delete('planning-user/:id')
+  @ExcludeAuthGuard()
+  async removePlanningPeriodUser(
+    @Param('id') id: string,
+  ): Promise<PlanningPeriodUser[]> {
+    return await this.planningPeriodService.removePlanningPeriodUsersByUserId(
+      id,
+    );
+  }
+
   @Post('/assignUser')
   async assignUser(
     @Req() req: Request,
@@ -85,6 +105,32 @@ export class PlanningPeriodsController {
   ): Promise<PlanningPeriodUser> {
     const tenantId = req['tenantId'];
     return await this.planningPeriodService.assignUser(assignUserDto, tenantId);
+  }
+
+  @Post('/assignUser-multiple-planning-periods')
+  async assignUserMultiplePlannigPeriods(
+    @Req() req: Request,
+    @Body() plannnigPeriodUserDto: PlannnigPeriodUserDto,
+  ): Promise<PlanningPeriodUser[]> {
+    const tenantId = req['tenantId'];
+    return await this.planningPeriodService.assignMultiplePlanningPeriodForMultipleUsers(
+      plannnigPeriodUserDto,
+      tenantId,
+    );
+  }
+
+  @Patch('update-users-assigned-planning-periods/:id')
+  async UpdatePlanningPeriod(
+    @Req() req: Request,
+    @Param('id') id: string,
+    @Body() plannnigPeriodUserDto: PlannnigPeriodUserDto,
+  ): Promise<PlanningPeriodUser[]> {
+    const tenantId = req['tenantId'];
+    return await this.planningPeriodService.updateMultiplePlanningPeriodUser(
+      id,
+      plannnigPeriodUserDto,
+      tenantId,
+    );
   }
 
   @Get('/assignment/getAssignedUsers')
@@ -101,11 +147,6 @@ export class PlanningPeriodsController {
   }
 
   @Get('assignment/assignedUser/:userId')
-  @ApiHeader({
-    name: 'tenantId',
-    description: 'Tenant ID for the current request',
-    required: true,
-  })
   async findByUser(
     @Param('userId') id: string,
     @Headers('tenantId') tenantId: UUID,
@@ -131,5 +172,12 @@ export class PlanningPeriodsController {
       id,
       assignUserDto,
     );
+  }
+
+  @Get('update/planning-period/status/:id')
+  async updatePlanningPeriodStatus(
+    @Param('id') id: string,
+  ): Promise<PlanningPeriod> {
+    return await this.planningPeriodService.updatePlanningPeriodStatus(id);
   }
 }

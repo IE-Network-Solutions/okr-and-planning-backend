@@ -5,6 +5,7 @@ import { PaginationService } from '@root/src/core/pagination/pagination.service'
 import { PlanningPeriod } from './entities/planningPeriod.entity';
 import { PlanningPeriodUser } from './entities/planningPeriodUser.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
 
 @Module({
   imports: [TypeOrmModule.forFeature([PlanningPeriod, PlanningPeriodUser])],
