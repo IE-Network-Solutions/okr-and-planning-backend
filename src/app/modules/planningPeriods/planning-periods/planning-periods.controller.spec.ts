@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { PaginationService } from '@root/src/core/pagination/pagination.service';
 import { mock } from 'jest-mock-extended';
 import { PlanningPeriod } from './entities/planningPeriod.entity';
@@ -27,18 +27,33 @@ describe('PlanningPeriodsController', () => {
           useValue: mock<Repository<PlanningPeriodUser>>(), // Use mock for the repository
         },
         {
+          provide: getRepositoryToken(DataSource),
+          useValue: mock<Repository<PlanningPeriodUser>>(), // Use mock for the repository
+        },
+        {
           provide: PaginationService,
           useValue: {
             paginate: jest.fn(), // Mock the paginate method
           },
         },
+        {
+          provide: DataSource,
+          useValue: mock<DataSource>(), // Mock the DataSource
+        },
+         
       ],
     }).compile();
 
-    planningPeriodsController = moduleRef.get<PlanningPeriodsController>(PlanningPeriodsController);
-    planningPeriodsService = moduleRef.get<PlanningPeriodsService>(PlanningPeriodsService);
-    planningPeriodRepository = moduleRef.get<Repository<PlanningPeriod>>(getRepositoryToken(PlanningPeriod));
-    
+    planningPeriodsController = moduleRef.get<PlanningPeriodsController>(
+      PlanningPeriodsController,
+    );
+    planningPeriodsService = moduleRef.get<PlanningPeriodsService>(
+      PlanningPeriodsService,
+    );
+    planningPeriodRepository = moduleRef.get<Repository<PlanningPeriod>>(
+      getRepositoryToken(PlanningPeriod),
+    );
+
     jest.clearAllMocks(); // Clear mocks before each test
   });
 

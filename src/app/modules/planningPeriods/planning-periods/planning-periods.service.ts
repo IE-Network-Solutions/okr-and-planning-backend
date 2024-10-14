@@ -1,13 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
+import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { PlanningPeriod } from './entities/planningPeriod.entity';
 import { PlanningPeriodUser } from './entities/planningPeriodUser.entity';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { CreatePlanningPeriodsDTO } from './dto/create-planningPeriods.dto';
 import { IPaginationOptions, Pagination } from 'nestjs-typeorm-paginate';
 import { PaginationDto } from '@root/src/core/commonDto/pagination-dto';
 import { PaginationService } from '../../../../core/pagination/pagination.service';
 import { AssignUsersDTO } from './dto/assignUser.dto';
+import { PlannnigPeriodUserDto } from './dto/planningPeriodUser.dto';
 
 @Injectable()
 export class PlanningPeriodsService {
@@ -17,6 +18,7 @@ export class PlanningPeriodsService {
     @InjectRepository(PlanningPeriodUser)
     private planningUserRepository: Repository<PlanningPeriodUser>,
     private readonly paginationService: PaginationService,
+    @InjectDataSource() private readonly dataSource: DataSource,
   ) {}
   async createPlanningPeriods(
     createPlanningPeriodsDto: CreatePlanningPeriodsDTO,
@@ -123,6 +125,107 @@ export class PlanningPeriodsService {
       );
     }
   }
+  async removePlanningPeriodUsersByUserId(
+    userId: string,
+  ): Promise<PlanningPeriodUser[]> {
+    try {
+      // Retrieve all planning users associated with the given userId
+      const planningUsers = await this.planningUserRepository.find({
+        where: { userId },
+      });
+
+      // Check if any planning users were found
+      if (planningUsers.length === 0) {
+        throw new NotFoundException(
+          `No planning period users found for userId ${userId}`,
+        );
+      }
+
+      // Loop through each planning user and perform soft removal
+      const removedUsers: PlanningPeriodUser[] = [];
+      for (const user of planningUsers) {
+        const removedUser = await this.planningUserRepository.softRemove(user);
+        removedUsers.push(removedUser);
+      }
+
+      return removedUsers; // Return the list of removed users
+    } catch (error) {
+      // Handle EntityNotFoundError if the planning user does not exist
+      if (error instanceof NotFoundException) {
+        throw error; // Re-throw the NotFoundException for proper handling
+      }
+      throw new Error(
+        `An error occurred while deleting planning period users: ${error.message}`,
+      );
+    }
+  }
+  async updatePlanningPeriodStatus(id: string): Promise<PlanningPeriod> {
+    try {
+      const planningperiod =
+        await this.planningPeriodRepository.findOneByOrFail({ id });
+
+      await this.planningPeriodRepository.update(planningperiod.id, {
+        isActive: !planningperiod.isActive,
+      });
+
+      const updatedPlanningPeriod =
+        await this.planningPeriodRepository.findOneBy({ id });
+
+      if (!updatedPlanningPeriod) {
+        throw new NotFoundException(
+          `The Planning period that you are updating for user with Id ${id} does not exist`,
+        );
+      }
+
+      return updatedPlanningPeriod;
+    } catch (error) {
+      if (error.name === 'EntityNotFoundError') {
+        throw new NotFoundException('Error assigning user');
+      }
+      throw error;
+    }
+  }
+  async updateMultiplePlanningPeriodUser(
+    userId: string,
+    values: PlannnigPeriodUserDto,
+    tenantId: string,
+  ): Promise<PlanningPeriodUser[]> {
+    return await this.dataSource.transaction(async (manager) => {
+      try {
+        // Find and delete existing planning periods for the user
+        const existingUsers = await manager.find(PlanningPeriodUser, {
+          where: { userId },
+        });
+        if (existingUsers.length > 0) {
+          await manager.softRemove(existingUsers); // Soft remove if using soft deletes
+          // Alternatively, for a hard delete, use: await manager.remove(existingUsers);
+        }
+
+        // Create new PlanningPeriodUser entries
+        const newPlanningPeriodUsers = values.planningPeriods.map(
+          (planningPeriodId) =>
+            manager.create(PlanningPeriodUser, {
+              userId,
+              planningPeriodId,
+              tenantId,
+            }),
+        );
+
+        // Save the new PlanningPeriodUser entries
+        const savedUsers = await manager.save(
+          PlanningPeriodUser,
+          newPlanningPeriodUsers,
+        );
+
+        return savedUsers;
+      } catch (error) {
+        throw new Error(
+          `Error updating PlanningPeriodUsers for user with ID ${userId}: ${error.message}`,
+        );
+      }
+    });
+  }
+
   async assignUser(
     assignUserDto: AssignUsersDTO,
     tenantId: string,
@@ -144,6 +247,52 @@ export class PlanningPeriodsService {
       throw error;
     }
   }
+  async assignMultiplePlanningPeriodForMultipleUsers(
+    assignUserDto: PlannnigPeriodUserDto,
+    tenantId: string,
+  ): Promise<PlanningPeriodUser[]> {
+    try {
+      // Check if planningPeriods are provided and retrieve the corresponding planning periods
+      const planningPeriods = await this.planningPeriodRepository.findByIds(
+        assignUserDto.planningPeriods,
+      );
+
+      // Check if planning periods exist
+      if (!planningPeriods.length) {
+        throw new NotFoundException(
+          'No planning periods found for the provided IDs.',
+        );
+      }
+
+      // Create an array to hold the assigned users
+      const assignedUsers: PlanningPeriodUser[] = [];
+
+      // Loop through each user ID and assign them to each planning period
+      for (const userId of assignUserDto.userIds) {
+        for (const planningPeriod of planningPeriods) {
+          const assign = this.planningUserRepository.create({
+            userId, // Assigning the current userId
+            tenantId: tenantId,
+            planningPeriod: planningPeriod,
+          });
+          // Save the newly created planning user
+          const savedUser = await this.planningUserRepository.save(assign);
+          assignedUsers.push(savedUser); // Add to the assigned users array
+        }
+      }
+
+      return assignedUsers; // Return the array of assigned users
+    } catch (error) {
+      // Handle specific error types if necessary
+      if (error instanceof NotFoundException) {
+        throw error; // Re-throw NotFoundException for proper handling
+      }
+      throw new Error(
+        `An error occurred while assigning users: ${error.message}`,
+      );
+    }
+  }
+
   async findAll(
     paginationOptions: PaginationDto,
     tenantId: string,
