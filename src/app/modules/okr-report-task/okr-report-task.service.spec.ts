@@ -39,9 +39,8 @@ describe('OkrReportTaskService', () => {
       ],
     }).compile();
 
-    okrReportTaskService = moduleRef.get<OkrReportTaskService>(
-      OkrReportTaskService,
-    );
+    okrReportTaskService =
+      moduleRef.get<OkrReportTaskService>(OkrReportTaskService);
   });
 
   it('should be defined', () => {

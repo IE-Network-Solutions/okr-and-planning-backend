@@ -1,2 +1,1 @@
-
-  // Example usage:  
+// Example usage:

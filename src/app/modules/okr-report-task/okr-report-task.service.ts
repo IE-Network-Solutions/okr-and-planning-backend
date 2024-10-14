@@ -124,7 +124,9 @@ export class OkrReportTaskService {
         (reportTask.status = value.status as ReportStatusEnum);
       reportTask.isAchived = value?.isAchieved ?? false;
       reportTask.tenantId = tenantId || null;
-      reportTask.actualValue = value?.actualValue ? `${value?.actualValue}`:null;
+      reportTask.actualValue = value?.actualValue
+        ? `${value?.actualValue}`
+        : null;
       reportTask.customReason = value?.reason || null;
       reportTask.failureReasonId = value?.failureReasonId || null;
       return reportTask;
@@ -178,14 +180,12 @@ export class OkrReportTaskService {
     return reportScore; // Return the calculated report score
   }
 
-
   async getUnReportedPlanTasks(
     userId: string,
     planningPeriodId: string,
     tenantId: string,
   ): Promise<any> {
     try {
-
       // Fetch all plan tasks where reports have not been created yet
       const unreportedTasks = await this.planTaskRepository
         .createQueryBuilder('planTask')
@@ -200,8 +200,12 @@ export class OkrReportTaskService {
         // Fetch unreported plan tasks based on userId, tenantId, and planningPeriodId
         .andWhere('planTask.tenantId = :tenantId', { tenantId })
         .andWhere('planningUser.userId = :userId', { userId })
-        .andWhere('planningUser.planningPeriodId = :planningPeriodId', { planningPeriodId }) // Use the relation to access the planningPeriod ID
-        .andWhere('plan.isReported = :isReported OR plan.isReported IS NULL', { isReported: false })
+        .andWhere('planningUser.planningPeriodId = :planningPeriodId', {
+          planningPeriodId,
+        }) // Use the relation to access the planningPeriod ID
+        .andWhere('plan.isReported = :isReported OR plan.isReported IS NULL', {
+          isReported: false,
+        })
 
         .getMany();
 

@@ -173,7 +173,6 @@ export class PlanningPeriodsController {
       assignUserDto,
     );
   }
-
   @Get('update/planning-period/status/:id')
   async updatePlanningPeriodStatus(
     @Param('id') id: string,
