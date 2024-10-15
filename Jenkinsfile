@@ -75,6 +75,7 @@ pipeline {
             }
         }
     }
+    
     post {
         success {
             echo 'Nest js application deployed successfully!'
