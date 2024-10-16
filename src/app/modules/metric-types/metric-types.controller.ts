@@ -64,4 +64,16 @@ export class MetricTypesController {
   removeMetricType(@Req() req: Request, @Param('id') id: string) {
     return this.metricTypesService.removeMetricType(id);
   }
+  @Get('/metric-type/count/:userId')
+  getPlannedKeyResultsGroupedByMetricType(
+    @Req() req: Request,
+    @Param('userId') userId: string,
+  ) {
+    const tenantId = req['tenantId'];
+
+    return this.metricTypesService.getPlannedKeyResultsGroupedByMetricType(
+      userId,
+      tenantId,
+    );
+  }
 }

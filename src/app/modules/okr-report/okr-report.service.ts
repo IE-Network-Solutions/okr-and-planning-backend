@@ -5,6 +5,7 @@ import { In, Repository } from 'typeorm';
 import { ReportTask } from '../okr-report-task/entities/okr-report-task.entity';
 import { CreateReportDTO } from './dto/create-report.dto';
 import { UUID } from 'crypto';
+import { RockStarDto } from './dto/report-rock-star.dto';
 
 @Injectable()
 export class OkrReportService {
@@ -77,5 +78,21 @@ export class OkrReportService {
       throw new NotFoundException(`Report with ID not found`);
     }
     await this.reportRepository.remove(report);
+  }
+
+  async rockStart(rockStarDto: RockStarDto, tenantId: string) {
+    let employees = await this.reportRepository
+     .createQueryBuilder('Report')
+      .leftJoinAndSelect('Report.plan', 'plan') 
+      .leftJoinAndSelect('plan.planningUser', 'planningUser') 
+      .leftJoinAndSelect('planningUser.planningUser', 'planningUser') 
+      .where('planningUser.planningPeriodId = :planningPeriodId',{planningPeriodId:rockStarDto.planningPeriodId}) 
+      .andWhere('planningUser.tenantId = :tenantId',{tenantId:tenantId})
+      .andWhere('planningUser.userId = :userId',{userId:rockStarDto.userId})
+      .getRawMany();
+
+      const maxScore = Math.max(...employees.map(item => item.reportScore));
+      const topEmployees = employees.filter(item => item.reportScore === maxScore);
+  return topEmployees
   }
 }
