@@ -1,7 +1,4 @@
-import {
-  ConflictException,
-  Injectable,
-} from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { ReportTask } from './entities/okr-report-task.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ReportTaskDTO } from './dto/create-okr-report-task.dto';
@@ -56,7 +53,7 @@ export class OkrReportTaskService {
       userId,
       tenantId,
     );
-  
+
     const returnedReportData = await this.reportService.createReportWithTasks(
       reportData,
     );
@@ -65,42 +62,24 @@ export class OkrReportTaskService {
       returnedReportData,
       tenantId,
     );
-  
+
     // Save the report tasks
     const savedReportTasks = await this.reportTaskRepo.save(reportTasks);
-  
+
     // If the report tasks are saved successfully, update the plan's isReported value to true
     if (savedReportTasks) {
       await this.updatePlanIsReported(planId);
     }
-  
+
     return savedReportTasks;
   }
-  
+
   // Method to update the isReported value of the plan
   private async updatePlanIsReported(planId: string): Promise<void> {
     await this.planRepository.update(planId, { isReported: true });
   }
-  // async checkAndUpdateProgressByKey(
-  //   planTaskKey: string,
-  //   keyResultId: string,
-  //   milestoneId?: string,
-  //   actualValue?: number
-  // ): Promise<boolean> {
-  //   try {
-  //     const planTask = await this.planTaskRepository.findOne({
-  //       where: { id: planTaskKey }, // Assuming the key is the ID
-  //     });
-  //     if (planTask && planTask.achieveMK) {
-  //       return true;
-  //     } else {
-  //       return false;
-  //     }
-  //   } catch (error) {
-  //     return false;
-  //   }
-  // }
-  
+
+
   private createReportData(
     reportScore: number,
     planId: string,
@@ -131,12 +110,12 @@ export class OkrReportTaskService {
   ): ReportTask[] {
     return Object.entries(dto).map(([key, value]) => {
       const reportTask = new ReportTask();
-        (reportTask.planTaskId = key),
+      (reportTask.planTaskId = key),
         (reportTask.reportId = reporteData?.id),
         (reportTask.status = value.status as ReportStatusEnum);
-        reportTask.isAchived = value?.isAchieved ?? false;
-        reportTask.tenantId = tenantId || null;
-        reportTask.actualValue = value?.actualValue
+      reportTask.isAchived = value?.isAchieved ?? false;
+      reportTask.tenantId = tenantId || null;
+      reportTask.actualValue = value?.actualValue
         ? `${value?.actualValue}`
         : null;
       reportTask.customReason = value?.reason || null;
