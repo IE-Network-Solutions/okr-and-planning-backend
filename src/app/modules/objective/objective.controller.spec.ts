@@ -176,6 +176,8 @@
 import { Test } from '@nestjs/testing';
 import { ObjectiveController } from './objective.controller';
 import { ObjectiveService } from './services/objective.service';
+import { OKRDashboardService } from './services/okr-dashbord.service';
+import { mock } from 'jest-mock-extended';
 
 jest.mock('./services/objective.service'); // Mock the service
 
@@ -187,7 +189,12 @@ describe('ObjectiveController', () => {
     const moduleRef = await Test.createTestingModule({
       imports: [],
       controllers: [ObjectiveController],
-      providers: [ObjectiveService],
+      providers: [ObjectiveService,
+        {
+          provide: OKRDashboardService,
+          useValue: mock<OKRDashboardService>(),
+        },
+      ],
     }).compile();
 
     objectiveController =
