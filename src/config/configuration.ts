@@ -10,7 +10,6 @@ export const configuration = () => ({
     description: process.env.APP_DESCRIPTION,
     version: process.env.APP_VERSION,
     isProduction: Boolean(process.env.APP_IS_PRODUCTION),
-
   },
 
   db: {

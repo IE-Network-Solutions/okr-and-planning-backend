@@ -11,7 +11,6 @@ import { PlanTask } from '../plan-tasks/entities/plan-task.entity';
 describe('OkrReportService', () => {
   let okrReportService: OkrReportService;
 
-
   beforeEach(async () => {
     const moduleRef = await Test.createTestingModule({
       providers: [
@@ -35,9 +34,7 @@ describe('OkrReportService', () => {
       ],
     }).compile();
 
-    okrReportService = moduleRef.get<OkrReportService>(
-      OkrReportService,
-    );
+    okrReportService = moduleRef.get<OkrReportService>(OkrReportService);
   });
 
   it('should be defined', () => {

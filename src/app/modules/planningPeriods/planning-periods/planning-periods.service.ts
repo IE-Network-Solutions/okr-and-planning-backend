@@ -192,16 +192,12 @@ export class PlanningPeriodsService {
   ): Promise<PlanningPeriodUser[]> {
     return await this.dataSource.transaction(async (manager) => {
       try {
-        // Find and delete existing planning periods for the user
         const existingUsers = await manager.find(PlanningPeriodUser, {
           where: { userId },
         });
         if (existingUsers.length > 0) {
           await manager.softRemove(existingUsers); // Soft remove if using soft deletes
-          // Alternatively, for a hard delete, use: await manager.remove(existingUsers);
         }
-
-        // Create new PlanningPeriodUser entries
         const newPlanningPeriodUsers = values.planningPeriods.map(
           (planningPeriodId) =>
             manager.create(PlanningPeriodUser, {
@@ -210,13 +206,10 @@ export class PlanningPeriodsService {
               tenantId,
             }),
         );
-
-        // Save the new PlanningPeriodUser entries
         const savedUsers = await manager.save(
           PlanningPeriodUser,
           newPlanningPeriodUsers,
         );
-
         return savedUsers;
       } catch (error) {
         throw new Error(
@@ -252,22 +245,15 @@ export class PlanningPeriodsService {
     tenantId: string,
   ): Promise<PlanningPeriodUser[]> {
     try {
-      // Check if planningPeriods are provided and retrieve the corresponding planning periods
       const planningPeriods = await this.planningPeriodRepository.findByIds(
         assignUserDto.planningPeriods,
       );
-
-      // Check if planning periods exist
       if (!planningPeriods.length) {
         throw new NotFoundException(
           'No planning periods found for the provided IDs.',
         );
       }
-
-      // Create an array to hold the assigned users
       const assignedUsers: PlanningPeriodUser[] = [];
-
-      // Loop through each user ID and assign them to each planning period
       for (const userId of assignUserDto.userIds) {
         for (const planningPeriod of planningPeriods) {
           const assign = this.planningUserRepository.create({
@@ -280,7 +266,6 @@ export class PlanningPeriodsService {
           assignedUsers.push(savedUser); // Add to the assigned users array
         }
       }
-
       return assignedUsers; // Return the array of assigned users
     } catch (error) {
       // Handle specific error types if necessary
@@ -292,7 +277,6 @@ export class PlanningPeriodsService {
       );
     }
   }
-
   async findAll(
     paginationOptions: PaginationDto,
     tenantId: string,
