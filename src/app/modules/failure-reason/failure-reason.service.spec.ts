@@ -19,9 +19,8 @@ describe('FailureReasonService', () => {
       ],
     }).compile();
 
-    failureReasonService = moduleRef.get<FailureReasonService>(
-      FailureReasonService,
-    );
+    failureReasonService =
+      moduleRef.get<FailureReasonService>(FailureReasonService);
   });
 
   it('should be defined', () => {

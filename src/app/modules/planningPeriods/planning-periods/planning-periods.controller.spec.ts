@@ -35,10 +35,16 @@ describe('PlanningPeriodsController', () => {
       ],
     }).compile();
 
-    planningPeriodsController = moduleRef.get<PlanningPeriodsController>(PlanningPeriodsController);
-    planningPeriodsService = moduleRef.get<PlanningPeriodsService>(PlanningPeriodsService);
-    planningPeriodRepository = moduleRef.get<Repository<PlanningPeriod>>(getRepositoryToken(PlanningPeriod));
-    
+    planningPeriodsController = moduleRef.get<PlanningPeriodsController>(
+      PlanningPeriodsController,
+    );
+    planningPeriodsService = moduleRef.get<PlanningPeriodsService>(
+      PlanningPeriodsService,
+    );
+    planningPeriodRepository = moduleRef.get<Repository<PlanningPeriod>>(
+      getRepositoryToken(PlanningPeriod),
+    );
+
     jest.clearAllMocks(); // Clear mocks before each test
   });
 

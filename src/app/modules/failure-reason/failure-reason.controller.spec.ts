@@ -25,9 +25,8 @@ describe('FailureReasonController', () => {
     failureReasonController = moduleRef.get<FailureReasonController>(
       FailureReasonController,
     );
-    failureReasonService = moduleRef.get<FailureReasonService>(
-      FailureReasonService,
-    );
+    failureReasonService =
+      moduleRef.get<FailureReasonService>(FailureReasonService);
     failureReasonRepository = moduleRef.get<Repository<FailureReason>>(
       getRepositoryToken(FailureReason),
     );

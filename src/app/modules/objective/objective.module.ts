@@ -10,6 +10,7 @@ import { HttpModule } from '@nestjs/axios';
 import { AverageOkrRuleModule } from '../average-okr-rule/average-okr-rule.module';
 import { GetFromOrganizatiAndEmployeInfoService } from './services/get-data-from-org.service';
 import { AverageOkrCalculation } from './services/average-okr-calculation.service';
+import { OKRDashboardService } from './services/okr-dashbord.service';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { AverageOkrCalculation } from './services/average-okr-calculation.servic
     ObjectiveService,
     GetFromOrganizatiAndEmployeInfoService,
     AverageOkrCalculation,
+    OKRDashboardService,
   ],
   exports: [ObjectiveService],
 })

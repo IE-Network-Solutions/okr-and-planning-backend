@@ -23,7 +23,6 @@ import { ExcludeAuthGuard } from '@root/src/core/guards/exclud.guard';
 
 import { UUID } from 'crypto';
 
-
 @Controller('planning-periods')
 @ApiTags('Planning-periods')
 export class PlanningPeriodsController {
