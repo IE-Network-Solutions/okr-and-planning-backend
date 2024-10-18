@@ -90,4 +90,26 @@ export class MetricTypesService {
     await this.metricTypeRepository.softRemove({ id });
     return MetricType;
   }
+
+  async getPlannedKeyResultsGroupedByMetricType(
+    userId: string,
+    tenantId: string,
+  ) {
+    const metricTypes = await this.metricTypeRepository.find({
+      where: {
+        keyResults: {
+          objective: {
+            userId: userId,
+            tenantId: tenantId,
+          },
+        },
+      },
+      relations: ['keyResults'],
+    });
+    for (const item of metricTypes) {
+      item[item.name] = item.keyResults.length || 0;
+      delete item.keyResults;
+    }
+    return metricTypes;
+  }
 }

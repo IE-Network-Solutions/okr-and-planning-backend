@@ -9,6 +9,9 @@ export class PlanningPeriod extends BaseModel {
   @Column({ type: 'uuid' })
   tenantId: string;
 
+  @Column({ type: 'boolean', default: false })
+  isActive: boolean;
+
   @Column({ type: 'interval' })
   intervalLength: string;
 

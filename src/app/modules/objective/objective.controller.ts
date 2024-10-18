@@ -16,11 +16,15 @@ import { Objective } from './entities/objective.entity';
 import { PaginationDto } from '@root/src/core/commonDto/pagination-dto';
 import { ApiTags } from '@nestjs/swagger';
 import { FilterObjectiveDto } from './dto/filter-objective.dto';
+import { OKRDashboardService } from './services/okr-dashbord.service';
 
 @Controller('objective')
 @ApiTags('Objective')
 export class ObjectiveController {
-  constructor(private readonly objectiveService: ObjectiveService) {}
+  constructor(
+    private readonly objectiveService: ObjectiveService,
+    private readonly okrDashboardService: OKRDashboardService,
+  ) {}
 
   @Post()
   async createObjective(
@@ -82,7 +86,7 @@ export class ObjectiveController {
   ) {
     const tenantId = req['tenantId'];
     const token = req['token'];
-    return this.objectiveService.handleUserOkr(
+    return this.okrDashboardService.handleUserOkr(
       userId,
       tenantId,
       token,

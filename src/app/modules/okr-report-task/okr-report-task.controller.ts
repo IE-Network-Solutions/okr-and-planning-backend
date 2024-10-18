@@ -39,8 +39,8 @@ export class OkrReportTaskController {
     @Headers('tenantId') tenantId: string,
   ) {
     return this.okrReportTaskService.getUnReportedPlanTasks(
-      planningPeriodId,
       userId,
+      planningPeriodId,
       tenantId,
     );
   }

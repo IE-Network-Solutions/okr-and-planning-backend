@@ -15,11 +15,13 @@ import { CreateAverageOkrRuleDto } from './dto/create-average-okr-rule.dto';
 import { UpdateAverageOkrRuleDto } from './dto/update-average-okr-rule.dto';
 import { PaginationDto } from '@root/src/core/commonDto/pagination-dto';
 import { AverageOkrRule } from './entities/average-okr-rule.entity';
+import { ExcludeAuthGuard } from '@root/src/core/guards/exclud.guard';
 
 @Controller('average-okr-rule')
 export class AverageOkrRuleController {
   constructor(private readonly averageOkrRuleService: AverageOkrRuleService) {}
   @Post()
+  @ExcludeAuthGuard()
   async createAverageOkrRule(
     @Req() req: Request,
     @Body() createAverageOkrRuleDto: CreateAverageOkrRuleDto,
@@ -61,6 +63,7 @@ export class AverageOkrRuleController {
   }
 
   @Delete(':id')
+  @ExcludeAuthGuard()
   removeAverageOkrRule(@Req() req: Request, @Param('id') id: string) {
     return this.averageOkrRuleService.removeAverageOkrRule(id);
   }

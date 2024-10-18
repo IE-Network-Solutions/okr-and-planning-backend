@@ -1,12 +1,8 @@
-import {
-  ConflictException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { ReportTask } from './entities/okr-report-task.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ReportTaskDTO } from './dto/create-okr-report-task.dto';
-import { In, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { UUID } from 'crypto';
 import { PlanTask } from '../plan-tasks/entities/plan-task.entity';
 import { PlanningPeriodUser } from '../planningPeriods/planning-periods/entities/planningPeriodUser.entity';
@@ -105,9 +101,6 @@ export class OkrReportTaskService {
     return savedReportTasks;
   }
 
-  private async updatePlanIsReported(planId: string): Promise<void> {
-    await this.planRepository.update(planId, { isReported: true });
-  }
   async checkAndUpdateProgressByKey(savedReportTasks: any[]): Promise<any[]> {
     try {
       const results = await Promise.all(
@@ -182,7 +175,16 @@ export class OkrReportTaskService {
     } catch (error) {
       return [];
     }
+
+    return savedReportTasks;
   }
+
+  // Method to update the isReported value of the plan
+  private async updatePlanIsReported(planId: string): Promise<void> {
+    await this.planRepository.update(planId, { isReported: true });
+  }
+
+
   private createReportData(
     reportScore: number,
     planId: string,
@@ -301,7 +303,11 @@ export class OkrReportTaskService {
         // .andWhere('plan.userId = :userId', { userId })
         .andWhere('planningUser.planningPeriodId = :planningPeriodId', {
           planningPeriodId,
+        }) // Use the relation to access the planningPeriod ID
+        .andWhere('plan.isReported = :isReported OR plan.isReported IS NULL', {
+          isReported: false,
         })
+
         .getMany();
 
       return unreportedTasks;
@@ -335,7 +341,7 @@ export class OkrReportTaskService {
           planningPeriodId,
         }) // Filter by planningPeriodId
         .andWhere('plan.isValidated = :isValidated', { isValidated: true }) // Check if isValidated is true
-        .andWhere('plan.isReported IS NULL') // Check if isReported is null
+        .andWhere('(plan.isReported IS NULL OR plan.isReported = false)') // Check if isReported is null
         .getMany();
 
       return reportTasks;

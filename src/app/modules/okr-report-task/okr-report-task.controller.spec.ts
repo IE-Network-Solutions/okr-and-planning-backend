@@ -44,12 +44,10 @@ describe('OkrReportTaskController', () => {
       ],
     }).compile();
 
-    okrReportController = moduleRef.get<OkrReportController>(
-      OkrReportController,
-    );
-    okrReportTaskService = moduleRef.get<OkrReportTaskService>(
-      OkrReportTaskService,
-    );
+    okrReportController =
+      moduleRef.get<OkrReportController>(OkrReportController);
+    okrReportTaskService =
+      moduleRef.get<OkrReportTaskService>(OkrReportTaskService);
     okrReportTaskRepository = moduleRef.get<Repository<ReportTask>>(
       getRepositoryToken(ReportTask),
     );

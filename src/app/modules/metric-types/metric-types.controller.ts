@@ -14,12 +14,14 @@ import { CreateMetricTypeDto } from './dto/create-metric-type.dto';
 import { UpdateMetricTypeDto } from './dto/update-metric-type.dto';
 import { PaginationDto } from '@root/src/core/commonDto/pagination-dto';
 import { MetricType } from './entities/metric-type.entity';
+import { ExcludeAuthGuard } from '@root/src/core/guards/exclud.guard';
 
 @Controller('metric-types')
 export class MetricTypesController {
   constructor(private readonly metricTypesService: MetricTypesService) {}
 
   @Post()
+  @ExcludeAuthGuard()
   async createMetricType(
     @Req() req: Request,
     @Body() createMetricTypeDto: CreateMetricTypeDto,
@@ -58,7 +60,20 @@ export class MetricTypesController {
   }
 
   @Delete(':id')
+  @ExcludeAuthGuard()
   removeMetricType(@Req() req: Request, @Param('id') id: string) {
     return this.metricTypesService.removeMetricType(id);
+  }
+  @Get('/metric-type/count/:userId')
+  getPlannedKeyResultsGroupedByMetricType(
+    @Req() req: Request,
+    @Param('userId') userId: string,
+  ) {
+    const tenantId = req['tenantId'];
+
+    return this.metricTypesService.getPlannedKeyResultsGroupedByMetricType(
+      userId,
+      tenantId,
+    );
   }
 }

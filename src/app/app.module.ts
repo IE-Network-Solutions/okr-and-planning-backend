@@ -50,7 +50,5 @@ configuration values obtained from a ConfigService. */
     //   useClass: AuthGuard,
     // },
   ],
-
-  
 })
 export class AppModule {}

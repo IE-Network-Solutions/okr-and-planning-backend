@@ -144,6 +144,7 @@ export class AppreciationService {
     const appreciation = await this.appreciationLogRepository
       .createQueryBuilder('appreciation')
       .leftJoinAndSelect('appreciation.type', 'recognitionType')
+      .leftJoinAndSelect('appreciation.carbonCopies', 'carbonCopies')
       .where('appreciation.id = :id', { id })
       .getOne();
 
