@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { PlanningPeriod } from './entities/planningPeriod.entity';
 import { PlanningPeriodUser } from './entities/planningPeriodUser.entity';
@@ -378,4 +378,19 @@ export class PlanningPeriodsService {
       throw error;
     }
   }
+
+async findPlanningPeriodByName(planningPeriodTitle:string,tenantId:string){
+  try{
+  const planningPeriod = await this.planningPeriodRepository.findOneOrFail({
+    where: {
+      name: planningPeriodTitle.toLowerCase(),
+      tenantId: tenantId,
+    },
+  });
+  return planningPeriod
+}catch(error){
+  throw new BadRequestException(error.message)
+}
+  
+}
 }

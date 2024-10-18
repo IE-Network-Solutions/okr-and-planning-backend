@@ -6,6 +6,8 @@ import { ReportTask } from '../okr-report-task/entities/okr-report-task.entity';
 import { CreateReportDTO } from './dto/create-report.dto';
 import { UUID } from 'crypto';
 import { RockStarDto } from './dto/report-rock-star.dto';
+import { PlanningPeriodsService } from '../planningPeriods/planning-periods/planning-periods.service';
+import { PlanningPeriod } from '../planningPeriods/planning-periods/entities/planningPeriod.entity';
 
 @Injectable()
 export class OkrReportService {
@@ -13,6 +15,7 @@ export class OkrReportService {
     @InjectRepository(Report) private reportRepository: Repository<Report>,
     @InjectRepository(ReportTask)
     private reportTaskRepository: Repository<ReportTask>,
+    private planningPeriodService:PlanningPeriodsService
   ) {}
 
   async createReportWithTasks(
@@ -79,20 +82,47 @@ export class OkrReportService {
     }
     await this.reportRepository.remove(report);
   }
-
   async rockStart(rockStarDto: RockStarDto, tenantId: string) {
-    let employees = await this.reportRepository
+    let reports = await this.reportRepository
      .createQueryBuilder('Report')
       .leftJoinAndSelect('Report.plan', 'plan') 
       .leftJoinAndSelect('plan.planningUser', 'planningUser') 
+      .leftJoinAndSelect('report.reportTask', 'reportTask') 
       .leftJoinAndSelect('planningUser.planningUser', 'planningUser') 
       .where('planningUser.planningPeriodId = :planningPeriodId',{planningPeriodId:rockStarDto.planningPeriodId}) 
       .andWhere('planningUser.tenantId = :tenantId',{tenantId:tenantId})
-      .andWhere('planningUser.userId = :userId',{userId:rockStarDto.userId})
+      .andWhere('reportTask.isAchieved = :isAchieved',{isAchieved:true})
       .getRawMany();
 
-      const maxScore = Math.max(...employees.map(item => item.reportScore));
-      const topEmployees = employees.filter(item => item.reportScore === maxScore);
+      const maxScore = Math.max(...reports.map(item => item.reportScore));
+      const topEmployees = reports.filter(item => item.reportScore === maxScore);
   return topEmployees
   }
+
+  // async userPerformance(rockStarDto: RockStarDto, tenantId: string) {
+  //   const planningPeriod = await this.panningPerodServise.findByPeriod(rockStarDto.planningPeriodId);
+    
+  //   const queryBuilder = this.reportRepository.createQueryBuilder('report')
+  //     .leftJoinAndSelect('report.plan', 'plan')
+  //     .leftJoinAndSelect('plan.planningUser', 'planningUser')
+  //     .leftJoinAndSelect('report.reportTask', 'reportTask')
+  //     .andWhere('planningUser.tenantId = :tenantId', { tenantId })
+  //     .andWhere('reportTask.isAchieved = :isAchieved', { isAchieved: true })
+  //     .andWhere('reportTask.planningPeriodId = :planningPeriodId', { planningPeriodId: rockStarDto.planningPeriodId });
+  
+  //   if (planningPeriod === 'weekly') {
+  //     queryBuilder
+  //       .where('EXTRACT(MONTH FROM reportTask.createdAt) = EXTRACT(MONTH FROM CURRENT_DATE)')
+  //       .andWhere('EXTRACT(YEAR FROM reportTask.createdAt) = EXTRACT(YEAR FROM CURRENT_DATE)')
+  //       .addSelect('EXTRACT(WEEK FROM reportTask.createdAt) as weekNumber')
+  //       .groupBy('weekNumber');
+  //   } else if (planningPeriod === 'Monthly') {
+  //     queryBuilder.where('reportTask.createdAt >= NOW() - INTERVAL \'12 months\'');
+  //   }
+  
+  //   const reports = await queryBuilder.getRawMany();
+  //   const maxScore = Math.max(...reports.map(item => item.reportScore));
+  //   return reports.filter(item => item.reportScore === maxScore);
+  // }
+  
 }
