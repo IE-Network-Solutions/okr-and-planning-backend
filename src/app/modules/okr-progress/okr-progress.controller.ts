@@ -47,10 +47,10 @@ export class OkrProgressController {
       metricType: metricTypeData(),
     };
 
-    return await this.okrProgressService.calculateKeyResultProgress(
-      data,
-      false,
-      200,
-    );
+    return await this.okrProgressService.calculateKeyResultProgress({
+      keyResult: data,
+      isOnCreate: false,
+      actualValueToUpdate: 200,
+    });
   }
 }

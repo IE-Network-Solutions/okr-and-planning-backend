@@ -108,7 +108,10 @@ export class KeyResultsService {
 
   async findOnekeyResult(id: string): Promise<KeyResult> {
     try {
-      const keyResult = await this.keyResultRepository.findOneByOrFail({ id });
+      const keyResult = await this.keyResultRepository.findOneOrFail({
+        where: { id: id },
+        relations: ['milestones'],
+      });
       return keyResult;
     } catch (error) {
       throw new NotFoundException(`keyResult Not Found`);
