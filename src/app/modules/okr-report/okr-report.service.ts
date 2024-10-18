@@ -15,7 +15,7 @@ export class OkrReportService {
     @InjectRepository(Report) private reportRepository: Repository<Report>,
     @InjectRepository(ReportTask)
     private reportTaskRepository: Repository<ReportTask>,
-    private planningPeriodService:PlanningPeriodsService
+ //   private planningPeriodService:PlanningPeriodsService
   ) {}
 
   async createReportWithTasks(

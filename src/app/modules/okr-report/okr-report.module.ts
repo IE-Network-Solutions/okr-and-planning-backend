@@ -27,7 +27,6 @@ import { PlanningPeriodsService } from '../planningPeriods/planning-periods/plan
   providers: [
     OkrReportService,
     OrgEmployeeInformationApiService,
-    PlanningPeriodsService
   ],
   exports: [OkrReportService],
 })
