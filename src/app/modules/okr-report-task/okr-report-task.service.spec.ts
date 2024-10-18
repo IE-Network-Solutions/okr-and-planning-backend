@@ -8,6 +8,7 @@ import { PlanningPeriodUser } from '../planningPeriods/planning-periods/entities
 import { Plan } from '../plan/entities/plan.entity';
 import { PlanTask } from '../plan-tasks/entities/plan-task.entity';
 import { OkrReportService } from '../okr-report/okr-report.service';
+import { OkrProgressService } from '../okr-progress/okr-progress.service';
 
 describe('OkrReportTaskService', () => {
   let okrReportTaskService: OkrReportTaskService;
@@ -35,6 +36,10 @@ describe('OkrReportTaskService', () => {
         {
           provide: OkrReportService,
           useValue: mock<OkrReportService>(),
+        },
+        {
+          provide: OkrProgressService,
+          useValue: mock<OkrProgressService>(),
         },
       ],
     }).compile();
