@@ -10,6 +10,7 @@ import { Plan } from '../plan/entities/plan.entity';
 import { PlanTask } from '../plan-tasks/entities/plan-task.entity';
 import { OkrReportService } from '../okr-report/okr-report.service';
 import { mock } from 'jest-mock-extended';
+import { OkrProgressService } from '../okr-progress/okr-progress.service';
 
 describe('OkrReportTaskController', () => {
   let okrReportController: OkrReportController;
@@ -39,6 +40,10 @@ describe('OkrReportTaskController', () => {
         },
         {
           provide: OkrReportService,
+          useValue: mock<OkrReportService>(),
+        },
+        {
+          provide: OkrProgressService,
           useValue: mock<OkrReportService>(),
         },
       ],
