@@ -13,7 +13,10 @@ import { PlanningPeriodUser } from '../planningPeriods/planning-periods/entities
 import { Plan } from '../plan/entities/plan.entity';
 import { OkrReportService } from '../okr-report/okr-report.service';
 import { ReportStatusEnum } from '@root/src/core/interfaces/reportStatus.type';
+import { NAME } from '../metric-types/enum/metric-type.enum';
 import { OkrProgressService } from '../okr-progress/okr-progress.service';
+import { Milestone } from '../milestones/entities/milestone.entity';
+import { Status } from '../milestones/enum/milestone.status.enum';
 
 @Injectable()
 export class OkrReportTaskService {
@@ -27,22 +30,38 @@ export class OkrReportTaskService {
     @InjectRepository(Plan)
     private planRepository: Repository<Plan>,
 
+    @InjectRepository(Plan)
+    private milestoneRepository: Repository<Milestone>,
+
     @InjectRepository(PlanTask)
     private planTaskRepository: Repository<PlanTask>,
 
     private reportService: OkrReportService, // Injecting the report service
-    private okrProgressService: OkrProgressService, // Injecting the report service
-  ) {}
-  async getMetricTypeNameFromPlanTask(planTaskId: string): Promise<any> {
-    const result = await this.planTaskRepository
-      .createQueryBuilder('planTask')
-      .leftJoinAndSelect('planTask.keyResult', 'keyResult') // Join with keyResult
-      .leftJoinAndSelect('keyResult.metricType', 'metricType') // Join with metricType
-      .select('metricType.name', 'name') // Select the metricType name
-      .where('planTask.id = :planTaskId', { planTaskId }) // Filter by planTask ID
-      .getOne(); // Get the result
 
-    return result ? result : null; // Return the metricType name or null
+    private okrProgressService: OkrProgressService, // Injecting the report service // private okrProgressService: OkrProgressService, // Injecting the report service
+  ) {}
+  async findMilestoneById(id: string): Promise<Milestone | null> {
+    try {
+      const milestone = await this.milestoneRepository.findOne({
+        where: { id },
+      });
+      return milestone || null;
+    } catch (error) {
+      throw new Error('Error finding milestone');
+    }
+  }
+  async updateMilestone(
+    id: string,
+    updateData: Partial<Milestone>,
+  ): Promise<Milestone | null> {
+    try {
+      const milestone = await this.findMilestoneById(id);
+      if (!milestone) return null;
+      Object.assign(milestone, updateData);
+      return await this.milestoneRepository.save(milestone);
+    } catch (error) {
+      throw new Error('Error updating milestone');
+    }
   }
   async create(
     createReportDto: ReportTaskDTO,
@@ -78,40 +97,90 @@ export class OkrReportTaskService {
       returnedReportData,
       tenantId,
     );
-    
-    // Object.entries(createReportDto).map(([key, value]) => {
-      // if(value.status==="Done"){
-        await Promise.all(
-          Object.entries(createReportDto).map(async ([key, value]) => {
-            if (value.status==="Done") {
-              const planTask = await this.planTaskRepository.findOne({
-                where: { id: key }, // Assuming key is the ID of the planTask
-              });
-              if (planTask && planTask.achieveMK) {
-                const data=await this.getMetricTypeNameFromPlanTask(planTask?.id)
-                   console.log(data,"value data")
-                // await this.okrProgressService.calculateKeyResultProgress(key);
-              }
-            }
-          })
-        );
-        // const planTaskExistedAndIsAchieveMK=this.okrProgressService.calculateKeyResultProgress(key)
-      // }
-    // });
-    return await this.reportTaskRepo.save(reportTasks);
+    const savedReportTasks = await this.reportTaskRepo.save(reportTasks);
+    if (savedReportTasks) {
+      await this.updatePlanIsReported(planId);
+    }
+    await this.checkAndUpdateProgressByKey(savedReportTasks);
+    return savedReportTasks;
   }
-  async checkAndUpdateProgressByKey(planTaskKey: string): Promise<boolean> {
+
+  private async updatePlanIsReported(planId: string): Promise<void> {
+    await this.planRepository.update(planId, { isReported: true });
+  }
+  async checkAndUpdateProgressByKey(savedReportTasks: any[]): Promise<any[]> {
     try {
-      const planTask = await this.planTaskRepository.findOne({
-        where: { id: planTaskKey }, // Assuming the key is the ID
-      });
-      if (planTask && planTask.achieveMK) {
-        return true;
-      } else {
-        return false;
-      }
+      const results = await Promise.all(
+        savedReportTasks.map(async (task) => {
+          const planTask = await this.planTaskRepository.findOne({
+            where: { id: task?.planTaskId },
+          });
+
+          if (!planTask) return false;
+          const metricsType = await this.getPlanTaskById(planTask.id);
+
+          // Check if the metrics type is MILESTONE before updating the milestone
+          if (metricsType?.keyResult?.metricType.name === NAME.MILESTONE) {
+            const milestoneUpdate = await this.findMilestoneById(
+              planTask?.milestoneId,
+            );
+
+            if (milestoneUpdate) {
+              // Update milestone properties only if metrics type is MILESTONE
+              await this.updateMilestone(planTask?.milestoneId, {
+                ...milestoneUpdate,
+                status: Status.COMPLETED,
+                updatedAt: new Date(),
+              });
+            }
+          }
+
+          switch (metricsType?.keyResult?.metricType.name) {
+            case NAME.MILESTONE:
+              if (planTask.achieveMK && task.status === 'Done') {
+                return await this.okrProgressService.calculateKeyResultProgress(
+                  {
+                    keyResult: planTask.keyResult,
+                    isOnCreate: true,
+                  },
+                );
+              }
+              break;
+
+            case NAME.ACHIEVE:
+              if (planTask.achieveMK && task.status === 'Done') {
+                return await this.okrProgressService.calculateKeyResultProgress(
+                  {
+                    keyResult: { ...planTask.keyResult, progress: 100 }, // Spreading and adding progress
+                    isOnCreate: true,
+                    actualValueToUpdate: task?.actualValue,
+                  },
+                );
+              }
+              break;
+            default:
+              if (planTask.status === 'Done') {
+                return await this.okrProgressService.calculateKeyResultProgress(
+                  {
+                    keyResult: {
+                      ...planTask.keyResult,
+                      actualValue: task?.actualValue,
+                    },
+                    isOnCreate: true,
+                    // actualValueToUpdate: task?.actualValue,
+                  },
+                );
+              }
+              break;
+          }
+
+          return null; // Return null if no conditions match or the task does not qualify
+        }),
+      );
+
+      return results;
     } catch (error) {
-      return false;
+      return [];
     }
   }
   private createReportData(
@@ -153,6 +222,13 @@ export class OkrReportTaskService {
       reportTask.customReason = value?.reason || null;
       reportTask.failureReasonId = value?.failureReasonId || null;
       return reportTask;
+    });
+  }
+
+  private async getPlanTaskById(key: string) {
+    return await this.planTaskRepository.findOne({
+      where: { id: key },
+      relations: ['keyResult', 'keyResult.metricType'],
     });
   }
   async getPlanningPeriodUserId(
@@ -202,7 +278,6 @@ export class OkrReportTaskService {
 
     return reportScore; // Return the calculated report score
   }
-
   async getUnReportedPlanTasks(
     userId: string,
     planningPeriodId: string,
@@ -236,7 +311,6 @@ export class OkrReportTaskService {
       );
     }
   }
-
   async findAllReportTasks(
     tenantId: UUID,
     userIds: string[],

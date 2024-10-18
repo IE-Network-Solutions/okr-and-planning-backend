@@ -9,7 +9,11 @@ import { KeyResultsService } from '../key-results/key-results.service';
 import { UpdateKeyResultDto } from '../key-results/dto/update-key-result.dto';
 import { MetricTypesService } from '../metric-types/metric-types.service';
 import { MilestonesService } from '../milestones/milestones.service';
-
+import { Milestone } from '../milestones/entities/milestone.entity';
+import { updateMilestoneData } from '../milestones/test/milestone.data';
+interface KeyResultWithActualValue extends KeyResult {
+  actualValue?: number; // Add actualValue as an optional property
+}
 @Injectable()
 export class OkrProgressService {
   constructor(
@@ -18,19 +22,27 @@ export class OkrProgressService {
     private readonly milestonesService: MilestonesService,
   ) {}
 
-  async calculateKeyResultProgress(
-    keyResult: KeyResult,
-    isOnCreate: boolean,
-    actualValueToUpdate: number,
-  ) {
+  async calculateKeyResultProgress({
+    keyResult,
+    isOnCreate,
+    actualValueToUpdate,
+  }: {
+    keyResult: KeyResultWithActualValue;
+    isOnCreate: boolean;
+    actualValueToUpdate?: number;
+  }): Promise<any> {
     const updateValue = new UpdateKeyResultDto();
+    const keyResults = await this.keyResultService.findOnekeyResult(
+      keyResult.id,
+    );
     if (keyResult.metricType.name === NAME.MILESTONE) {
       let keyResultProgress = 0;
-      keyResult.milestones.forEach((milestone) => {
+      keyResults.milestones.forEach((milestone) => {
         if (milestone.status === Status.COMPLETED) {
           keyResultProgress += milestone.weight;
         }
       });
+
       updateValue.progress = keyResultProgress;
     } else if (keyResult.metricType.name === NAME.ACHIEVE) {
       updateValue.progress = keyResult.progress;
@@ -41,7 +53,7 @@ export class OkrProgressService {
       const previousCurrentValue = isOnCreate
         ? previousValue.currentValue
         : previousValue.currentValue - actualValueToUpdate; //  previousValue.lastUpdateValue;
-      const currentValue = previousCurrentValue + keyResult.currentValue;
+      const currentValue = previousCurrentValue + keyResult['actualValue'];
       const initialDifference = currentValue - keyResult.initialValue;
       const targetDifference = keyResult.targetValue - keyResult.initialValue;
       const progress = (initialDifference / targetDifference) * 100;

@@ -9,13 +9,16 @@ import { PlanningPeriodUser } from '../planningPeriods/planning-periods/entities
 import { Plan } from '../plan/entities/plan.entity';
 import { OkrReportService } from '../okr-report/okr-report.service';
 import { OkrProgressService } from '../okr-progress/okr-progress.service';
-import { KeyResultsService } from '../key-results/key-results.service';
-import { MetricTypesService } from '../metric-types/metric-types.service';
-import { MilestonesService } from '../milestones/milestones.service';
+import { KeyResultsService } from '../key-results/__mocks__/key-results.service';
+import { OkrProgress } from '../okr-progress/entities/okr-progress.entity';
+import { KeyResultsModule } from '../key-results/key-results.module';
+import { OkrProgressModule } from '../okr-progress/okr-progress.module';
 import { KeyResult } from '../key-results/entities/key-result.entity';
-import { PaginationService } from '@root/src/core/pagination/pagination.service';
 import { MetricType } from '../metric-types/entities/metric-type.entity';
 import { Milestone } from '../milestones/entities/milestone.entity';
+import { MetricTypesService } from '../metric-types/__mocks__/metric-types.service';
+import { PaginationService } from '@root/src/core/pagination/pagination.service';
+import { MilestonesService } from '../milestones/__mocks__/milestones.service';
 
 @Module({
   imports: [
@@ -29,6 +32,8 @@ import { Milestone } from '../milestones/entities/milestone.entity';
       MetricType,
       Milestone
     ]),
+    OkrProgressModule,
+    KeyResultsModule,
   ],
   controllers: [OkrReportTaskController],
   providers: [
