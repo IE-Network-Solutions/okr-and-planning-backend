@@ -2,11 +2,11 @@ pipeline {
     agent any
 
     environment {
-        REMOTE_SERVER = 'ubuntu@139.185.53.18'
+        REMOTE_SERVER = 'ubuntu@139.185.51.164'
         REPO_URL = 'https://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@github.com/IE-Network-Solutions/okr-and-planning-backend.git'
-        BRANCH_NAME = 'develop'
-        REPO_DIR = 'okr-backend'
-        SSH_CREDENTIALS_ID = 'peptest'
+        BRANCH_NAME = 'staging'
+        REPO_DIR = 'staging/okr-backend'
+        SSH_CREDENTIALS_ID = 'pepproduction'
     }
 
     
@@ -42,7 +42,7 @@ pipeline {
             steps {
                 sshagent (credentials: [SSH_CREDENTIALS_ID]) {
                     sh """
-                        ssh -o StrictHostKeyChecking=no $REMOTE_SERVER 'cp ~/backend-env/.okr-env ~/$REPO_DIR/.env'
+                        ssh -o StrictHostKeyChecking=no $REMOTE_SERVER 'cp ~/backend-env/staging-env/.okr-env ~/$REPO_DIR/.env'
                         ssh -o StrictHostKeyChecking=no $REMOTE_SERVER 'cd ~/$REPO_DIR && npm install'
                     """
                 }
