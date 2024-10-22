@@ -101,6 +101,7 @@ export class OkrReportTaskService {
     return savedReportTasks;
   }
 
+
   async checkAndUpdateProgressByKey(savedReportTasks: any[]): Promise<any[]> {
     try {
       const results = await Promise.all(
@@ -176,7 +177,6 @@ export class OkrReportTaskService {
       return [];
     }
 
-    return savedReportTasks;
   }
 
   // Method to update the isReported value of the plan
