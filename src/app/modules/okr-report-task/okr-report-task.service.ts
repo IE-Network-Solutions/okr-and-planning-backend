@@ -177,7 +177,6 @@ export class OkrReportTaskService {
       return [];
     }
 
-    return savedReportTasks;
   }
 
   // Method to update the isReported value of the plan
