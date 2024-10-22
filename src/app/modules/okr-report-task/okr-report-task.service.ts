@@ -71,7 +71,6 @@ export class OkrReportTaskService {
       await this.updatePlanIsReported(planId);
     }
 
-    return savedReportTasks;
   }
 
   // Method to update the isReported value of the plan
