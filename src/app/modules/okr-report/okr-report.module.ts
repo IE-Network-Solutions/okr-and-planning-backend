@@ -10,6 +10,8 @@ import { PlanningPeriodUser } from '../planningPeriods/planning-periods/entities
 import { Plan } from '../plan/entities/plan.entity';
 import { PlanningPeriodsModule } from '../planningPeriods/planning-periods/planning-periods.module';
 import { PlanningPeriodsService } from '../planningPeriods/planning-periods/planning-periods.service';
+import { PlanningPeriod } from '../planningPeriods/planning-periods/entities/planningPeriod.entity';
+import { PaginationService } from '@root/src/core/pagination/pagination.service';
 
 @Module({
   imports: [
@@ -20,14 +22,13 @@ import { PlanningPeriodsService } from '../planningPeriods/planning-periods/plan
       PlanningPeriodUser,
       Plan,
     ]),
- //   PlanningPeriodsModule
+   PlanningPeriodsModule
     
   ],
   controllers: [OkrReportController],
   providers: [
     OkrReportService,
-    OrgEmployeeInformationApiService,
-  ],
+    OrgEmployeeInformationApiService,  ],
   exports: [OkrReportService],
 })
 export class OkrReportModule {}

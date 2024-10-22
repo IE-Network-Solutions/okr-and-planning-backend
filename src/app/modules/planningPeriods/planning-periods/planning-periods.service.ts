@@ -379,7 +379,7 @@ export class PlanningPeriodsService {
     }
   }
 
-async findPlanningPeriodByName(planningPeriodTitle:string,tenantId:string){
+async findOnePlanningPeriodByName(planningPeriodTitle:string,tenantId:string){
   try{
   const planningPeriod = await this.planningPeriodRepository.findOneOrFail({
     where: {

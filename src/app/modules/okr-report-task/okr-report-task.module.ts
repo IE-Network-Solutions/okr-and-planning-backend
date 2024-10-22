@@ -9,16 +9,21 @@ import { PlanningPeriodUser } from '../planningPeriods/planning-periods/entities
 import { Plan } from '../plan/entities/plan.entity';
 import { OkrReportService } from '../okr-report/okr-report.service';
 import { OkrProgressService } from '../okr-progress/okr-progress.service';
-import { KeyResultsService } from '../key-results/__mocks__/key-results.service';
 import { OkrProgress } from '../okr-progress/entities/okr-progress.entity';
 import { KeyResultsModule } from '../key-results/key-results.module';
 import { OkrProgressModule } from '../okr-progress/okr-progress.module';
 import { KeyResult } from '../key-results/entities/key-result.entity';
 import { MetricType } from '../metric-types/entities/metric-type.entity';
 import { Milestone } from '../milestones/entities/milestone.entity';
-import { MetricTypesService } from '../metric-types/__mocks__/metric-types.service';
 import { PaginationService } from '@root/src/core/pagination/pagination.service';
-import { MilestonesService } from '../milestones/__mocks__/milestones.service';
+import { KeyResultsService } from '../key-results/key-results.service';
+import { MetricTypesService } from '../metric-types/metric-types.service';
+import { MilestonesService } from '../milestones/milestones.service';
+import { PlanningPeriodsModule } from '../planningPeriods/planning-periods/planning-periods.module';
+import { MilestonesModule } from '../milestones/milestones.module';
+import { MetricTypesModule } from '../metric-types/metric-types.module';
+import { OkrReportModule } from '../okr-report/okr-report.module';
+import { PaginationModule } from '@root/src/core/pagination/pagination.module';
 
 @Module({
   imports: [
@@ -34,16 +39,13 @@ import { MilestonesService } from '../milestones/__mocks__/milestones.service';
     ]),
     OkrProgressModule,
     KeyResultsModule,
+    PlanningPeriodsModule,KeyResultsModule,MilestonesModule,MetricTypesModule,OkrProgressModule,OkrReportModule,PaginationModule
   ],
   controllers: [OkrReportTaskController],
   providers: [
     OkrReportTaskService,
-    OkrReportService,
-    OkrProgressService,
-    KeyResultsService,
-    MetricTypesService,
-    PaginationService,
-    MilestonesService],
+   
+    ],
   exports: [OkrReportTaskService],
 })
 export class OkrReportTaskModule {}
