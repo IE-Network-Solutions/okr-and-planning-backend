@@ -13,7 +13,7 @@ export const metricTypeData = (): MetricType => {
     createdBy: 'selam',
     name: NAME.CURRENCY,
     description: 'Currency',
-    tenantId:"tenantId",
+    tenantId: '57577865-7625-4170-a803-a73567e19216',
     keyResults: null,
   };
 };
@@ -59,6 +59,7 @@ export const updateMetricTypeData = () => {
     name: NAME.MILESTONE,
     description: 'descriptiom',
     keyResults: null,
+    tenantId: '57577865-7625-4170-a803-a73567e19216',
     updatedAt: new Date('2022-10-22 07:11:42'),
     createdAt: new Date('2022-10-22 07:11:42'),
     updatedBy: 'selam',
