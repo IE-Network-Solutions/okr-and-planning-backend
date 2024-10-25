@@ -7,15 +7,23 @@ import { Report } from '../okr-report/entities/okr-report.entity';
 import { PlanTask } from '../plan-tasks/entities/plan-task.entity';
 import { PlanningPeriodUser } from '../planningPeriods/planning-periods/entities/planningPeriodUser.entity';
 import { Plan } from '../plan/entities/plan.entity';
+import { OkrReportService } from '../okr-report/okr-report.service';
+import { OkrProgressService } from '../okr-progress/okr-progress.service';
+import { OkrProgress } from '../okr-progress/entities/okr-progress.entity';
 import { KeyResultsModule } from '../key-results/key-results.module';
 import { OkrProgressModule } from '../okr-progress/okr-progress.module';
 import { KeyResult } from '../key-results/entities/key-result.entity';
 import { MetricType } from '../metric-types/entities/metric-type.entity';
 import { Milestone } from '../milestones/entities/milestone.entity';
-import { MetricTypesModule } from '../metric-types/metric-types.module';
-import { PaginationModule } from '@root/src/core/pagination/pagination.module';
+import { PaginationService } from '@root/src/core/pagination/pagination.service';
+import { KeyResultsService } from '../key-results/key-results.service';
+import { MetricTypesService } from '../metric-types/metric-types.service';
+import { MilestonesService } from '../milestones/milestones.service';
+import { PlanningPeriodsModule } from '../planningPeriods/planning-periods/planning-periods.module';
 import { MilestonesModule } from '../milestones/milestones.module';
+import { MetricTypesModule } from '../metric-types/metric-types.module';
 import { OkrReportModule } from '../okr-report/okr-report.module';
+import { PaginationModule } from '@root/src/core/pagination/pagination.module';
 
 @Module({
   imports: [
@@ -27,14 +35,17 @@ import { OkrReportModule } from '../okr-report/okr-report.module';
       Plan,
       KeyResult,
       MetricType,
-      Milestone
+      Milestone,
     ]),
     OkrProgressModule,
     KeyResultsModule,
-    OkrReportModule,
+    PlanningPeriodsModule,
+    KeyResultsModule,
+    MilestonesModule,
     MetricTypesModule,
+    OkrProgressModule,
+    OkrReportModule,
     PaginationModule,
-    MilestonesModule
   ],
   controllers: [OkrReportTaskController],
   providers: [OkrReportTaskService],

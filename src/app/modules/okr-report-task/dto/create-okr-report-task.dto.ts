@@ -14,7 +14,6 @@ export class ReportTaskDTO {
   // @IsString()
   // planTaskId: string;
 
-  
   // @IsString()
   // status?: string;
 
