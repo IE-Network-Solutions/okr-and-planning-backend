@@ -27,8 +27,6 @@ export class Report extends BaseModel {
     onDelete: 'SET NULL',
     onUpdate: 'CASCADE',
   })
- 
-
   @Column({ nullable: true })
   planId: string;
 
@@ -43,11 +41,11 @@ export class Report extends BaseModel {
     onUpdate: 'CASCADE',
     // eager: true,
   })
-   @JoinColumn({name:'planId'})
+  @JoinColumn({ name: 'planId' })
   // plan: Plan;
   plan: Plan;
   @OneToMany(() => ReportComment, (reportComment) => reportComment.report, {
-    cascade: true, 
+    cascade: true,
   })
   comments: ReportComment[];
 

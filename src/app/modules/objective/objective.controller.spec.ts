@@ -189,7 +189,8 @@ describe('ObjectiveController', () => {
     const moduleRef = await Test.createTestingModule({
       imports: [],
       controllers: [ObjectiveController],
-      providers: [ObjectiveService,
+      providers: [
+        ObjectiveService,
         {
           provide: OKRDashboardService,
           useValue: mock<OKRDashboardService>(),

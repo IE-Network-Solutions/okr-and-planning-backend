@@ -291,5 +291,4 @@ export class AppreciationService {
     const appreciation = await this.findOne(id);
     return await this.appreciationLogRepository.softRemove(appreciation);
   }
-
 }

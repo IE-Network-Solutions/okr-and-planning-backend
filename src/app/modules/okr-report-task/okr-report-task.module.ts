@@ -35,17 +35,20 @@ import { PaginationModule } from '@root/src/core/pagination/pagination.module';
       Plan,
       KeyResult,
       MetricType,
-      Milestone
+      Milestone,
     ]),
     OkrProgressModule,
     KeyResultsModule,
-    PlanningPeriodsModule,KeyResultsModule,MilestonesModule,MetricTypesModule,OkrProgressModule,OkrReportModule,PaginationModule
+    PlanningPeriodsModule,
+    KeyResultsModule,
+    MilestonesModule,
+    MetricTypesModule,
+    OkrProgressModule,
+    OkrReportModule,
+    PaginationModule,
   ],
   controllers: [OkrReportTaskController],
-  providers: [
-    OkrReportTaskService,
-   
-    ],
+  providers: [OkrReportTaskService],
   exports: [OkrReportTaskService],
 })
 export class OkrReportTaskModule {}

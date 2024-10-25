@@ -65,7 +65,6 @@ export class OkrReportTaskService {
     planningPeriodId: string,
     userId: string,
   ): Promise<ReportTask[]> {
-
     const planningPeriodUserId = await this.getPlanningPeriodUserId(
       tenantId,
       userId,
@@ -100,7 +99,6 @@ export class OkrReportTaskService {
     await this.checkAndUpdateProgressByKey(savedReportTasks);
     return savedReportTasks;
   }
-
 
   async checkAndUpdateProgressByKey(savedReportTasks: any[]): Promise<any[]> {
     try {
@@ -176,14 +174,12 @@ export class OkrReportTaskService {
     } catch (error) {
       return [];
     }
-
   }
 
   // Method to update the isReported value of the plan
   private async updatePlanIsReported(planId: string): Promise<void> {
     await this.planRepository.update(planId, { isReported: true });
   }
-
 
   private createReportData(
     reportScore: number,

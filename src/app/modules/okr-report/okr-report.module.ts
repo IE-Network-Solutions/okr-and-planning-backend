@@ -22,15 +22,10 @@ import { PaginationService } from '@root/src/core/pagination/pagination.service'
       PlanningPeriodUser,
       Plan,
     ]),
-   PlanningPeriodsModule
-    
+    PlanningPeriodsModule,
   ],
   controllers: [OkrReportController],
-  providers: [
-    OkrReportService,
-    OrgEmployeeInformationApiService,
-    
-  ],
+  providers: [OkrReportService, OrgEmployeeInformationApiService],
   exports: [OkrReportService],
 })
 export class OkrReportModule {}

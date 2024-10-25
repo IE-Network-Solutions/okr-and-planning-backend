@@ -3,7 +3,7 @@ import { IsOptional, IsString } from 'class-validator';
 export class RockStarDto {
   @IsString()
   planningPeriodId: string;
-@IsOptional()
+  @IsOptional()
   @IsString()
   userId?: string;
 }

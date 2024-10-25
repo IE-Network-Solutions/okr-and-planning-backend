@@ -52,19 +52,16 @@ export class OkrReportController {
     return this.reportService.deleteReport(id, tenantId);
   }
   @Get('/rock-star/user')
-  async rockStart(
-    @Req() req: Request,
-    @Query() rockStarDto?: RockStarDto,
-  )  {
+  async rockStart(@Req() req: Request, @Query() rockStarDto?: RockStarDto) {
     const tenantId = req['tenantId'];
-    return  await this.reportService.rockStart(rockStarDto,tenantId);
+    return await this.reportService.rockStart(rockStarDto, tenantId);
   }
   @Get('/performance/user')
   async userPerformance(
     @Req() req: Request,
     @Query() rockStarDto?: RockStarDto,
-  )  {
+  ) {
     const tenantId = req['tenantId'];
-    return  await this.reportService.userPerformance(rockStarDto,tenantId);
+    return await this.reportService.userPerformance(rockStarDto, tenantId);
   }
 }

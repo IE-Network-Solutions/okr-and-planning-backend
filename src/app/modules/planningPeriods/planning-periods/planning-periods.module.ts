@@ -11,6 +11,6 @@ import { DataSource } from 'typeorm';
   imports: [TypeOrmModule.forFeature([PlanningPeriod, PlanningPeriodUser])],
   controllers: [PlanningPeriodsController],
   providers: [PlanningPeriodsService, PaginationService],
-  exports:[PlanningPeriodsService]
+  exports: [PlanningPeriodsService],
 })
 export class PlanningPeriodsModule {}

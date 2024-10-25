@@ -45,8 +45,8 @@ export class MetricTypesService {
         options,
         paginationOptions.orderBy,
         paginationOptions.orderDirection,
-       // {tenantId}
-      );  
+        // {tenantId}
+      );
 
       return paginatedData;
     } catch (error) {
