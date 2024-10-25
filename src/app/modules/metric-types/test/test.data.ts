@@ -13,6 +13,7 @@ export const metricTypeData = (): MetricType => {
     createdBy: 'selam',
     name: NAME.CURRENCY,
     description: 'Currency',
+    tenantId:"tenantId",
     keyResults: null,
   };
 };
