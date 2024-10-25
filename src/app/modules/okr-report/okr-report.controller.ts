@@ -59,4 +59,12 @@ export class OkrReportController {
     const tenantId = req['tenantId'];
     return  await this.reportService.rockStart(rockStarDto,tenantId);
   }
+  @Get('/performance/user')
+  async userPerformance(
+    @Req() req: Request,
+    @Query() rockStarDto?: RockStarDto,
+  )  {
+    const tenantId = req['tenantId'];
+    return  await this.reportService.userPerformance(rockStarDto,tenantId);
+  }
 }

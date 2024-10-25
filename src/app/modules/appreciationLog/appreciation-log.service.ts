@@ -9,8 +9,9 @@ import { PaginationService } from '@root/src/core/pagination/pagination.service'
 import { RecognitionTypeService } from '../recognitionType/recognition-type.service';
 import { CarbonCopyLogService } from '../carbonCopyLlog/carbon-copy-log.service';
 import { FilterAppreciationLogDto } from './dto/filter.appreciation-log.dto';
-import { ReprimandLogService } from '../reprimandLog/setrvices/reprimand-log.service';
 import { ReprimandLog } from '../reprimandLog/entities/reprimand.entity';
+import { RockStarDto } from '../okr-report/dto/report-rock-star.dto';
+import { ReprimandLogService } from '../reprimandLog/setrvices/reprimand-log.service';
 
 @Injectable()
 export class AppreciationService {
@@ -290,4 +291,5 @@ export class AppreciationService {
     const appreciation = await this.findOne(id);
     return await this.appreciationLogRepository.softRemove(appreciation);
   }
+
 }

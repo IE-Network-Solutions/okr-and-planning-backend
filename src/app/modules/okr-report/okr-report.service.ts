@@ -15,8 +15,7 @@ export class OkrReportService {
     @InjectRepository(Report) private reportRepository: Repository<Report>,
     @InjectRepository(ReportTask)
     private reportTaskRepository: Repository<ReportTask>,
-   private planningPeriodService:PlanningPeriodsService,
-  // @InjectRepository(PlanningPeriod)
+    private planningPeriodService:PlanningPeriodsService
   ) {}
 
   async createReportWithTasks(
@@ -84,17 +83,17 @@ export class OkrReportService {
     await this.reportRepository.remove(report);
   }
   async rockStart(rockStarDto: RockStarDto, tenantId: string) {
+    console.log(rockStarDto,"rockStarDto")
     let reports = await this.reportRepository
-     .createQueryBuilder('Report')
-      .leftJoinAndSelect('Report.plan', 'plan') 
-      .leftJoinAndSelect('plan.planningUser', 'planningUser') 
-      .leftJoinAndSelect('report.reportTask', 'reportTask') 
-      .leftJoinAndSelect('planningUser.planningUser', 'planningUser') 
-      .where('planningUser.planningPeriodId = :planningPeriodId',{planningPeriodId:rockStarDto.planningPeriodId}) 
-      .andWhere('planningUser.tenantId = :tenantId',{tenantId:tenantId})
-      .andWhere('reportTask.isAchieved = :isAchieved',{isAchieved:true})
-      .getRawMany();
-
+    .createQueryBuilder('report')
+  .leftJoinAndSelect('report.plan', 'plan')
+    .leftJoinAndSelect('plan.planningUser', 'planningUser')
+     .leftJoinAndSelect('report.reportTask', 'reportTask')
+     .where('planningUser.planningPeriodId = :planningPeriodId', { planningPeriodId: rockStarDto.planningPeriodId })
+     .andWhere('planningUser.tenantId = :tenantId', { tenantId: tenantId })
+   .andWhere('reportTask.isAchived = :isAchived', { isAchived: true })
+    .getRawMany();
+  
       const maxScore = Math.max(...reports.map(item => item.reportScore));
       const topEmployees = reports.filter(item => item.reportScore === maxScore);
   return topEmployees

@@ -28,7 +28,9 @@ import { PaginationService } from '@root/src/core/pagination/pagination.service'
   controllers: [OkrReportController],
   providers: [
     OkrReportService,
-    OrgEmployeeInformationApiService,  ],
+    OrgEmployeeInformationApiService,
+    
+  ],
   exports: [OkrReportService],
 })
 export class OkrReportModule {}
