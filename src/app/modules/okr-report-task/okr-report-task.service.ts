@@ -1,8 +1,8 @@
 import { ConflictException, Injectable } from '@nestjs/common';
 import { ReportTask } from './entities/okr-report-task.entity';
-import { InjectRepository } from '@nestjs/typeorm';
+import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { ReportTaskDTO } from './dto/create-okr-report-task.dto';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { UUID } from 'crypto';
 import { PlanTask } from '../plan-tasks/entities/plan-task.entity';
 import { PlanningPeriodUser } from '../planningPeriods/planning-periods/entities/planningPeriodUser.entity';
@@ -28,6 +28,8 @@ export class OkrReportTaskService {
 
     @InjectRepository(Plan)
     private milestoneRepository: Repository<Milestone>,
+
+    @InjectDataSource() private readonly dataSource: DataSource,
 
     @InjectRepository(PlanTask)
     private planTaskRepository: Repository<PlanTask>,
@@ -66,6 +68,12 @@ export class OkrReportTaskService {
     userId: string,
   ): Promise<ReportTask[]> {
 
+    const queryRunner = this.dataSource.createQueryRunner();
+
+    // Establish the transaction
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+  try {
     const planningPeriodUserId = await this.getPlanningPeriodUserId(
       tenantId,
       userId,
@@ -98,8 +106,20 @@ export class OkrReportTaskService {
       await this.updatePlanIsReported(planId);
     }
     await this.checkAndUpdateProgressByKey(savedReportTasks);
+
+    await queryRunner.commitTransaction();
     return savedReportTasks;
+
+  } catch (error) {
+    // Rollback transaction if any error occurs
+    await queryRunner.rollbackTransaction();
+    throw error;
+
+  } finally {
+    // Release the query runner after committing or rolling back
+    await queryRunner.release();
   }
+}
 
 
   async checkAndUpdateProgressByKey(savedReportTasks: any[]): Promise<any[]> {
@@ -140,7 +160,6 @@ export class OkrReportTaskService {
                 );
               }
               break;
-
             case NAME.ACHIEVE:
               if (planTask.achieveMK && task.status === 'Done') {
                 return await this.okrProgressService.calculateKeyResultProgress(
