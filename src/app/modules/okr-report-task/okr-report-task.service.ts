@@ -300,7 +300,8 @@ export class OkrReportTaskService {
   ): Promise<any> {
     try {
       // Fetch all plan tasks where reports have not been created yet
-      const unreportedTasks = await this.planTaskRepository
+
+        const unreportedTasks = await this.planTaskRepository
         .createQueryBuilder('planTask')
         .leftJoinAndSelect('planTask.plan', 'plan')
         .leftJoinAndSelect('planTask.milestone', 'milestone')
@@ -310,18 +311,15 @@ export class OkrReportTaskService {
         .leftJoinAndSelect('planTask.parentTask', 'parentTask')
         .leftJoinAndSelect('plan.planningUser', 'planningUser') // Add relation to planningUser from the Plan entity
 
-        // Fetch unreported plan tasks based on userId, tenantId, and planningPeriodId
-        // .where('plan.isReported = :isReported', { isReported: false })
-        // .andWhere('plan.tenantId = :tenantId', { tenantId })
-        // .andWhere('plan.userId = :userId', { userId })
-        .andWhere('planningUser.planningPeriodId = :planningPeriodId', {
-          planningPeriodId,
-        }) // Use the relation to access the planningPeriod ID
-        .andWhere('plan.isReported = :isReported OR plan.isReported IS NULL', {
-          isReported: false,
-        })
+        // Apply filtering conditions
+        .where('plan.tenantId = :tenantId', { tenantId })
+        .andWhere('plan.userId = :userId', { userId })
+        .andWhere('planningUser.planningPeriodId = :planningPeriodId', { planningPeriodId }) // Use relation to access planningPeriod ID
+        .andWhere('plan.isValidated = :isValidated', { isValidated: true }) // Filter by validated plans only
+        .andWhere('plan.isReported = :isReported OR plan.isReported IS NULL', { isReported: false })
 
         .getMany();
+
 
       return unreportedTasks;
     } catch (error) {
