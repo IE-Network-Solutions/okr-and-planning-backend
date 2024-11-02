@@ -81,18 +81,22 @@ export class OkrReportService {
   }
 
   async rockStart(rockStarDto: RockStarDto, tenantId: string) {
-    let employees = await this.reportRepository
-     .createQueryBuilder('Report')
-      .leftJoinAndSelect('Report.plan', 'plan') 
-      .leftJoinAndSelect('plan.planningUser', 'planningUser') 
-      .leftJoinAndSelect('planningUser.planningUser', 'planningUser') 
-      .where('planningUser.planningPeriodId = :planningPeriodId',{planningPeriodId:rockStarDto.planningPeriodId}) 
-      .andWhere('planningUser.tenantId = :tenantId',{tenantId:tenantId})
-      .andWhere('planningUser.userId = :userId',{userId:rockStarDto.userId})
+    const employees = await this.reportRepository
+      .createQueryBuilder('Report')
+      .leftJoinAndSelect('Report.plan', 'plan')
+      .leftJoinAndSelect('plan.planningUser', 'planningUser')
+      .leftJoinAndSelect('planningUser.planningUser', 'planningUser')
+      .where('planningUser.planningPeriodId = :planningPeriodId', {
+        planningPeriodId: rockStarDto.planningPeriodId,
+      })
+      .andWhere('planningUser.tenantId = :tenantId', { tenantId: tenantId })
+      .andWhere('planningUser.userId = :userId', { userId: rockStarDto.userId })
       .getRawMany();
 
-      const maxScore = Math.max(...employees.map(item => item.reportScore));
-      const topEmployees = employees.filter(item => item.reportScore === maxScore);
-  return topEmployees
+    const maxScore = Math.max(...employees.map((item) => item.reportScore));
+    const topEmployees = employees.filter(
+      (item) => item.reportScore === maxScore,
+    );
+    return topEmployees;
   }
 }

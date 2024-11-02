@@ -1,6 +1,6 @@
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { OkrReportController } from '../okr-report/okr-report.controller';
 import { ReportTask } from './entities/okr-report-task.entity';
 import { OkrReportTaskService } from './okr-report-task.service';
@@ -45,6 +45,10 @@ describe('OkrReportTaskController', () => {
         {
           provide: OkrProgressService,
           useValue: mock<OkrReportService>(),
+        },
+        {
+          provide: DataSource,
+          useValue: mock<DataSource>(), // Mock the DataSource
         },
       ],
     }).compile();

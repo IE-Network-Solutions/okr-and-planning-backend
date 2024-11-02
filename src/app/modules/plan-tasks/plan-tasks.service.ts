@@ -27,7 +27,6 @@ export class PlanTasksService {
     private readonly keyResultService: KeyResultsService,
     private readonly milestoneService: MilestonesService,
     @InjectDataSource() private readonly dataSource: DataSource,
-
   ) {}
   async create(
     createPlanTasksDto: CreatePlanTaskDto[],
@@ -109,7 +108,7 @@ export class PlanTasksService {
           plan,
           keyResult,
           milestone: getMilestone || null,
-          achieveMK:createPlanTaskDto.achieveMK,
+          achieveMK: createPlanTaskDto.achieveMK,
           level,
           weight: createPlanTaskDto.weight,
         });
@@ -130,9 +129,9 @@ export class PlanTasksService {
 
         result.push(plan); // Collect the result for the return value
       }
-    // Commit transaction if all operations succeed
-    await queryRunner.commitTransaction();
-    return await this.findOne(result[0].id); // Assuming you want to return the first created plan
+      // Commit transaction if all operations succeed
+      await queryRunner.commitTransaction();
+      return await this.findOne(result[0].id); // Assuming you want to return the first created plan
     } catch (error) {
       await queryRunner.rollbackTransaction();
 
@@ -140,7 +139,7 @@ export class PlanTasksService {
         throw new NotFoundException('Error creating tasks');
       }
       throw error;
-    }finally {
+    } finally {
       // Release the query runner after committing or rolling back
       await queryRunner.release();
     }

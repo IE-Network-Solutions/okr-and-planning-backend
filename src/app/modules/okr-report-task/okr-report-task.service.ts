@@ -67,60 +67,56 @@ export class OkrReportTaskService {
     planningPeriodId: string,
     userId: string,
   ): Promise<ReportTask[]> {
-
     const queryRunner = this.dataSource.createQueryRunner();
 
     // Establish the transaction
     await queryRunner.connect();
     await queryRunner.startTransaction();
-  try {
-    const planningPeriodUserId = await this.getPlanningPeriodUserId(
-      tenantId,
-      userId,
-      planningPeriodId,
-    );
-    if (!planningPeriodUserId) {
-      throw new Error('Planning period user not found');
-    }
-    const planId = await this.getPlanId(planningPeriodUserId);
-    if (!planId) {
-      throw new Error('Plan not found for the given planning period user');
-    }
-    const reportScore = await this.calculateReportScore(createReportDto);
-    const reportData = this.createReportData(
-      reportScore,
-      planId,
-      userId,
-      tenantId,
-    );
-    const returnedReportData = await this.reportService.createReportWithTasks(
-      reportData,
-    );
-    const reportTasks = this.mapDtoToReportTasks(
-      createReportDto,
-      returnedReportData,
-      tenantId,
-    );
-    const savedReportTasks = await this.reportTaskRepo.save(reportTasks);
-    if (savedReportTasks) {
-      await this.updatePlanIsReported(planId);
-    }
-    await this.checkAndUpdateProgressByKey(savedReportTasks);
+    try {
+      const planningPeriodUserId = await this.getPlanningPeriodUserId(
+        tenantId,
+        userId,
+        planningPeriodId,
+      );
+      if (!planningPeriodUserId) {
+        throw new Error('Planning period user not found');
+      }
+      const planId = await this.getPlanId(planningPeriodUserId);
+      if (!planId) {
+        throw new Error('Plan not found for the given planning period user');
+      }
+      const reportScore = await this.calculateReportScore(createReportDto);
+      const reportData = this.createReportData(
+        reportScore,
+        planId,
+        userId,
+        tenantId,
+      );
+      const returnedReportData = await this.reportService.createReportWithTasks(
+        reportData,
+      );
+      const reportTasks = this.mapDtoToReportTasks(
+        createReportDto,
+        returnedReportData,
+        tenantId,
+      );
+      const savedReportTasks = await this.reportTaskRepo.save(reportTasks);
+      if (savedReportTasks) {
+        await this.updatePlanIsReported(planId);
+      }
+      await this.checkAndUpdateProgressByKey(savedReportTasks);
 
-    await queryRunner.commitTransaction();
-    return savedReportTasks;
-
-  } catch (error) {
-    // Rollback transaction if any error occurs
-    await queryRunner.rollbackTransaction();
-    throw error;
-
-  } finally {
-    // Release the query runner after committing or rolling back
-    await queryRunner.release();
+      await queryRunner.commitTransaction();
+      return savedReportTasks;
+    } catch (error) {
+      // Rollback transaction if any error occurs
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      // Release the query runner after committing or rolling back
+      await queryRunner.release();
+    }
   }
-}
-
 
   async checkAndUpdateProgressByKey(savedReportTasks: any[]): Promise<any[]> {
     try {
@@ -195,14 +191,12 @@ export class OkrReportTaskService {
     } catch (error) {
       return [];
     }
-
   }
 
   // Method to update the isReported value of the plan
   private async updatePlanIsReported(planId: string): Promise<void> {
     await this.planRepository.update(planId, { isReported: true });
   }
-
 
   private createReportData(
     reportScore: number,

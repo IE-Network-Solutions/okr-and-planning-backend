@@ -1,7 +1,6 @@
 import {
   IsArray,
   IsBoolean,
-  isBoolean,
   IsEnum,
   IsInt,
   IsNotEmpty,
@@ -54,7 +53,7 @@ export class CreatePlanTaskDto {
 
   @IsBoolean()
   @IsOptional()
-  achieveMK:boolean;
+  achieveMK: boolean;
 
   @IsString()
   @IsOptional()

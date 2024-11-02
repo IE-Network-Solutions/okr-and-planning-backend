@@ -27,14 +27,14 @@ import { OkrReportModule } from '../okr-report/okr-report.module';
       Plan,
       KeyResult,
       MetricType,
-      Milestone
+      Milestone,
     ]),
     OkrProgressModule,
     KeyResultsModule,
     OkrReportModule,
     MetricTypesModule,
     PaginationModule,
-    MilestonesModule
+    MilestonesModule,
   ],
   controllers: [OkrReportTaskController],
   providers: [OkrReportTaskService],
