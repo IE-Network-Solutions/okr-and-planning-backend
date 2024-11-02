@@ -10,5 +10,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
   imports: [TypeOrmModule.forFeature([PlanningPeriod, PlanningPeriodUser])],
   controllers: [PlanningPeriodsController],
   providers: [PlanningPeriodsService, PaginationService],
+  exports: [PlanningPeriodsService],
 })
 export class PlanningPeriodsModule {}

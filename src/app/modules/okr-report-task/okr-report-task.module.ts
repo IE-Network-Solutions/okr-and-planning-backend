@@ -12,10 +12,11 @@ import { OkrProgressModule } from '../okr-progress/okr-progress.module';
 import { KeyResult } from '../key-results/entities/key-result.entity';
 import { MetricType } from '../metric-types/entities/metric-type.entity';
 import { Milestone } from '../milestones/entities/milestone.entity';
-import { MetricTypesModule } from '../metric-types/metric-types.module';
-import { PaginationModule } from '@root/src/core/pagination/pagination.module';
+import { PlanningPeriodsModule } from '../planningPeriods/planning-periods/planning-periods.module';
 import { MilestonesModule } from '../milestones/milestones.module';
+import { MetricTypesModule } from '../metric-types/metric-types.module';
 import { OkrReportModule } from '../okr-report/okr-report.module';
+import { PaginationModule } from '@root/src/core/pagination/pagination.module';
 
 @Module({
   imports: [
@@ -31,10 +32,13 @@ import { OkrReportModule } from '../okr-report/okr-report.module';
     ]),
     OkrProgressModule,
     KeyResultsModule,
-    OkrReportModule,
-    MetricTypesModule,
-    PaginationModule,
+    PlanningPeriodsModule,
+    KeyResultsModule,
     MilestonesModule,
+    MetricTypesModule,
+    OkrProgressModule,
+    OkrReportModule,
+    PaginationModule,
   ],
   controllers: [OkrReportTaskController],
   providers: [OkrReportTaskService],
