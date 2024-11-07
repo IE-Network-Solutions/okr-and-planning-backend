@@ -1,7 +1,7 @@
 import { Test } from '@nestjs/testing';
 import { mock } from 'jest-mock-extended';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { OkrReportTaskService } from './okr-report-task.service';
 import { ReportTask } from './entities/okr-report-task.entity';
 import { PlanningPeriodUser } from '../planningPeriods/planning-periods/entities/planningPeriodUser.entity';
@@ -40,6 +40,10 @@ describe('OkrReportTaskService', () => {
         {
           provide: OkrProgressService,
           useValue: mock<OkrProgressService>(),
+        },
+        {
+          provide: DataSource,
+          useValue: mock<DataSource>(), // Mock the DataSource
         },
       ],
     }).compile();

@@ -1,8 +1,8 @@
 import { ConflictException, Injectable } from '@nestjs/common';
 import { ReportTask } from './entities/okr-report-task.entity';
-import { InjectRepository } from '@nestjs/typeorm';
+import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { ReportTaskDTO } from './dto/create-okr-report-task.dto';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { UUID } from 'crypto';
 import { PlanTask } from '../plan-tasks/entities/plan-task.entity';
 import { PlanningPeriodUser } from '../planningPeriods/planning-periods/entities/planningPeriodUser.entity';
@@ -28,6 +28,8 @@ export class OkrReportTaskService {
 
     @InjectRepository(Plan)
     private milestoneRepository: Repository<Milestone>,
+
+    @InjectDataSource() private readonly dataSource: DataSource,
 
     @InjectRepository(PlanTask)
     private planTaskRepository: Repository<PlanTask>,
@@ -65,39 +67,55 @@ export class OkrReportTaskService {
     planningPeriodId: string,
     userId: string,
   ): Promise<ReportTask[]> {
-    const planningPeriodUserId = await this.getPlanningPeriodUserId(
-      tenantId,
-      userId,
-      planningPeriodId,
-    );
-    if (!planningPeriodUserId) {
-      throw new Error('Planning period user not found');
+    const queryRunner = this.dataSource.createQueryRunner();
+
+    // Establish the transaction
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const planningPeriodUserId = await this.getPlanningPeriodUserId(
+        tenantId,
+        userId,
+        planningPeriodId,
+      );
+      if (!planningPeriodUserId) {
+        throw new Error('Planning period user not found');
+      }
+      const planId = await this.getPlanId(planningPeriodUserId);
+      if (!planId) {
+        throw new Error('Plan not found for the given planning period user');
+      }
+      const reportScore = await this.calculateReportScore(createReportDto);
+      const reportData = this.createReportData(
+        reportScore,
+        planId,
+        userId,
+        tenantId,
+      );
+      const returnedReportData = await this.reportService.createReportWithTasks(
+        reportData,
+      );
+      const reportTasks = this.mapDtoToReportTasks(
+        createReportDto,
+        returnedReportData,
+        tenantId,
+      );
+      const savedReportTasks = await this.reportTaskRepo.save(reportTasks);
+      if (savedReportTasks) {
+        await this.updatePlanIsReported(planId);
+      }
+      await this.checkAndUpdateProgressByKey(savedReportTasks);
+
+      await queryRunner.commitTransaction();
+      return savedReportTasks;
+    } catch (error) {
+      // Rollback transaction if any error occurs
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      // Release the query runner after committing or rolling back
+      await queryRunner.release();
     }
-    const planId = await this.getPlanId(planningPeriodUserId);
-    if (!planId) {
-      throw new Error('Plan not found for the given planning period user');
-    }
-    const reportScore = await this.calculateReportScore(createReportDto);
-    const reportData = this.createReportData(
-      reportScore,
-      planId,
-      userId,
-      tenantId,
-    );
-    const returnedReportData = await this.reportService.createReportWithTasks(
-      reportData,
-    );
-    const reportTasks = this.mapDtoToReportTasks(
-      createReportDto,
-      returnedReportData,
-      tenantId,
-    );
-    const savedReportTasks = await this.reportTaskRepo.save(reportTasks);
-    if (savedReportTasks) {
-      await this.updatePlanIsReported(planId);
-    }
-    await this.checkAndUpdateProgressByKey(savedReportTasks);
-    return savedReportTasks;
   }
 
   async checkAndUpdateProgressByKey(savedReportTasks: any[]): Promise<any[]> {
@@ -138,7 +156,6 @@ export class OkrReportTaskService {
                 );
               }
               break;
-
             case NAME.ACHIEVE:
               if (planTask.achieveMK && task.status === 'Done') {
                 return await this.okrProgressService.calculateKeyResultProgress(
@@ -283,7 +300,8 @@ export class OkrReportTaskService {
   ): Promise<any> {
     try {
       // Fetch all plan tasks where reports have not been created yet
-      const unreportedTasks = await this.planTaskRepository
+
+        const unreportedTasks = await this.planTaskRepository
         .createQueryBuilder('planTask')
         .leftJoinAndSelect('planTask.plan', 'plan')
         .leftJoinAndSelect('planTask.milestone', 'milestone')
@@ -293,18 +311,15 @@ export class OkrReportTaskService {
         .leftJoinAndSelect('planTask.parentTask', 'parentTask')
         .leftJoinAndSelect('plan.planningUser', 'planningUser') // Add relation to planningUser from the Plan entity
 
-        // Fetch unreported plan tasks based on userId, tenantId, and planningPeriodId
-        // .where('plan.isReported = :isReported', { isReported: false })
-        // .andWhere('plan.tenantId = :tenantId', { tenantId })
-        // .andWhere('plan.userId = :userId', { userId })
-        .andWhere('planningUser.planningPeriodId = :planningPeriodId', {
-          planningPeriodId,
-        }) // Use the relation to access the planningPeriod ID
-        .andWhere('plan.isReported = :isReported OR plan.isReported IS NULL', {
-          isReported: false,
-        })
+        // Apply filtering conditions
+        .where('plan.tenantId = :tenantId', { tenantId })
+        .andWhere('plan.userId = :userId', { userId })
+        .andWhere('planningUser.planningPeriodId = :planningPeriodId', { planningPeriodId }) // Use relation to access planningPeriod ID
+        .andWhere('plan.isValidated = :isValidated', { isValidated: true }) // Filter by validated plans only
+        .andWhere('plan.isReported = :isReported OR plan.isReported IS NULL', { isReported: false })
 
         .getMany();
+
 
       return unreportedTasks;
     } catch (error) {
