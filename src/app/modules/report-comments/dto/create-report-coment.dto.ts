@@ -5,11 +5,11 @@ export class CreateReportCommentDto {
   reportId: string;
 
   @IsUUID()
-  commentedById: string;
+  commentedBy: string;
 
   @IsString()
-  commentText: string;
+  comment: string;
 
-  @IsUUID()
-  tenantId: string;
+  // @IsUUID()
+  // tenantId: string;
 }

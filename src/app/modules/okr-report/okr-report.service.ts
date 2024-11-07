@@ -47,6 +47,7 @@ export class OkrReportService {
     const reports = await this.reportRepository
       .createQueryBuilder('report') // Start from the 'report' entity
       .leftJoinAndSelect('report.reportTask', 'reportTask') // Join 'reportTask'
+      .leftJoinAndSelect('report.comments', 'ReportComment') // Join 'ReportComment' (adjust alias here)
       .leftJoinAndSelect('reportTask.planTask', 'planTask') // Join 'planTask'
       .leftJoinAndSelect('planTask.plan', 'plan') // Join 'plan'
       .leftJoinAndSelect('plan.planningUser', 'planningUser') // Join 'planningUser'
