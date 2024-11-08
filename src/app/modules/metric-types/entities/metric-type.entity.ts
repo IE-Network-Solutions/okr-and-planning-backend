@@ -9,7 +9,7 @@ export class MetricType extends BaseModel {
   name: NAME;
   @Column({ type: 'varchar', length: '255' })
   description: string;
-  @Column({ type: 'uuid' })
+  @Column({ type: 'uuid',nullable:true })
   tenantId: string;
   @OneToMany(() => KeyResult, (key) => key.metricType)
   keyResults: KeyResult[];
