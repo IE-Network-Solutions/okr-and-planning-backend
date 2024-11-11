@@ -4,9 +4,9 @@ pipeline {
     environment {
         REMOTE_SERVER = 'ubuntu@139.185.53.18'
         REPO_URL = 'https://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@github.com/IE-Network-Solutions/okr-and-planning-backend.git'
-        BRANCH_NAME = 'develop'
+        BRANCH_NAME = 'production'
         REPO_DIR = 'okr-backend'
-        SSH_CREDENTIALS_ID = 'peptest'
+        SSH_CREDENTIALS_ID = 'pepproduction'
     }
 
     
