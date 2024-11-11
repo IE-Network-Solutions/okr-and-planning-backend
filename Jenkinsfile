@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        REMOTE_SERVER = 'ubuntu@139.185.53.18'
+        REMOTE_SERVER = 'ubuntu@139.185.51.164'
         REPO_URL = 'https://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@github.com/IE-Network-Solutions/okr-and-planning-backend.git'
         BRANCH_NAME = 'production'
         REPO_DIR = 'okr-backend'
