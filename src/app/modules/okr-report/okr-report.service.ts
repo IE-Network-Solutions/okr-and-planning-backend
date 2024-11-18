@@ -8,6 +8,7 @@ import { UUID } from 'crypto';
 import { RockStarDto } from './dto/report-rock-star.dto';
 import { PlanningPeriodsService } from '../planningPeriods/planning-periods/planning-periods.service';
 import { PaginationDto } from '@root/src/core/commonDto/pagination-dto';
+import { ReportStatusEnum } from '@root/src/core/interfaces/reportStatus.type';
 
 @Injectable()
 export class OkrReportService {
@@ -23,7 +24,7 @@ export class OkrReportService {
   ): Promise<Report> {
     // Step 1: Create the Report entity
     const report = this.reportRepository.create({
-      // status: ReportStatusEnum[`${reportData.reportScore}`],
+      status: ReportStatusEnum.Reported,
       reportScore: reportData.reportScore,
       reportTitle: reportData.reportTitle,
       tenantId: reportData?.tenantId,
@@ -33,7 +34,9 @@ export class OkrReportService {
 
     // Step 2: Save the Report entity
     const savedReport = await this.reportRepository.save(report);
-
+    if (!savedReport) {
+      throw new Error('Report not Saved');
+    }
     // Step 5: Return the saved report and its associated tasks
     return savedReport;
   }
