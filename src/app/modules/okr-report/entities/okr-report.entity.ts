@@ -2,6 +2,7 @@ import {
   Column,
   Entity,
   JoinColumn,
+  ManyToMany,
   ManyToOne,
   OneToMany,
   OneToOne,
@@ -23,7 +24,7 @@ export class Report extends BaseModel {
   @Column()
   reportTitle: string;
 
-  @OneToOne(() => Plan, (plan) => plan.report, {
+  @ManyToOne(() => Plan, (plan) => plan.report, {
     onDelete: 'SET NULL',
     onUpdate: 'CASCADE',
   })
@@ -36,14 +37,6 @@ export class Report extends BaseModel {
   @Column({ nullable: true })
   userId: string;
 
-  @ManyToOne(() => Plan, (plan) => plan.plan, {
-    onDelete: 'SET NULL',
-    onUpdate: 'CASCADE',
-    // eager: true,
-  })
-  @JoinColumn({ name: 'planId' })
-  // plan: Plan;
-  plan: Plan;
   @OneToMany(() => ReportComment, (reportComment) => reportComment.report, {
     cascade: true,
   })

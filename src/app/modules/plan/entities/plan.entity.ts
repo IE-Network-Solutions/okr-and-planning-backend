@@ -66,7 +66,7 @@ export class Plan extends BaseModel {
   })
   comments: PlanComment[];
 
-  @OneToOne(() => Report, (report) => report.plan)
+  @OneToMany(() => Report, (report) => report.planId)
   report: Report;
 
   @OneToOne(() => ReportTask, (reportTask) => reportTask.planTask)

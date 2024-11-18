@@ -224,7 +224,7 @@ export class OkrReportTaskService {
         failureReasonId?: string;
       }
     >,
-    reporteData,
+    reporteData:any,
     tenantId: string,
   ): ReportTask[] {
     return Object.entries(dto).map(([key, value]) => {

@@ -14,7 +14,6 @@ export class OkrReportService {
   constructor(
     @InjectRepository(Report) private reportRepository: Repository<Report>,
     @InjectRepository(ReportTask)
-    private reportTaskRepository: Repository<ReportTask>,
     private planningPeriodService: PlanningPeriodsService,
   ) {}
 
@@ -100,7 +99,7 @@ export class OkrReportService {
     const topEmployees = reports.filter(
       (item) => item.reportScore === maxScore,
     );
-    return topEmployees;
+     return topEmployees;
   }
 
   async userPerformance(rockStarDto: RockStarDto, tenantId: string) {
