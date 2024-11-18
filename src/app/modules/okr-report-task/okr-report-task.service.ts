@@ -2,7 +2,7 @@ import { ConflictException, Injectable } from '@nestjs/common';
 import { ReportTask } from './entities/okr-report-task.entity';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { ReportTaskDTO } from './dto/create-okr-report-task.dto';
-import {DataSource, Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { UUID } from 'crypto';
 import { PlanTask } from '../plan-tasks/entities/plan-task.entity';
 import { PlanningPeriodUser } from '../planningPeriods/planning-periods/entities/planningPeriodUser.entity';

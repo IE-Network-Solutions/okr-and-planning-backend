@@ -9,6 +9,8 @@ import { Plan } from '../plan/entities/plan.entity';
 import { PlanTask } from '../plan-tasks/entities/plan-task.entity';
 import { OkrReportService } from '../okr-report/okr-report.service';
 import { OkrProgressService } from '../okr-progress/okr-progress.service';
+import { Milestone } from '../milestones/entities/milestone.entity';
+import { Report } from '../okr-report/entities/okr-report.entity';
 
 describe('OkrReportTaskService', () => {
   let okrReportTaskService: OkrReportTaskService;
@@ -34,6 +36,14 @@ describe('OkrReportTaskService', () => {
           useValue: mock<Repository<PlanTask>>(),
         },
         {
+          provide: getRepositoryToken(Milestone),
+          useValue: mock<Repository<Milestone>>(), // Mock the DataSource
+        },
+        {
+          provide: getRepositoryToken(Report),
+          useValue: mock<Repository<Report>>(), // Mock the DataSource
+        },
+        {
           provide: OkrReportService,
           useValue: mock<OkrReportService>(),
         },
@@ -45,6 +55,7 @@ describe('OkrReportTaskService', () => {
           provide: DataSource,
           useValue: mock<DataSource>(), // Mock the DataSource
         },
+
       ],
     }).compile();
 
