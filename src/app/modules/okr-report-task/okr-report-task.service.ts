@@ -130,7 +130,8 @@ export class OkrReportTaskService {
           const metricsType = await this.getPlanTaskById(planTask.id);
 
           // Check if the metrics type is MILESTONE before updating the milestone
-          if (metricsType?.keyResult?.metricType.name === NAME.MILESTONE) {
+          // if (metricsType?.keyResult?.metricType.name === NAME.MILESTONE ) {
+            if (planTask?.achieveMK && metricsType?.keyResult?.metricType.name === NAME.MILESTONE) {
             const milestoneUpdate = await this.findMilestoneById(
               planTask?.milestoneId,
             );
