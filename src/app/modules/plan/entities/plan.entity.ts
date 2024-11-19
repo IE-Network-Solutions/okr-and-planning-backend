@@ -27,10 +27,10 @@ export class Plan extends BaseModel {
   @Column({ type: 'text', nullable: true })
   description: string;
 
-  @Column({ type: 'boolean',default:false })
+  @Column({ type: 'boolean', default: false })
   isValidated: boolean;
 
-  @Column({ type: 'boolean',default:false})
+  @Column({ type: 'boolean', default: false })
   isReported: boolean;
 
   @TreeChildren()
