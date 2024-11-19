@@ -13,8 +13,7 @@ export class PlanComment extends BaseModel {
   @Column({ type: 'uuid' })
   tenantId: string;
 
-
-  @Column({ type:'uuid',nullable:true })
+  @Column({ type: 'uuid', nullable: true })
   planId: string;
 
   @ManyToOne(() => Plan, (plan) => plan.comments, {
@@ -22,5 +21,4 @@ export class PlanComment extends BaseModel {
     onUpdate: 'CASCADE',
   })
   plan: Plan;
-  
 }
