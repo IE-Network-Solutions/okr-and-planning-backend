@@ -5,19 +5,18 @@ import { ApiTags } from '@nestjs/swagger';
 
 @Controller('report-comments')
 @ApiTags('report-comments')
-
 export class ReportCommentsController {
   constructor(private readonly reportCommentService: ReportCommentsService) {}
 
   @Post()
-  async createComment(    
+  async createComment(
     @Req() req: Request,
-    @Body() createReportCommentDto: CreateReportCommentDto
+    @Body() createReportCommentDto: CreateReportCommentDto,
   ) {
     const tenantId = req['tenantId'];
     return await this.reportCommentService.createComment(
       createReportCommentDto,
-      tenantId
+      tenantId,
     );
   }
 

@@ -8,9 +8,7 @@ import { Plan } from '../plan/entities/plan.entity';
 import { PlanService } from '../plan/plan.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([PlanComment,Plan]),
-    PlanModule
-   ],
+  imports: [TypeOrmModule.forFeature([PlanComment, Plan]), PlanModule],
   controllers: [PlanCommentsController],
   providers: [PlanCommentsService],
 })

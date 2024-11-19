@@ -22,8 +22,8 @@ export class ReportTask extends BaseModel {
   @Column({ nullable: true })
   actualValue: string;
 
-  @Column()
-  isAchived: boolean;
+  @Column({default:false})
+  isAchieved: boolean;
 
   @Column({ nullable: true })
   tenantId: string; // This stores the foreign key for Tenant
