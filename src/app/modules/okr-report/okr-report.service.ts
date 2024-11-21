@@ -8,7 +8,8 @@ import { UUID } from 'crypto';
 import { RockStarDto } from './dto/report-rock-star.dto';
 import { PlanningPeriodsService } from '../planningPeriods/planning-periods/planning-periods.service';
 import { PaginationDto } from '@root/src/core/commonDto/pagination-dto';
-
+import { startOfWeek, endOfWeek } from 'date-fns';
+import { GetFromOrganizatiAndEmployeInfoService } from '../objective/services/get-data-from-org.service';
 @Injectable()
 export class OkrReportService {
   constructor(
@@ -16,6 +17,7 @@ export class OkrReportService {
     @InjectRepository(ReportTask)
     private reportTaskRepository: Repository<ReportTask>,
     private planningPeriodService: PlanningPeriodsService,
+    private readonly getFromOrganizatiAndEmployeInfoService: GetFromOrganizatiAndEmployeInfoService,
   ) {}
 
   async createReportWithTasks(
@@ -83,6 +85,8 @@ export class OkrReportService {
     await this.reportRepository.remove(report);
   }
   async rockStart(rockStarDto: RockStarDto, tenantId: string) {
+    const startOfCurrentWeek = startOfWeek(new Date(), { weekStartsOn: 1 });
+    const endOfCurrentWeek = endOfWeek(new Date(), { weekStartsOn: 1 });
     const reports = await this.reportRepository
       .createQueryBuilder('report')
       .leftJoinAndSelect('report.plan', 'plan')
@@ -92,16 +96,33 @@ export class OkrReportService {
         planningPeriodId: rockStarDto.planningPeriodId,
       })
       .andWhere('planningUser.tenantId = :tenantId', { tenantId: tenantId })
-      .andWhere('reportTask.isAchived = :isAchived', { isAchived: true })
+      .andWhere(
+        'report.createdAt BETWEEN :startOfCurrentWeek AND :endOfCurrentWeek',
+        {
+          startOfCurrentWeek,
+          endOfCurrentWeek,
+        },
+      )
       .getRawMany();
 
-    const maxScore = Math.max(...reports.map((item) => item.reportScore));
-    const topEmployees = reports.filter(
-      (item) => item.reportScore === maxScore,
+    for (const report of reports) {
+      const user = await this.getFromOrganizatiAndEmployeInfoService.getUsers(
+        report.report_userId,
+        tenantId,
+      );
+      report['user'] = user;
+    }
+    const maxScore = Math.max(
+      ...reports.map((item) =>
+        parseFloat(item.report_reportScore.split('%')[0]),
+      ),
     );
+    const topEmployees = reports.filter(
+      (item) => parseFloat(item.report_reportScore.split('%')[0]) === maxScore,
+    );
+
     return topEmployees;
   }
-
   async userPerformance(rockStarDto: RockStarDto, tenantId: string) {
     const planningPeriod =
       await this.planningPeriodService.findOnePlanningPeriod(
@@ -110,12 +131,12 @@ export class OkrReportService {
 
     const queryBuilder = this.reportRepository
       .createQueryBuilder('report')
-      .leftJoinAndSelect('report.plan', 'plan')
-      .leftJoinAndSelect('plan.planningUser', 'planningUser')
-      .leftJoinAndSelect('report.reportTask', 'reportTask')
+      .leftJoin('report.plan', 'plan')
+      .leftJoin('plan.planningUser', 'planningUser')
+      .leftJoin('report.reportTask', 'reportTask')
       .andWhere('planningUser.tenantId = :tenantId', { tenantId })
       .andWhere('planningUser.userId = :userId', { userId: rockStarDto.userId })
-      .andWhere('reportTask.isAchieved = :isAchieved', { isAchieved: true })
+      // .andWhere('reportTask.isAchieved = :isAchieved', { isAchieved: true })
       .andWhere('reportTask.planningPeriodId = :planningPeriodId', {
         planningPeriodId: rockStarDto.planningPeriodId,
       });
@@ -123,20 +144,40 @@ export class OkrReportService {
     if (planningPeriod.name === 'Weekly') {
       queryBuilder
         .where(
-          'EXTRACT(MONTH FROM reportTask.createdAt) = EXTRACT(MONTH FROM CURRENT_DATE)',
+          'EXTRACT(MONTH FROM report.createdAt) = EXTRACT(MONTH FROM CURRENT_DATE)',
         )
         .andWhere(
-          'EXTRACT(YEAR FROM reportTask.createdAt) = EXTRACT(YEAR FROM CURRENT_DATE)',
+          'EXTRACT(YEAR FROM report.createdAt) = EXTRACT(YEAR FROM CURRENT_DATE)',
         )
-        .addSelect('EXTRACT(WEEK FROM reportTask.createdAt) as weekNumber')
-        .groupBy('weekNumber');
+        .addSelect('EXTRACT(WEEK FROM report.createdAt) AS weekNumber')
+        .addSelect(
+          "SUM(CAST(replace(report.reportScore, '%', '') AS NUMERIC)) AS totalScore",
+        )
+        .groupBy('weekNumber,report.id');
     } else if (planningPeriod.name === 'Monthly') {
-      queryBuilder.where(
-        "reportTask.createdAt >= NOW() - INTERVAL '12 months'",
-      );
+      queryBuilder
+        .where("reportTask.createdAt >= NOW() - INTERVAL '12 months'")
+        .addSelect('EXTRACT(MONTH FROM report.createdAt) AS month')
+        .addSelect('EXTRACT(YEAR FROM report.createdAt) AS year')
+        .addSelect(
+          "SUM(CAST(replace(report.reportScore, '%', '') AS NUMERIC)) AS totalScore",
+        )
+        .groupBy('year, month,report.id')
+        .orderBy('year', 'ASC')
+        .addOrderBy('month', 'ASC');
     }
+
     const reports = await queryBuilder.getRawMany();
-    const maxScore = Math.max(...reports.map((item) => item.reportScore));
-    return reports.filter((item) => item.reportScore === maxScore);
+    for (const report of reports) {
+      const user = await this.getFromOrganizatiAndEmployeInfoService.getUsers(
+        report.report_userId,
+        tenantId,
+      );
+      report['user'] = user;
+    }
+    return reports;
+    //   const maxScore = Math.max(...reports.map((item) => parseFloat(item.report_reportScore.split('%')[0])));
+    // console.log(maxScore,"maxScore")
+    //   return reports.filter((item) => parseFloat(item.report_reportScore.split('%')[0]) === maxScore);
   }
 }

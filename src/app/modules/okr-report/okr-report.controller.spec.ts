@@ -10,6 +10,7 @@ import { Plan } from '../plan/entities/plan.entity';
 import { PlanTask } from '../plan-tasks/entities/plan-task.entity';
 import { PlanningPeriodsService } from '../planningPeriods/planning-periods/planning-periods.service';
 import { mock } from 'jest-mock-extended';
+import { GetFromOrganizatiAndEmployeInfoService } from '../objective/services/get-data-from-org.service';
 
 describe('OkrReportController', () => {
   let okrReportController: OkrReportController;
@@ -48,6 +49,10 @@ describe('OkrReportController', () => {
         {
           provide: PlanningPeriodsService,
           useValue: mock<PlanningPeriodsService>(),
+        },
+        {
+          provide: GetFromOrganizatiAndEmployeInfoService,
+          useValue: mock<GetFromOrganizatiAndEmployeInfoService>(),
         },
       ],
     }).compile();
