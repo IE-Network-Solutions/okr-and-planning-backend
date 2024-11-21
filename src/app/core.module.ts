@@ -18,6 +18,7 @@ import { AppreciationModule } from './modules/appreciationLog/appreciation.modul
 import { CarbonCopyLog } from './modules/carbonCopyLlog/entities/carbon-copy-log.entity';
 import { RecognitionTypeModule } from './modules/recognitionType/recognition-type.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
+import { PlanCommentsModule } from './modules/plan-comments/plan-comments.module';
 @Global()
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
     PlanningPeriodsModule,
     PlanModule,
     PlanTasksModule,
+    PlanCommentsModule,
 
     ReportCommentsModule,
     OkrReportModule,

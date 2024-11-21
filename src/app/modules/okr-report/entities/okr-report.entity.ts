@@ -36,7 +36,7 @@ export class Report extends BaseModel {
   @Column({ nullable: true })
   userId: string;
 
-  @OneToOne(() => Plan, (plan) => plan.plan, {
+  @ManyToOne(() => Plan, (plan) => plan.plan, {
     onDelete: 'SET NULL',
     onUpdate: 'CASCADE',
     // eager: true,

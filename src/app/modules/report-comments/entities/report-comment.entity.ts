@@ -5,7 +5,7 @@ import { BaseModel } from '@root/src/database/base.model';
 @Entity()
 export class ReportComment extends BaseModel {
   @Column('text')
-  commentText: string;
+  comment: string;
 
   @Column({ nullable: true })
   tenantId: string;
@@ -20,5 +20,5 @@ export class ReportComment extends BaseModel {
   reportId: string;
 
   @Column({ nullable: true })
-  commentedById: string;
+  commentedBy: string;
 }
