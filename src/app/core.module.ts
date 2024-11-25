@@ -18,6 +18,7 @@ import { AppreciationModule } from './modules/appreciationLog/appreciation.modul
 import { CarbonCopyLog } from './modules/carbonCopyLlog/entities/carbon-copy-log.entity';
 import { RecognitionTypeModule } from './modules/recognitionType/recognition-type.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
+import { VariablePayModule } from './modules/variable_pay/variable-pay.module';
 @Global()
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
     AppreciationModule,
     CarbonCopyLog,
     DashboardModule,
+    VariablePayModule
   ],
 })
 export class CoreModule {}
