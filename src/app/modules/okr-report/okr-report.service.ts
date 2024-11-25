@@ -8,7 +8,6 @@ import { UUID } from 'crypto';
 import { RockStarDto } from './dto/report-rock-star.dto';
 import { PlanningPeriodsService } from '../planningPeriods/planning-periods/planning-periods.service';
 import { PaginationDto } from '@root/src/core/commonDto/pagination-dto';
-
 import { startOfWeek, endOfWeek } from 'date-fns';
 import { GetFromOrganizatiAndEmployeInfoService } from '../objective/services/get-data-from-org.service';
 
