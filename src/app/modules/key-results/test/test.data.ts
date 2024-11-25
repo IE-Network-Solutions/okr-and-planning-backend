@@ -30,6 +30,7 @@ export const keyResultData = (): KeyResult => {
     createdAt: new Date('2022-10-22 07:11:42'),
     updatedBy: 'selam',
     createdBy: 'selam',
+    keyResultId: "keyResultId"
   };
 };
 
@@ -51,6 +52,7 @@ export const createKeyResulteData = (): CreateKeyResultDto => {
     progress: 0,
 
     milestones: null,
+      keyResultId: "keyResultId"
   };
 };
 export const deleteKeyResultData = () => {
@@ -110,6 +112,7 @@ export const updatekeyResultData = () => {
     createdAt: new Date('2022-10-22 07:11:42'),
     updatedBy: 'selam',
     createdBy: 'selam',
+      keyResultId: "keyResultId"
   };
 };
 export const createkeyResultDataOnCreate = () => {
@@ -140,6 +143,7 @@ export const createkeyResultDataOnCreate = () => {
     createdAt: new Date('2022-10-22 07:11:42'),
     updatedBy: 'selam',
     createdBy: 'selam',
+      keyResultId: "keyResultId"
   };
 };
 
@@ -171,6 +175,7 @@ export const updatekeyResultDataOnUpdate = () => {
     createdAt: new Date('2022-10-22 07:11:42'),
     updatedBy: 'selam',
     createdBy: 'selam',
+      keyResultId: "keyResultId"
   };
 };
 

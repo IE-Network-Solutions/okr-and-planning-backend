@@ -40,6 +40,8 @@ export class KeyResult extends BaseModel {
   progress: number;
   @Column({ type: 'uuid' })
   tenantId: string;
+  @Column({ type: 'uuid' ,nullable:true})
+  keyResultId: string;
   @ManyToOne(() => Objective, (obj) => obj.keyResults)
   @JoinColumn({ name: 'objectiveId' })
   objective: Objective;

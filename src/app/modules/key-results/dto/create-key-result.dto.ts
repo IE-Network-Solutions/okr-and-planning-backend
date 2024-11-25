@@ -12,6 +12,9 @@ export class CreateKeyResultDto {
   @IsOptional()
   @IsString()
   objectiveId?: string;
+  @IsOptional()
+  @IsString()
+  keyResultId?: string;
   @IsString()
   title: string;
   @IsOptional()

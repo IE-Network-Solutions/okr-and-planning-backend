@@ -17,6 +17,7 @@ export const objectiveData = (): Objective => {
     createdAt: new Date('2022-10-22 07:11:42'),
     updatedBy: 'selam',
     createdBy: 'selam',
+    objectiveId:"objectiveId"
   };
 };
 
@@ -28,6 +29,7 @@ export const createobjectiveData = (): CreateObjectiveDto => {
     deadline: new Date('2022-10-22 07:11:42'),
     allignedKeyResultId: '13f734dc-56c6-4118-87fc-e403a00693c0',
     keyResults: [],
+      objectiveId:"objectiveId"
   };
 };
 export const delete0bjectiveData = () => {
@@ -74,6 +76,7 @@ export const updateObjectiveData = () => {
     createdAt: new Date('2022-10-22 07:11:42'),
     updatedBy: 'selam',
     createdBy: 'selam',
+      objectiveId:"objectiveId"
   };
 };
 export const createobjectiveDataOnCreate = () => {
@@ -90,6 +93,7 @@ export const createobjectiveDataOnCreate = () => {
     createdAt: new Date('2022-10-22 07:11:42'),
     updatedBy: 'selam',
     createdBy: 'selam',
+      objectiveId:"objectiveId"
   };
 };
 
@@ -108,6 +112,7 @@ export const updateObjectiveDataOnUpdate = () => {
     createdAt: new Date('2022-10-22 07:11:42'),
     updatedBy: 'selam',
     createdBy: 'selam',
+      objectiveId:"objectiveId"
   };
 };
 
