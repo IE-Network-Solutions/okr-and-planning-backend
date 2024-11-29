@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { AverageOkrCalculation } from './average-okr-calculation.service';
 import { FilterObjectiveDto } from '../dto/filter-objective.dto';
 import { PaginationDto } from '@root/src/core/commonDto/pagination-dto';
@@ -29,18 +33,25 @@ export class OKRDashboardService {
     paginationOptions?: PaginationDto,
   ): Promise<ViewUserAndSupervisorOKRDto> {
     try {
-      const response = await this.getFromOrganizatiAndEmployeInfoService.getUsers(
-        userId,
-        tenantId,
-        token,
-      );
-      
-      if (!response || !response.employeeJobInformation || !response.employeeJobInformation.length) {
-        throw new NotFoundException('User or employee job information not found');
+      const response =
+        await this.getFromOrganizatiAndEmployeInfoService.getUsers(
+          userId,
+          tenantId,
+          token,
+        );
+
+      if (
+        !response ||
+        !response.employeeJobInformation ||
+        !response.employeeJobInformation.length
+      ) {
+        throw new NotFoundException(
+          'User or employee job information not found',
+        );
       }
-      
+
       const employeeJobInfo = response.employeeJobInformation[0];
-      
+
       const averageOKrrule =
         await this.averageOkrRuleService.findOneAverageOkrRuleByTenant(
           tenantId,
@@ -107,60 +118,83 @@ export class OKRDashboardService {
           tenantId,
           token,
         );
-    
+
       if (!departments || departments.length === 0) {
-        throw new NotFoundException("No departments found for the given tenant.");
+        throw new NotFoundException(
+          'No departments found for the given tenant.',
+        );
       }
-    
+
       const department = departments.find(
         (item) => item.id === employeeJobInfo.departmentId,
       );
-    
+
       if (!department) {
         throw new NotFoundException("User's department not found.");
       }
-    
-      const users = department.users.map((user) => user.id).filter((id) => id !== userId);
-    
+
+      const users = department.users
+        .map((user) => user.id)
+        .filter((id) => id !== userId);
+
       const [teamObjectives, individualObjectives, companyObjective] =
         await Promise.all([
           this.objectiveService.findUsersObjectives(tenantId, users),
-          this.objectiveService.findAllObjectives(userId, tenantId, null, paginationOptions),
-          this.objectiveService.getCompanyOkr(tenantId, userId, null, paginationOptions),
+          this.objectiveService.findAllObjectives(
+            userId,
+            tenantId,
+            null,
+            paginationOptions,
+          ),
+          this.objectiveService.getCompanyOkr(
+            tenantId,
+            userId,
+            null,
+            paginationOptions,
+          ),
         ]);
-    
+
       // Validate results
-      if (!individualObjectives?.items?.length || !companyObjective?.items?.length) {
+      if (
+        !individualObjectives?.items?.length ||
+        !companyObjective?.items?.length
+      ) {
         throw new NotFoundException('No objectives found.');
       }
-    
-      const individualOKRScore = await this.averageOkrCalculation.calculateAverageOkr(
-        individualObjectives.items,
-      );
-      
+
+      const individualOKRScore =
+        await this.averageOkrCalculation.calculateAverageOkr(
+          individualObjectives.items,
+        );
+
       if (employeeJobInfo.departmentLeadOrNot) {
         totalOkr +=
           (individualOKRScore.okr * (averageOKrrule?.myOkrPercentage ?? 50)) /
           100;
         daysLeft = individualOKRScore.daysLeft;
         completedOkr = individualOKRScore.okrCompleted;
-  
+
         if (teamObjectives) {
           const teamOKRScore =
-            await this.averageOkrCalculation.calculateAverageOkr(teamObjectives);
+            await this.averageOkrCalculation.calculateAverageOkr(
+              teamObjectives,
+            );
           teamOkr = teamOKRScore.okr;
           totalOkr +=
-            (teamOKRScore.okr * (averageOKrrule?.teamOkrPercentage ?? 50)) / 100;
+            (teamOKRScore.okr * (averageOKrrule?.teamOkrPercentage ?? 50)) /
+            100;
         }
       } else {
         totalOkr = individualOKRScore.okr;
         daysLeft = individualOKRScore.daysLeft;
         completedOkr = individualOKRScore.okrCompleted;
         keyResultCount = individualOKRScore.keyResultcount;
-  
+
         if (teamObjectives) {
           const teamOKRScore =
-            await this.averageOkrCalculation.calculateAverageOkr(teamObjectives);
+            await this.averageOkrCalculation.calculateAverageOkr(
+              teamObjectives,
+            );
           teamOkr = teamOKRScore.okr;
         }
       }
@@ -179,7 +213,6 @@ export class OKRDashboardService {
         companyOkr,
       };
     } catch (error) {
-      console.error("calculateUserOKR", error.message);
       return {
         totalOkr: 0,
         completedOkr: 0,
@@ -188,10 +221,9 @@ export class OKRDashboardService {
         teamOkr: 0,
         companyOkr: 0,
       };
-    }    
+    }
   }
-  
-  
+
   async supervisorOkr(
     userId: string,
     tenantId: string,

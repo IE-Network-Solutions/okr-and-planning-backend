@@ -89,12 +89,14 @@ export class ObjectiveController {
   ) {
     const tenantId = req['tenantId'];
     const token = req['token'];
-  
+
     // Validate required parameters
     if (!tenantId || !token || !userId) {
-      throw new BadRequestException('Missing required parameters: tenantId, token, or userId');
+      throw new BadRequestException(
+        'Missing required parameters: tenantId, token, or userId',
+      );
     }
-  
+
     try {
       // Call the service and return the result
       const result = await this.okrDashboardService.handleUserOkr(
@@ -105,11 +107,9 @@ export class ObjectiveController {
       );
       return result;
     } catch (error) {
-      console.error(error,"8888")
-      throw error
+      throw error;
     }
   }
-  
 
   @Get('/objective-filter')
   objectiveFilter(
