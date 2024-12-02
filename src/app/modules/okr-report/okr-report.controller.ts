@@ -6,12 +6,14 @@ import {
   Headers,
   Param,
   Post,
+  Query,
   Req,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { OkrReportService } from './okr-report.service';
 import { UUID } from 'crypto';
 import { CreateReportDTO } from './dto/create-report.dto';
+import { RockStarDto } from './dto/report-rock-star.dto';
 
 @Controller('okr-report')
 @ApiTags('okr-report')
@@ -48,5 +50,18 @@ export class OkrReportController {
     @Headers('tenantId') tenantId: UUID,
   ): Promise<void> {
     return this.reportService.deleteReport(id, tenantId);
+  }
+  @Get('/rock-star/user')
+  async rockStart(@Req() req: Request, @Query() rockStarDto?: RockStarDto) {
+    const tenantId = req['tenantId'];
+    return await this.reportService.rockStart(rockStarDto, tenantId);
+  }
+  @Get('/performance/user')
+  async userPerformance(
+    @Req() req: Request,
+    @Query() rockStarDto?: RockStarDto,
+  ) {
+    const tenantId = req['tenantId'];
+    return await this.reportService.userPerformance(rockStarDto, tenantId);
   }
 }

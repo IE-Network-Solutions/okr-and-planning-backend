@@ -3,10 +3,10 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
+import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { PlanTask } from './entities/plan-task.entity';
 import { Plan } from '../plan/entities/plan.entity';
-import { Repository, TreeRepository } from 'typeorm';
+import { DataSource, Repository, TreeRepository } from 'typeorm';
 import { KeyResultsService } from '../key-results/key-results.service';
 import { MilestonesService } from '../milestones/milestones.service';
 import { PaginationService } from '@root/src/core/pagination/pagination.service';
@@ -26,12 +26,18 @@ export class PlanTasksService {
     private readonly paginationService: PaginationService,
     private readonly keyResultService: KeyResultsService,
     private readonly milestoneService: MilestonesService,
+    @InjectDataSource() private readonly dataSource: DataSource,
   ) {}
   async create(
     createPlanTasksDto: CreatePlanTaskDto[],
     tenantId: string,
     level = 0,
   ): Promise<Plan> {
+    const queryRunner = this.dataSource.createQueryRunner();
+    // Establish the transaction
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
     try {
       const result: any = [];
       if (!createPlanTasksDto || createPlanTasksDto.length === 0) {
@@ -102,6 +108,7 @@ export class PlanTasksService {
           plan,
           keyResult,
           milestone: getMilestone || null,
+          achieveMK: createPlanTaskDto.achieveMK,
           level,
           weight: createPlanTaskDto.weight,
         });
@@ -122,13 +129,19 @@ export class PlanTasksService {
 
         result.push(plan); // Collect the result for the return value
       }
-
+      // Commit transaction if all operations succeed
+      await queryRunner.commitTransaction();
       return await this.findOne(result[0].id); // Assuming you want to return the first created plan
     } catch (error) {
+      await queryRunner.rollbackTransaction();
+
       if (error.name === 'EntityNotFoundError') {
         throw new NotFoundException('Error creating tasks');
       }
       throw error;
+    } finally {
+      // Release the query runner after committing or rolling back
+      await queryRunner.release();
     }
   }
   async findAll(tenantId: string): Promise<Plan[]> {

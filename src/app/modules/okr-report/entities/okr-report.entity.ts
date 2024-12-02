@@ -27,15 +27,6 @@ export class Report extends BaseModel {
     onDelete: 'SET NULL',
     onUpdate: 'CASCADE',
   })
-  // @JoinColumn()
-  // plan: Plan;
-  @OneToOne(() => Plan, (plan) => plan.plan, {
-    onDelete: 'SET NULL',
-    onUpdate: 'CASCADE',
-    // eager: true,
-  })
-  plan: Plan;
-
   @Column({ nullable: true })
   planId: string;
 
@@ -45,6 +36,14 @@ export class Report extends BaseModel {
   @Column({ nullable: true })
   userId: string;
 
+  @ManyToOne(() => Plan, (plan) => plan.plan, {
+    onDelete: 'SET NULL',
+    onUpdate: 'CASCADE',
+    // eager: true,
+  })
+  @JoinColumn({ name: 'planId' })
+  // plan: Plan;
+  plan: Plan;
   @OneToMany(() => ReportComment, (reportComment) => reportComment.report, {
     cascade: true,
   })

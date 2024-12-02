@@ -123,6 +123,7 @@ describe('MeticTypeService', () => {
           },
           paginationOptions().orderBy,
           paginationOptions().orderDirection,
+          { tenantId },
         );
       });
 

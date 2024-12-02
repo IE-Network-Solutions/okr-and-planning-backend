@@ -1,8 +1,8 @@
 import { ConflictException, Injectable } from '@nestjs/common';
 import { ReportTask } from './entities/okr-report-task.entity';
-import { InjectRepository } from '@nestjs/typeorm';
+import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { ReportTaskDTO } from './dto/create-okr-report-task.dto';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { UUID } from 'crypto';
 import { PlanTask } from '../plan-tasks/entities/plan-task.entity';
 import { PlanningPeriodUser } from '../planningPeriods/planning-periods/entities/planningPeriodUser.entity';
@@ -26,8 +26,10 @@ export class OkrReportTaskService {
     @InjectRepository(Plan)
     private planRepository: Repository<Plan>,
 
-    @InjectRepository(Plan)
+    @InjectRepository(Milestone)
     private milestoneRepository: Repository<Milestone>,
+
+    @InjectDataSource() private readonly dataSource: DataSource,
 
     @InjectRepository(PlanTask)
     private planTaskRepository: Repository<PlanTask>,
@@ -41,6 +43,7 @@ export class OkrReportTaskService {
       const milestone = await this.milestoneRepository.findOne({
         where: { id },
       });
+
       return milestone || null;
     } catch (error) {
       throw new Error('Error finding milestone');
@@ -65,42 +68,56 @@ export class OkrReportTaskService {
     planningPeriodId: string,
     userId: string,
   ): Promise<ReportTask[]> {
+    const queryRunner = this.dataSource.createQueryRunner();
 
-    const planningPeriodUserId = await this.getPlanningPeriodUserId(
-      tenantId,
-      userId,
-      planningPeriodId,
-    );
-    if (!planningPeriodUserId) {
-      throw new Error('Planning period user not found');
+    // Establish the transaction
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const planningPeriodUserId = await this.getPlanningPeriodUserId(
+        tenantId,
+        userId,
+        planningPeriodId,
+      );
+      if (!planningPeriodUserId) {
+        throw new Error('Planning period user not found');
+      }
+      const planId = await this.getPlanId(planningPeriodUserId);
+      if (!planId) {
+        throw new Error('Plan not found for the given planning period user');
+      }
+      const reportScore = await this.calculateReportScore(createReportDto);
+      const reportData = this.createReportData(
+        reportScore,
+        planId,
+        userId,
+        tenantId,
+      );
+      const returnedReportData = await this.reportService.createReportWithTasks(
+        reportData,
+      );
+      const reportTasks = this.mapDtoToReportTasks(
+        createReportDto,
+        returnedReportData,
+        tenantId,
+      );
+      const savedReportTasks = await this.reportTaskRepo.save(reportTasks);
+      let checkPlanIsReported: any; // You can replace 'any' with a more specific type if known
+      if (savedReportTasks) {
+        checkPlanIsReported = await this.updatePlanIsReported(planId);
+      }
+      const check = await this.checkAndUpdateProgressByKey(savedReportTasks);
+      if (check && checkPlanIsReported) {
+        await queryRunner.commitTransaction();
+      }
+      return savedReportTasks;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
     }
-    const planId = await this.getPlanId(planningPeriodUserId);
-    if (!planId) {
-      throw new Error('Plan not found for the given planning period user');
-    }
-    const reportScore = await this.calculateReportScore(createReportDto);
-    const reportData = this.createReportData(
-      reportScore,
-      planId,
-      userId,
-      tenantId,
-    );
-    const returnedReportData = await this.reportService.createReportWithTasks(
-      reportData,
-    );
-    const reportTasks = this.mapDtoToReportTasks(
-      createReportDto,
-      returnedReportData,
-      tenantId,
-    );
-    const savedReportTasks = await this.reportTaskRepo.save(reportTasks);
-    if (savedReportTasks) {
-      await this.updatePlanIsReported(planId);
-    }
-    await this.checkAndUpdateProgressByKey(savedReportTasks);
-    return savedReportTasks;
   }
-
 
   async checkAndUpdateProgressByKey(savedReportTasks: any[]): Promise<any[]> {
     try {
@@ -111,14 +128,16 @@ export class OkrReportTaskService {
           });
 
           if (!planTask) return false;
-          const metricsType = await this.getPlanTaskById(planTask.id);
 
+          const metricsType = await this.getPlanTaskById(planTask.id);
           // Check if the metrics type is MILESTONE before updating the milestone
-          if (metricsType?.keyResult?.metricType.name === NAME.MILESTONE) {
+          if (
+            planTask?.achieveMK &&
+            metricsType?.keyResult?.metricType.name === NAME.MILESTONE
+          ) {
             const milestoneUpdate = await this.findMilestoneById(
               planTask?.milestoneId,
             );
-
             if (milestoneUpdate) {
               // Update milestone properties only if metrics type is MILESTONE
               await this.updateMilestone(planTask?.milestoneId, {
@@ -140,7 +159,6 @@ export class OkrReportTaskService {
                 );
               }
               break;
-
             case NAME.ACHIEVE:
               if (planTask.achieveMK && task.status === 'Done') {
                 return await this.okrProgressService.calculateKeyResultProgress(
@@ -176,14 +194,18 @@ export class OkrReportTaskService {
     } catch (error) {
       return [];
     }
-
   }
 
   // Method to update the isReported value of the plan
   private async updatePlanIsReported(planId: string): Promise<void> {
-    await this.planRepository.update(planId, { isReported: true });
+    try {
+      await this.planRepository.update(planId, { isReported: true });
+    } catch (error) {
+      throw new Error(
+        `Could not update plan status for the ID , it already Reported`,
+      );
+    }
   }
-
 
   private createReportData(
     reportScore: number,
@@ -210,20 +232,20 @@ export class OkrReportTaskService {
         failureReasonId?: string;
       }
     >,
-    reporteData,
+    reportData: any,
     tenantId: string,
-  ): ReportTask[] {
+  ): Record<string, any>[] {
+    // Change return type to an array of plain objects
     return Object.entries(dto).map(([key, value]) => {
-      const reportTask = new ReportTask();
-      (reportTask.planTaskId = key),
-        (reportTask.reportId = reporteData?.id),
-        (reportTask.status = value.status as ReportStatusEnum);
-      reportTask.isAchived = value?.isAchieved ?? false;
-      reportTask.tenantId = tenantId || null;
-      // reportTask.actualValue = `${value?.actualValue}` ?? null;
-      reportTask.customReason = value?.reason || null;
-      reportTask.failureReasonId = value?.failureReasonId || null;
-      return reportTask;
+      return {
+        planTaskId: key,
+        reportId: reportData?.id,
+        status: value.status as ReportStatusEnum,
+        isAchieved: value?.status === 'Done' ? true : false,
+        tenantId: tenantId || null,
+        customReason: value?.reason || null,
+        failureReasonId: value?.failureReasonId || null,
+      };
     });
   }
 
@@ -287,6 +309,7 @@ export class OkrReportTaskService {
   ): Promise<any> {
     try {
       // Fetch all plan tasks where reports have not been created yet
+
       const unreportedTasks = await this.planTaskRepository
         .createQueryBuilder('planTask')
         .leftJoinAndSelect('planTask.plan', 'plan')
@@ -297,17 +320,15 @@ export class OkrReportTaskService {
         .leftJoinAndSelect('planTask.parentTask', 'parentTask')
         .leftJoinAndSelect('plan.planningUser', 'planningUser') // Add relation to planningUser from the Plan entity
 
-        // Fetch unreported plan tasks based on userId, tenantId, and planningPeriodId
-        // .where('plan.isReported = :isReported', { isReported: false })
-        // .andWhere('plan.tenantId = :tenantId', { tenantId })
-        // .andWhere('plan.userId = :userId', { userId })
+        // Apply filtering conditions
+        .where('plan.tenantId = :tenantId', { tenantId })
+        .andWhere('plan.userId = :userId', { userId })
         .andWhere('planningUser.planningPeriodId = :planningPeriodId', {
           planningPeriodId,
-        }) // Use the relation to access the planningPeriod ID
-        .andWhere('plan.isReported = :isReported OR plan.isReported IS NULL', {
-          isReported: false,
-        })
-
+        }) // Use relation to access planningPeriod ID
+        .andWhere('plan.isValidated = :isValidated', { isValidated: true }) // Filter by validated plans only
+        .andWhere('plan.isReported = :isReported OR plan.isReported IS NULL', { isReported: false })
+        
         .getMany();
 
       return unreportedTasks;

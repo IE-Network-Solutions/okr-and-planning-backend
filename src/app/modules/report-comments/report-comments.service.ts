@@ -17,9 +17,9 @@ export class ReportCommentsService {
 
   async createComment(
     createReportCommentDto: CreateReportCommentDto,
+    tenantId: string,
   ): Promise<ReportComment> {
-    const { reportId, commentedById, commentText, tenantId } =
-      createReportCommentDto;
+    const { reportId, commentedBy, comment } = createReportCommentDto;
 
     // Ensure the report, user, and tenant exist
     const report = await this.reportRepository.findOne({
@@ -28,14 +28,14 @@ export class ReportCommentsService {
     // const user = await this.userRepository.findOne({ where: { id: commentedById } });
     // const tenant = await this.tenantRepository.findOne({ where: { id: tenantId } });
 
-    // if (!report || !user || !tenant) {
-    //   throw new Error('Report, User, or Tenant not found');
-    // }
+    if (!report) {
+      throw new Error('Report, User, or Tenant not found');
+    }
 
     const newComment = this.reportCommentRepository.create({
       reportId,
-      commentedById,
-      commentText,
+      commentedBy,
+      comment,
       tenantId,
     });
 

@@ -1,6 +1,6 @@
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { PaginationService } from '@root/src/core/pagination/pagination.service';
 import { PlanTasksController } from './plan-tasks.controller';
 import { PlanTasksService } from './plan-tasks.service';
@@ -46,6 +46,10 @@ describe('PlanTasksController', () => {
         {
           provide: KeyResultsService,
           useValue: mock<KeyResultsService>(),
+        },
+        {
+          provide: DataSource,
+          useValue: mock<DataSource>(), // Mock the DataSource
         },
       ],
     }).compile();

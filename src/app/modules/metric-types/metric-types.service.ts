@@ -45,6 +45,7 @@ export class MetricTypesService {
         options,
         paginationOptions.orderBy,
         paginationOptions.orderDirection,
+        { tenantId },
       );
 
       return paginatedData;
