@@ -1,16 +1,15 @@
-import { IsDecimal, IsUUID } from "class-validator";
+import { IsDecimal, IsOptional, IsUUID } from "class-validator";
 
 export class CreateVpScoringCriterionDto {
-  
+  @IsOptional()
     @IsUUID()
-    vpScoringId: string;
-  
+    vpScoringId?: string;
+ 
     @IsUUID()
     vpCriteriaId: string;
   
     @IsDecimal()
     weight: number;
   
-    @IsUUID()
-    tenantId: string;
+   
 }

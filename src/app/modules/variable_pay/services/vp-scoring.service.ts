@@ -3,37 +3,92 @@ import { CreateVpScoringDto } from '../dtos/vp-scoring-dto/create-vp-scoring.dto
 import { UpdateVpScoringDto } from '../dtos/vp-scoring-dto/update-vp-scoring.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { VpScoring } from '../entities/vp-scoring.entity';
-import { Repository } from 'typeorm';
+import { Connection, QueryRunner, Repository } from 'typeorm';
 import { PaginationService } from '@root/src/core/pagination/pagination.service';
 import { PaginationDto } from '@root/src/core/commonDto/pagination-dto';
 import { IPaginationOptions, Pagination } from 'nestjs-typeorm-paginate';
+import { CreateUserVpScoringDto } from '../dtos/user-vp-scoring-dto/create-user-vp-scoring.dto';
+import { UserVpScoringService } from './user-vp-scoring.service';
+import { CreateVpScoringCriterionDto } from '../dtos/vp-scoring-criteria-dto/create-vp-scoring-criterion.dto';
 
 
 @Injectable()
 export class VpScoringService {  constructor( 
   @InjectRepository(VpScoring)
   private vpScoringRepository: Repository<VpScoring>,
-  private readonly paginationService: PaginationService)
+  private readonly paginationService: PaginationService,
+  private readonly userVpScoringService: UserVpScoringService,
+
+
+  private readonly connection: Connection)
   {}
 async createVpScoring(
   createVpScoringDto: CreateVpScoringDto,
   tenantId: string,
 ): Promise<VpScoring> {
 
-  try {
-    const vpScoring = await this.vpScoringRepository.create({
-      ...createVpScoringDto,
-      tenantId,
-    });
-   return await this.vpScoringRepository.save(
-    vpScoring
-    );
-  } catch (error) {
-   
-    throw new BadRequestException(error.message);
-  } 
-}
-async findAllVpScorings(
+  
+    const queryRunner: QueryRunner = this.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      
+      const vpScoring = await this.vpScoringRepository.create({
+        ...createVpScoringDto,
+        tenantId,
+      });
+      const savedVpScoring=  await await queryRunner.manager.save(
+        VpScoring,
+        vpScoring
+        );
+  
+        if(createVpScoringDto.createUserVpScoringDto&&createVpScoringDto.createUserVpScoringDto.length>0){
+
+        await Promise.all(
+          createVpScoringDto.createUserVpScoringDto.map(async (createUserVpScoring) => {
+            const userVPScoring = new CreateUserVpScoringDto();
+            userVPScoring.vpScoringId = savedVpScoring.id;
+            userVPScoring.userId = createUserVpScoring.userId;
+         
+            const createMonth = await this.userVpScoringService.createUserVpScoring(
+              userVPScoring,
+              tenantId,
+              queryRunner,
+            );
+          }),
+        );
+      }
+
+
+      if(createVpScoringDto.vpScoringCriteria&&createVpScoringDto.vpScoringCriteria.length>0){
+
+        await Promise.all(
+          createVpScoringDto.vpScoringCriteria.map(async (criteria) => {
+            const vpCriteria = new CreateVpScoringCriterionDto();
+            vpCriteria.vpScoringId = savedVpScoring.id;
+            vpCriteria.vpCriteriaId = vpCriteria.vpCriteriaId;
+            vpCriteria.weight = vpCriteria.weight;
+            const createVpScoringCriteria = await this.userVpScoringService.createUserVpScoring(
+              vpCriteria,
+              tenantId,
+              queryRunner,
+            );
+          }),
+        );
+      }
+
+      await queryRunner.commitTransaction();
+        return await this.findOneVpScoring(savedVpScoring.id);
+      }
+     catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw new BadRequestException(error.message);
+    } finally {
+      await queryRunner.release();
+    }
+  
+  }
+  async findAllVpScorings(
   tenantId: string,
   paginationOptions?: PaginationDto,
 ): Promise<Pagination<VpScoring>> {

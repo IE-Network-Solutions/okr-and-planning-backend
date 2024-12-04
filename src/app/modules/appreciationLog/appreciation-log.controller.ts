@@ -15,8 +15,10 @@ import { CreateAppreciationDto } from './dto/create-appreciation.dto';
 import { UpdateAppreciationDto } from './dto/update-appreciation.dto';
 import { IPaginationOptions } from 'nestjs-typeorm-paginate';
 import { FilterAppreciationLogDto } from './dto/filter.appreciation-log.dto';
+import { ApiTags } from '@nestjs/swagger';
 
 @Controller('appreciation-log')
+@ApiTags('appreciation-log')
 export class AppreciationController {
   constructor(private readonly appreciationService: AppreciationService) {}
 

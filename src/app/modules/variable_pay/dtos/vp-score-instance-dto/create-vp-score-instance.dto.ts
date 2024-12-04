@@ -1,4 +1,4 @@
-import { IsDecimal, IsUUID } from "class-validator";
+import { IsArray, IsDecimal, IsUUID } from "class-validator";
 
 export class CreateVpScoreInstanceDto {
   
@@ -11,12 +11,10 @@ export class CreateVpScoreInstanceDto {
     @IsDecimal()
     vpScore: number;
   
-    // @IsObject()
-    // breakdown: Record<string, any>;
+  @IsArray()
+    breakdown: Record<string, any>;
   
     @IsUUID()
     monthId: string;
   
-    @IsUUID()
-    tenantId: string;
 }

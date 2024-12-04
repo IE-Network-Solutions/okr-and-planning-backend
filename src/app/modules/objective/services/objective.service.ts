@@ -38,6 +38,7 @@ import { AverageOkrRule } from '../../average-okr-rule/entities/average-okr-rule
 import { EmptyPaginationDto } from '@root/src/core/commonDto/return-empty-paginated.dto';
 import { GetFromOrganizatiAndEmployeInfoService } from './get-data-from-org.service';
 import { AverageOkrCalculation } from './average-okr-calculation.service';
+import { error } from 'console';
 
 @Injectable()
 export class ObjectiveService {
@@ -94,6 +95,7 @@ export class ObjectiveService {
     paginationOptions?: PaginationDto,
   ): Promise<Pagination<Objective>> {
     try {
+      console.log(paginationOptions,"paginationOptions")
       const options: IPaginationOptions = {
         page: paginationOptions.page,
         limit: paginationOptions.limit,
@@ -225,6 +227,7 @@ export class ObjectiveService {
         queryBuilder,
         options,
       );
+      if(paginatedData.items.length>0){
       for (const objective of paginatedData.items) {
         try {
           const user =
@@ -233,8 +236,11 @@ export class ObjectiveService {
               tenantId,
             );
           objective['user'] = user;
-        } catch {}
+        } catch(error) {
+          console.log(error.message,"gggg")
+        }
       }
+    }
       return paginatedData;
     } catch (error) {
       throw new BadRequestException(error.message);

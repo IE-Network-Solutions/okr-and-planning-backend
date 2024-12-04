@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { VpScoringCriterion } from '../entities/vp-scoring-criterion.entity';
-import { Repository } from 'typeorm';
+import { QueryRunner, Repository } from 'typeorm';
 import { IPaginationOptions, Pagination } from 'nestjs-typeorm-paginate';
 import { PaginationDto } from '@root/src/core/commonDto/pagination-dto';
 import { CreateVpScoringCriterionDto } from '../dtos/vp-scoring-criteria-dto/create-vp-scoring-criterion.dto';
@@ -12,24 +12,32 @@ import { PaginationService } from '@root/src/core/pagination/pagination.service'
 export class VpScoringCriteriaService {
   constructor( 
     @InjectRepository(VpScoringCriterion)
-    private VpScoringCriterionRepository: Repository<VpScoringCriterion>,
+    private vpScoringCriterionRepository: Repository<VpScoringCriterion>,
     private readonly paginationService: PaginationService)
     {}
   async createVpScoringCriterion(
     createVpScoringCriterionDto: CreateVpScoringCriterionDto,
     tenantId: string,
+    queryRunner?: QueryRunner,
   ): Promise<VpScoringCriterion> {
 
     try {
-      const vpScoringCriterion = await this.VpScoringCriterionRepository.create({
-        ...createVpScoringCriterionDto,
-        tenantId,
-      });
-     return await this.VpScoringCriterionRepository.save(
-      vpScoringCriterion
-      );
-     
-     
+      const createdVpScoringCriterion = queryRunner
+      ? queryRunner.manager.create(VpScoringCriterion, {
+          ...createVpScoringCriterionDto,
+          tenantId,
+        })
+      : this.vpScoringCriterionRepository.create({
+          ...createVpScoringCriterionDto,
+          tenantId,
+        });
+    const savedVpScoringCriterion = queryRunner
+      ? await queryRunner.manager.save(VpScoringCriterion, createdVpScoringCriterion)
+      : await this.vpScoringCriterionRepository.save(createdVpScoringCriterion);
+
+return savedVpScoringCriterion
+
+   
     } catch (error) {
      
       throw new BadRequestException(error.message);
@@ -44,7 +52,7 @@ export class VpScoringCriteriaService {
         page: paginationOptions.page,
         limit: paginationOptions.limit,
       };
-      const queryBuilder = this.VpScoringCriterionRepository
+      const queryBuilder = this.vpScoringCriterionRepository
         .createQueryBuilder('VpScoringCriterion')
         .where('VpScoringCriterion.tenantId = :tenantId', { tenantId })
     
@@ -61,7 +69,7 @@ export class VpScoringCriteriaService {
 
   async findOneVpScoringCriterion(id: string): Promise<VpScoringCriterion> {
     try {
-      const vpScoringCriterion = await this.VpScoringCriterionRepository.findOne({
+      const vpScoringCriterion = await this.vpScoringCriterionRepository.findOne({
         where: { id: id }      });
       return vpScoringCriterion;
     } catch (error) {
@@ -79,7 +87,7 @@ export class VpScoringCriteriaService {
     if (!VpScoringCriterion) {
       throw new NotFoundException(`VpScoringCriterion Not Found`);
     }
-    await this.VpScoringCriterionRepository.update({ id }, updateVpScoringCriterionDto);
+    await this.vpScoringCriterionRepository.update({ id }, updateVpScoringCriterionDto);
     return await this.findOneVpScoringCriterion(id);
   }catch(error){
   throw new BadRequestException(error.message)
@@ -91,7 +99,7 @@ export class VpScoringCriteriaService {
     if (!vpScoringCriterion) {
       throw new NotFoundException(`VpScoringCriterion Not Found`);
     }
-    await this.VpScoringCriterionRepository.softRemove({ id });
+    await this.vpScoringCriterionRepository.softRemove({ id });
     return vpScoringCriterion;
   }
   catch(error){

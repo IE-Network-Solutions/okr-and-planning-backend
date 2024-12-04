@@ -21,7 +21,6 @@ export class VpCriteriaController {
   ): Promise<VpCriteria> {
     return await this.vpCriteriaService.createVpCriteria(
       createVpCriteriaDto,
-      tenantId,
     );
   }
 
@@ -32,7 +31,6 @@ export class VpCriteriaController {
   ) {
     
     return this.vpCriteriaService.findAllVpCriteria(
-      tenantId,
       paginationOptions,
     );
   }
@@ -51,7 +49,6 @@ export class VpCriteriaController {
     return this.vpCriteriaService.updateVpCriteria(
       id,
       updateVpCriteriaDto,
-      tenantId,
     );
   }
   @Delete(':id')

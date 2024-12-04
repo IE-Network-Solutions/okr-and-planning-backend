@@ -23,6 +23,8 @@ export class Plan extends BaseModel {
 
   @Column({ type: 'uuid', nullable: true })
   tenantId: string;
+  @Column({ type: 'uuid', nullable: true })
+  sessionId: string;
 
   @Column({ type: 'text', nullable: true })
   description: string;

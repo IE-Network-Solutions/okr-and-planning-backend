@@ -16,8 +16,10 @@ import { UpdateAverageOkrRuleDto } from './dto/update-average-okr-rule.dto';
 import { PaginationDto } from '@root/src/core/commonDto/pagination-dto';
 import { AverageOkrRule } from './entities/average-okr-rule.entity';
 import { ExcludeAuthGuard } from '@root/src/core/guards/exclud.guard';
+import { ApiTags } from '@nestjs/swagger';
 
 @Controller('average-okr-rule')
+@ApiTags('average-okr-rule')
 export class AverageOkrRuleController {
   constructor(private readonly averageOkrRuleService: AverageOkrRuleService) {}
   @Post()

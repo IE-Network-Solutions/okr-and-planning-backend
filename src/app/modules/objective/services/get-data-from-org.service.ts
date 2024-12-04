@@ -12,19 +12,18 @@ export class GetFromOrganizatiAndEmployeInfoService {
   ) {
     this.orgUrl = this.configService.get<string>('ORG_SERVER');
   }
-  async getUsers(userId: string, tenantId: string, token?: string) {
+  async getUsers(userId: string, tenantId: string) {
     const response = await this.httpService
       .get(`${this.orgUrl}/users/${userId}`, {
         headers: {
           tenantid: tenantId,
-          token: token,
         },
       })
       .toPromise();
     return response.data;
   }
 
-  async getDepartmentsWithUsers(tenantId: string, token: string) {
+  async getDepartmentsWithUsers(tenantId: string) {
     const response = await this.httpService
       .get(`${this.orgUrl}/users/all/departments`, {
         headers: {

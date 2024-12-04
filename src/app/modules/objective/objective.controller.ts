@@ -8,6 +8,7 @@ import {
   Req,
   Query,
   Put,
+  Headers,
 } from '@nestjs/common';
 import { ObjectiveService } from './services/objective.service';
 import { CreateObjectiveDto } from './dto/create-objective.dto';
@@ -17,6 +18,7 @@ import { PaginationDto } from '@root/src/core/commonDto/pagination-dto';
 import { ApiTags } from '@nestjs/swagger';
 import { FilterObjectiveDto } from './dto/filter-objective.dto';
 import { OKRDashboardService } from './services/okr-dashbord.service';
+import { ExcludeAuthGuard } from '@root/src/core/guards/exclud.guard';
 
 @Controller('objective')
 @ApiTags('Objective')
@@ -82,15 +84,11 @@ export class ObjectiveController {
   calculateUSerOkr(
     @Req() req: Request,
     @Param('userId') userId: string,
-    @Query() paginationOptions?: PaginationDto,
   ) {
-    const tenantId = req['tenantId'];
-    const token = req['token'];
+    const tenantId = req['tenantId']
     return this.okrDashboardService.handleUserOkr(
       userId,
       tenantId,
-      token,
-      paginationOptions,
     );
   }
 
@@ -109,6 +107,7 @@ export class ObjectiveController {
   }
 
   @Post('/team')
+  @ExcludeAuthGuard()
   getTeamOkr(
     @Req() req: Request,
     @Body() filterDto?: FilterObjectiveDto,
@@ -122,6 +121,7 @@ export class ObjectiveController {
     );
   }
   @Post('/company/okr/:userId')
+  @ExcludeAuthGuard()
   getCompanyOkr(
     @Req() req: Request,
     @Param('userId') userId: string,
@@ -134,6 +134,52 @@ export class ObjectiveController {
       userId,
       filterDto,
       paginationOptions,
+    );
+  }
+
+  
+  @Post('/single-user-okr')
+  @ExcludeAuthGuard()
+  getOkrOfSingleUser(
+    @Headers('tenantId') tenantId: string,
+    @Headers('userId') userId: string,
+    @Query() paginationOptions?: PaginationDto,
+    
+  ) {
+    console.log()
+    return this.okrDashboardService.getOkrOfSingleUser(
+      userId,
+      tenantId,
+      paginationOptions
+    );
+  }
+
+
+  @Post('/supervisor-ok')
+  @ExcludeAuthGuard()
+  getOkrOfSupervisor(
+    @Headers('tenantId') tenantId: string,
+    @Headers('userId') userId: string, 
+    @Query() paginationOptions?: PaginationDto,
+  ) {
+    return this.okrDashboardService.getOkrOfSupervisor(
+      userId,
+      tenantId,
+      paginationOptions
+    );
+  }
+
+  @Post('/team-okr')
+  @ExcludeAuthGuard()
+  getOkrOfTeam(
+    @Headers('tenantId') tenantId: string,
+    @Headers('userId') userId: string,  
+    @Query() paginationOptions?: PaginationDto,
+  ) {
+    return this.okrDashboardService.getOkrOfTeam(
+      userId,
+      tenantId,
+      paginationOptions
     );
   }
 }

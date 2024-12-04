@@ -55,7 +55,17 @@ export class UserVpScoringController {
   }
 
   @Delete(':id')
-  removeUserVpScoring(@Headers('tenantId') tenantId: string, @Param('id') id: string) {
+  get(@Headers('tenantId') tenantId: string, @Param('id') id: string) {
     return this.userVpScoringService.removeUserVpScoring(id);
+  }
+
+  @Get('/user-vp-scoring-by-user/:userId')
+  findOneUserVpScoringByUserId(@Headers('tenantId') tenantId: string, @Param('userId') userId: string) {
+    return this.userVpScoringService.findOneUserVpScoringByUserId(userId,tenantId);
+  }
+
+  @Delete('/calculate/vp')
+  calculateVP(@Headers('tenantId') tenantId: string, @Headers('userId') userId: string) {
+    return this.userVpScoringService.calculateVP(userId,tenantId);
   }
 }

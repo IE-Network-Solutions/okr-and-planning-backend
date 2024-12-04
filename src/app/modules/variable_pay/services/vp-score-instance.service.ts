@@ -21,6 +21,7 @@ export class VpScoreInstanceService {
   ): Promise<VpScoreInstance> {
 
     try {
+      console.log("lllllll",createVpScoreInstanceDto)
       const vpScoreInstance = await this.vpScoreInstanceRepository.create({
         ...createVpScoreInstanceDto,
         tenantId,

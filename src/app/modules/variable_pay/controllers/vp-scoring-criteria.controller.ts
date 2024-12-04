@@ -4,8 +4,10 @@ import { VpScoringCriterion } from '../entities/vp-scoring-criterion.entity';
 import { VpScoringCriteriaService } from '../services/vp-scoring-criteria.service';
 import { CreateVpScoringCriterionDto } from '../dtos/vp-scoring-criteria-dto/create-vp-scoring-criterion.dto';
 import { UpdateVpScoringCriterionDto } from '../dtos/vp-scoring-criteria-dto/update-vp-scoring-criterion.dto';
+import { ApiTags } from '@nestjs/swagger';
 
 @Controller('vp-scoring-criteria')
+@ApiTags('vp-scoring-criteria')
 export class VpScoringCriteriaController {
   constructor(
     private readonly VpScoringCriteriaService: VpScoringCriteriaService,

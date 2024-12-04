@@ -3,6 +3,7 @@ import { Column, Entity, OneToMany } from "typeorm";
 import { SourceService } from "../enums/sourceService.enum";
 import { CriteriaTarget } from "./criteria-target.entity";
 import { VpScoringCriterion } from "./vp-scoring-criterion.entity";
+import { RequestTemplateDto } from "../dtos/criteria-target-dto/vpCriteriaRequesTemplate.dto";
 
 @Entity()
 export class VpCriteria extends BaseModel{
@@ -19,6 +20,9 @@ export class VpCriteria extends BaseModel{
     @Column({ type: 'varchar', length: 500 })
     sourceEndpoint: string;
   
+    @Column({ type: 'json', nullable:true})
+    requestTemplate: RequestTemplateDto[];
+
     @Column({ type: 'boolean', default: false })
     isDeduction: boolean;
   

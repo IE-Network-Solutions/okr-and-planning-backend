@@ -13,6 +13,7 @@ import { AverageOkrRuleService } from '../../average-okr-rule/average-okr-rule.s
 import { JobInformationDto } from '../dto/job-information.dto';
 import { AverageOkrRule } from '../../average-okr-rule/entities/average-okr-rule.entity';
 import { ObjectiveService } from './objective.service';
+import { paginationOptions } from '@root/src/core/commonTestData/commonTest.data';
 
 @Injectable()
 export class OKRDashboardService {
@@ -25,7 +26,6 @@ export class OKRDashboardService {
   async handleUserOkr(
     userId: string,
     tenantId: string,
-    token: string,
     paginationOptions?: PaginationDto,
   ): Promise<ViewUserAndSupervisorOKRDto> {
     try {
@@ -33,7 +33,6 @@ export class OKRDashboardService {
         await this.getFromOrganizatiAndEmployeInfoService.getUsers(
           userId,
           tenantId,
-          token,
         );
 
       const employeeJobInfo = response.employeeJobInformation[0];
@@ -52,7 +51,6 @@ export class OKRDashboardService {
       } = await this.calculateUserOKR(
         userId,
         tenantId,
-        token,
         employeeJobInfo,
         averageOKrrule,
         paginationOptions,
@@ -63,7 +61,6 @@ export class OKRDashboardService {
             await this.supervisorOkr(
               response.reportingTo.id,
               tenantId,
-              token,
               paginationOptions,
             )
           ).userOkr
@@ -86,7 +83,6 @@ export class OKRDashboardService {
   private async calculateUserOKR(
     userId: string,
     tenantId: string,
-    token: string,
     employeeJobInfo: JobInformationDto,
     averageOKrrule?: AverageOkrRule,
     paginationOptions?: PaginationDto,
@@ -100,8 +96,7 @@ export class OKRDashboardService {
 
     const departments =
       await this.getFromOrganizatiAndEmployeInfoService.getDepartmentsWithUsers(
-        tenantId,
-        token,
+        tenantId
       );
     const department = departments.find(
       (item) => item.id === employeeJobInfo.departmentId,
@@ -119,7 +114,7 @@ export class OKRDashboardService {
           null,
           paginationOptions,
         ),
-        this.objectiveService.getCompanyOkr(
+       this.objectiveService.getCompanyOkr(
           tenantId,
           userId,
           null,
@@ -177,7 +172,6 @@ export class OKRDashboardService {
   async supervisorOkr(
     userId: string,
     tenantId: string,
-    token: string,
     paginationOptions?: PaginationDto,
   ): Promise<ViewUserAndSupervisorOKRDto> {
     const response = await this.getFromOrganizatiAndEmployeInfoService.getUsers(
@@ -191,7 +185,6 @@ export class OKRDashboardService {
     const { totalOkr, completedOkr, daysLeft } = await this.calculateUserOKR(
       userId,
       tenantId,
-      token,
       employeeJobInfo,
       averageOKrrule,
       paginationOptions,
@@ -202,5 +195,111 @@ export class OKRDashboardService {
     returnedObject.okrCompleted = completedOkr;
     returnedObject.userOkr = totalOkr;
     return returnedObject;
+  }
+
+
+
+  async getOkrOfSingleUser(
+    userId: string,
+    tenantId: string,
+    paginationOptions?: PaginationDto,
+  ): Promise<number> {
+    try {
+      const response =
+        await this.getFromOrganizatiAndEmployeInfoService.getUsers(
+          userId,
+          tenantId
+        );
+        console.log(response,"response")
+
+      const employeeJobInfo = response.employeeJobInformation[0];
+      const averageOKrrule =
+        await this.averageOkrRuleService.findOneAverageOkrRuleByTenant(
+          tenantId,
+        );
+
+      const {
+        totalOkr,
+        completedOkr,
+        daysLeft,
+        keyResultCount,
+        teamOkr,
+        companyOkr,
+      } = await this.calculateUserOKR(
+        userId,
+        tenantId,
+        employeeJobInfo,
+        averageOKrrule,
+        paginationOptions
+      );
+      return totalOkr;
+    } catch (error) {
+      throw new Error(error.message);
+    }
+  }
+
+  async getOkrOfSupervisor(
+    userId: string,
+    tenantId: string,
+    paginationOptions?: PaginationDto,
+  ): Promise<number> {
+    try {
+      const response =
+        await this.getFromOrganizatiAndEmployeInfoService.getUsers(
+          userId,
+          tenantId,
+        );
+        const supervisorOkr = response.reportingTo?.id
+        ? (
+            await this.supervisorOkr(
+              response.reportingTo.id,
+              tenantId,
+              paginationOptions,
+            )
+          ).userOkr
+        : 0;
+
+      
+      return supervisorOkr;
+    } catch (error) {
+      throw new Error(error.message);
+    }
+  }
+  async getOkrOfTeam(
+    userId: string,
+    tenantId: string,
+    paginationOptions?: PaginationDto,
+  ): Promise<number> {
+    try {
+      const response =
+        await this.getFromOrganizatiAndEmployeInfoService.getUsers(
+          userId,
+          tenantId,
+        );
+
+      const employeeJobInfo = response.employeeJobInformation[0];
+      const averageOKrrule =
+        await this.averageOkrRuleService.findOneAverageOkrRuleByTenant(
+          tenantId,
+        );
+
+      const {
+        totalOkr,
+        completedOkr,
+        daysLeft,
+        keyResultCount,
+        teamOkr,
+        companyOkr,
+      } = await this.calculateUserOKR(
+        userId,
+        tenantId,
+        employeeJobInfo,
+        averageOKrrule,
+        paginationOptions,
+      );
+      return teamOkr;
+    } catch (error) {
+      throw new Error(error.message);
+    }
   }
 }

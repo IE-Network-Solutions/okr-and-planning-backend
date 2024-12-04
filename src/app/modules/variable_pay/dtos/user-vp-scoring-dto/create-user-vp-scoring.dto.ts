@@ -1,14 +1,13 @@
-import { IsUUID } from "class-validator";
+import { IsOptional, IsUUID } from "class-validator";
 
 export class CreateUserVpScoringDto {
+    
+        @IsUUID()
+        userId?: string;
+        @IsOptional()
+        @IsUUID()
+        vpScoringId?: string;
+      
 
-        @IsUUID()
-        userId: string;
-      
-        @IsUUID()
-        vpScoringId: string;
-      
-        @IsUUID()
-        tenantId: string;
   
 }

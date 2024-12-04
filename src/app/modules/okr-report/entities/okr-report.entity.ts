@@ -35,6 +35,9 @@ export class Report extends BaseModel {
 
   @Column({ nullable: true })
   userId: string;
+  
+  @Column({ type: 'uuid', nullable: true })
+  sessionId: string;
 
   @OneToOne(() => Plan, (plan) => plan.plan, {
     onDelete: 'SET NULL',

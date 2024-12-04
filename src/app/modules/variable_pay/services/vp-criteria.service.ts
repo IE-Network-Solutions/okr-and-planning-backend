@@ -7,33 +7,35 @@ import { CreateVpCriteriaDto } from '../dtos/vp-criteria-dto/create-vp-criteria.
 import { UpdateVpCriteriaDto } from '../dtos/vp-criteria-dto/update-vp-criteria.dto';
 import { IPaginationOptions, Pagination } from 'nestjs-typeorm-paginate';
 import { PaginationDto } from '@root/src/core/commonDto/pagination-dto';
+import { UserVpScoringService } from './user-vp-scoring.service';
+import { VpScoringCriteriaService } from './vp-scoring-criteria.service';
 
 @Injectable()
 export class VpCriteriaService {
   constructor( 
     @InjectRepository(VpCriteria)
     private vpCriteriaRepository: Repository<VpCriteria>,
-    private readonly paginationService: PaginationService)
+    private readonly paginationService: PaginationService,
+    // private readonly userVpScoringService: UserVpScoringService,
+    // private readonly vpScoringCriteriaService: VpScoringCriteriaService
+
+  )
     {}
   async createVpCriteria(
     createVpCriteriaDto: CreateVpCriteriaDto,
-    tenantId: string,
   ): Promise<VpCriteria> {
-
     try {
+      
       const vpCriteria = await this.vpCriteriaRepository.create(createVpCriteriaDto);
      return await this.vpCriteriaRepository.save(
       vpCriteria
-      );
-     
-     
+      ); 
     } catch (error) {
      
       throw new BadRequestException(error.message);
     } 
   }
   async findAllVpCriteria(
-    tenantId: string,
     paginationOptions?: PaginationDto,
   ): Promise<Pagination<VpCriteria>> {
     try {
@@ -71,7 +73,6 @@ export class VpCriteriaService {
   async updateVpCriteria(
     id: string,
     updateVpCriteriaDto: UpdateVpCriteriaDto,
-    tenantId: string,
   ): Promise<VpCriteria> {
     try{
     const VpCriteria = await this.findOneVpCriteria(id);
@@ -97,4 +98,5 @@ export class VpCriteriaService {
     throw new BadRequestException(error.message)
   }
   }
+
 }

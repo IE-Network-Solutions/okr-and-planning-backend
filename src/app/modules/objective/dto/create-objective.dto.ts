@@ -16,6 +16,8 @@ export class CreateObjectiveDto {
   description?: string;
   @IsString()
   userId: string;
+  @IsString()
+  sessionId: string;
   @IsDateString()
   deadline: Date;
   @IsOptional()

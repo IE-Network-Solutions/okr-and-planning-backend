@@ -14,7 +14,7 @@ export class CriteriaTarget extends BaseModel {
     @ManyToOne(() => VpCriteria, { onDelete: 'CASCADE' })
     vpCriteria: VpCriteria;
   
-    @Column({ type: 'decimal', precision: 10, scale: 2 })
+    @Column({ type: 'decimal', precision: 10, scale: 2 ,default:1})
     target: number;
   
     @Column({ type: 'varchar', nullable: true })
