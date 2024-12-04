@@ -49,6 +49,8 @@ export class Report extends BaseModel {
   })
   comments: ReportComment[];
 
-  @OneToMany(() => ReportTask, (reportTask) => reportTask.report)
-  reportTask: ReportTask[];
+  @OneToMany(() => ReportTask, (reportTask) => reportTask.report, {
+    cascade: true,
+  })
+  reportTask: ReportTask[]; 
 }

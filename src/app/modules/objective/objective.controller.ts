@@ -8,6 +8,9 @@ import {
   Req,
   Query,
   Put,
+  BadRequestException,
+  InternalServerErrorException,
+  NotFoundException,
 } from '@nestjs/common';
 import { ObjectiveService } from './services/objective.service';
 import { CreateObjectiveDto } from './dto/create-objective.dto';
@@ -79,19 +82,33 @@ export class ObjectiveController {
   }
 
   @Get('/user/:userId')
-  calculateUSerOkr(
+  async calculateUSerOkr(
     @Req() req: Request,
     @Param('userId') userId: string,
     @Query() paginationOptions?: PaginationDto,
   ) {
     const tenantId = req['tenantId'];
     const token = req['token'];
-    return this.okrDashboardService.handleUserOkr(
-      userId,
-      tenantId,
-      token,
-      paginationOptions,
-    );
+
+    // Validate required parameters
+    if (!tenantId || !token || !userId) {
+      throw new BadRequestException(
+        'Missing required parameters: tenantId, token, or userId',
+      );
+    }
+
+    try {
+      // Call the service and return the result
+      const result = await this.okrDashboardService.handleUserOkr(
+        userId,
+        tenantId,
+        token,
+        paginationOptions,
+      );
+      return result;
+    } catch (error) {
+      throw error;
+    }
   }
 
   @Get('/objective-filter')
