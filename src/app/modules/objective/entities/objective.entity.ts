@@ -6,6 +6,8 @@ export class Objective extends BaseModel {
   @Column({ type: 'varchar', length: '500', nullable: true })
   title: string;
   @Column({ type: 'varchar', length: '255', nullable: true })
+  objectiveId: string;
+  @Column({ type: 'varchar', length: '255', nullable: true })
   description: string;
   @Column({ type: 'uuid' })
   userId: string;

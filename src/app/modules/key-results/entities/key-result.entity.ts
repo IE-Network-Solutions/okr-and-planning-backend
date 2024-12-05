@@ -16,6 +16,8 @@ import { Max, Min } from 'class-validator';
 export class KeyResult extends BaseModel {
   @Column({ type: 'uuid' })
   objectiveId: string;
+  @Column({ type: 'varchar', length: '255', nullable: true })
+  keyResultId: string;
   @Column({ type: 'varchar', length: '50' })
   title: string;
   @Column({ type: 'varchar', length: '255', nullable: true })
