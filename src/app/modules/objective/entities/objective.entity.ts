@@ -3,10 +3,12 @@ import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
 import { KeyResult } from '../../key-results/entities/key-result.entity';
 @Entity()
 export class Objective extends BaseModel {
-  @Column({ type: 'varchar', length: '500', nullable: true })
+  @Column({ type: 'varchar', length: '1000'})
   title: string;
   @Column({ type: 'varchar', length: '255', nullable: true })
   objectiveId: string;
+  @Column({ type: 'uuid' ,nullable:true})
+  sessionId: string;
   @Column({ type: 'varchar', length: '255', nullable: true })
   description: string;
   @Column({ type: 'uuid' })
