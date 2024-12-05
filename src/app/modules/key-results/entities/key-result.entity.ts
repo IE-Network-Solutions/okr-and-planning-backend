@@ -18,7 +18,7 @@ export class KeyResult extends BaseModel {
   objectiveId: string;
   @Column({ type: 'varchar', length: '255', nullable: true })
   keyResultId: string;
-  @Column({ type: 'varchar', length: '50' })
+  @Column({ type: 'varchar', length: '500' })
   title: string;
   @Column({ type: 'varchar', length: '255', nullable: true })
   description: string;
