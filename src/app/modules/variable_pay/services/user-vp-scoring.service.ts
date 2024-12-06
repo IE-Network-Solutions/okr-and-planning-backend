@@ -13,6 +13,8 @@ import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { GetFromOrganizatiAndEmployeInfoService } from '../../objective/services/get-data-from-org.service';
 import { RequestTemplateDto } from '../dtos/criteria-target-dto/vpCriteriaRequesTemplate.dto';
+import { RefreshVPDto } from '../dtos/user-vp-scoring-dto/refresh-vp.dto';
+import { VpScoreBreakDownDto } from '../dtos/vp-score-instance-dto/vp-score-break-down.dto';
 
 @Injectable()
 export class UserVpScoringService {
@@ -39,6 +41,7 @@ export class UserVpScoringService {
     queryRunner?: QueryRunner,
   ): Promise<UserVpScoring> {
     try {
+      console.log(createUserVpScoringDto,"kjjjjjjjjjjjjjjjjjjju")
       const createdUserVpScoring = queryRunner
       ? queryRunner.manager.create(UserVpScoring, {
           ...createUserVpScoringDto,
@@ -84,10 +87,23 @@ export class UserVpScoringService {
     }
   }
 
-  async findOneUserVpScoring(id: string): Promise<UserVpScoring> {
+  async findOneUserVpScoring(id: string,tenantId:string): Promise<UserVpScoring> {
     try {
       const userVpScoring = await this.userVpScoringRepository.findOne({
-        where: { id: id },
+        where: { id: id ,tenantId:tenantId},
+        relations: ['vpScoring'],
+      });
+      return userVpScoring;
+    } catch (error) {
+      throw new NotFoundException(`UserVpScoring Not Found`);
+    }
+  }
+
+
+  async findOneUserVpScoringByUSerId(userId: string,tenantId:string): Promise<UserVpScoring> {
+    try {
+      const userVpScoring = await this.userVpScoringRepository.findOne({
+        where: { userId: userId ,tenantId:tenantId},
         relations: ['vpScoring'],
       });
       return userVpScoring;
@@ -102,19 +118,19 @@ export class UserVpScoringService {
     tenantId: string,
   ): Promise<UserVpScoring> {
     try{
-    const userVpScoring = await this.findOneUserVpScoring(id);
+    const userVpScoring = await this.findOneUserVpScoring(id,tenantId);
     if (!userVpScoring) {
       throw new NotFoundException(`UserVpScoring Not Found`);
     }
     await this.userVpScoringRepository.update({ id }, updateUserVpScoringDto);
-    return await this.findOneUserVpScoring(id);
+    return await this.findOneUserVpScoring(id,tenantId);
   }catch(error){
   throw new BadRequestException(error.message)
   }
   }
-  async removeUserVpScoring(id: string): Promise<UserVpScoring> {
+  async removeUserVpScoring(id: string,tenantId:string): Promise<UserVpScoring> {
     try{
-    const userVpScoring = await this.findOneUserVpScoring(id);
+    const userVpScoring = await this.findOneUserVpScoring(id,tenantId);
     if (!UserVpScoring) {
       throw new NotFoundException(`UserVpScoring Not Found`);
     }
@@ -139,24 +155,25 @@ export class UserVpScoringService {
   }
 
   
-  async calculateVP(userId:string,tenantId:string){
+  async calculateVP(userId:string,tenantId:string):Promise<any>{
     let result =0
-    let breakDownData=[]  ///create dto fro break downdata
+    let breakDownData=[]  
 
 
-    let breakDownObject={}
+    let breakDownObject = new VpScoreBreakDownDto()
     const userScoring = await this.findOneUserVpScoringByUserId(userId,tenantId)
 if(userScoring){
 
  const totalPercentage= userScoring.vpScoring.totalPercentage
 const vpScoringCriterions= userScoring.vpScoring.vpScoringCriterions
-const currentMonth = await this.getActiveMonth(tenantId)
+const currentMonth = await this.getUsersService.getActiveMonth(tenantId)
 const user= await this.getUsersService.getUsers(userId,tenantId)
 
   const userDepartmentId=user.employeeJobInformation[0].departmentId
 
 
  for(const criteria of vpScoringCriterions) {
+  let eachScore=0
  let achievedScore= await this.getResults(tenantId,criteria.vpCriteria.sourceEndpoint,userId)
  for(const target of criteria.vpCriteria.criteriaTargets){
   if(target.month){
@@ -164,24 +181,26 @@ const user= await this.getUsersService.getUsers(userId,tenantId)
     if(target.month === currentMonth.name || target.departmentId===userDepartmentId){
    
 if(criteria.vpCriteria.isDeduction){
-  
       result = result-(criteria.weight*achievedScore)/target.target
 }
 
 else{
-  console.log(result,"elseeee")
+ 
   result = result+((criteria.weight)*achievedScore)/target.target
 
 }
 
 
     }
-  }
-  breakDownObject["targetId"]=target.id
- }
- breakDownObject["criteriaId"]=criteria.id
+    const eachScore=(criteria.weight*achievedScore)/target.target
 
-breakDownObject["weight"]=criteria.weight
+  }
+  breakDownObject.targetId=target.id
+ }
+ breakDownObject.criteriaId=criteria.vpCriteria.id
+
+ breakDownObject.weight=criteria.weight
+ breakDownObject.score=eachScore
  breakDownData.push(breakDownObject)
 
  }
@@ -192,8 +211,23 @@ instance.vpScore=result
 instance.vpScoringId=userScoring.vpScoring.id
 instance.breakdown=breakDownData
 
- const savedInstance =await this.vpScoreInstanceService.createVpScoreInstance(instance,tenantId)
+ const savedInstance =await this.vpScoreInstanceService.vpScoreInstanceCreateOrUpdate(instance,tenantId)
 return savedInstance
+  }
+
+}
+
+async refreshVP(refreshVPDto:RefreshVPDto,tenantId:string):Promise<any>{
+  try{
+   const allUsersVP= await Promise.all(refreshVPDto.users.map(async(item)=>{
+    await this.calculateVP(item,tenantId)
+   }
+  ))
+  return allUsersVP
+}
+  catch(error){
+    throw new BadRequestException(error.message)
+
   }
 
 }
@@ -221,42 +255,5 @@ async getResults(tenantId: string, url: string, userId: string) {
     
     throw new Error("An error occurred while fetching the results.");
   }
-}
-
-
-async getActiveMonth(tenantId: string) {
-  const response = await this.httpService
-  .get(`${this.orgUrl}/month/active/month`, {
-      headers: {
-        tenantid: tenantId,
-      },
-    })
-    .toPromise();
-  return response.data;
-}
-
-
-
-async getActiveUserVpScoring(tenantId: string) {
-  const response = await this.httpService
-  .get(`${this.orgUrl}/UserVpScoring/active/UserVpScoring`, {
-      headers: {
-        tenantid: tenantId,
-      },
-    })
-    .toPromise();
-  return response.data;
-}
-
-
-async getUser(tenantId: string) {
-  const response = await this.httpService
-  .get(`${this.orgUrl}/UserVpScoring/active/UserVpScoring`, {
-      headers: {
-        tenantid: tenantId,
-      },
-    })
-    .toPromise();
-  return response.data;
 }
 }

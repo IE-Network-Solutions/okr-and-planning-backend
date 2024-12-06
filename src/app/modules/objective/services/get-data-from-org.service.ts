@@ -33,4 +33,28 @@ export class GetFromOrganizatiAndEmployeInfoService {
       .toPromise();
     return response.data;
   }
+
+
+  async getActiveMonth(tenantId: string) {
+    const response = await this.httpService
+    .get(`${this.orgUrl}/month/active/month`, {
+        headers: {
+          tenantid: tenantId,
+        },
+      })
+      .toPromise();
+    return response.data;
+  }
+
+
+  async activatePreviousActiveMonth(tenantId: string) {
+    const response = await this.httpService
+    .get(`${this.orgUrl}/month/previousMonth/month`, {
+        headers: {
+          tenantid: tenantId,
+        },
+      })
+      .toPromise();
+    return response.data;
+  }
 }

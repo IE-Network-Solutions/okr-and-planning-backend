@@ -1,6 +1,7 @@
 import { BaseModel } from "@root/src/database/base.model";
 import { Column, Entity, ManyToOne } from "typeorm";
 import { VpScoring } from "./vp-scoring.entity";
+import { VpScoreBreakDownDto } from "../dtos/vp-score-instance-dto/vp-score-break-down.dto";
 
 @Entity()
 export class VpScoreInstance extends BaseModel {
@@ -18,7 +19,7 @@ export class VpScoreInstance extends BaseModel {
     vpScore: number;
   
     @Column({ type: 'json' })
-    breakdown: Record<string, any>;///what type
+    breakdown: VpScoreBreakDownDto[]
   
     @Column({ type: 'uuid' })
     monthId: string;

@@ -7,6 +7,7 @@ export class UserVpScoring extends BaseModel {
   
     @Column({ type: 'uuid' })
     userId: string;
+    
   
     @Column({ type: 'uuid' })
     vpScoringId: string;

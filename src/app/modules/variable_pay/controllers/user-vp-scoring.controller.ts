@@ -5,6 +5,7 @@ import { CreateUserVpScoringDto } from '../dtos/user-vp-scoring-dto/create-user-
 import { UserVpScoring } from '../entities/user-vp-scoring.entity';
 import { UpdateUserVpScoringDto } from '../dtos/user-vp-scoring-dto/update-user-vp-scoring.dto';
 import { PaginationDto } from '@root/src/core/commonDto/pagination-dto';
+import { RefreshVPDto } from '../dtos/user-vp-scoring-dto/refresh-vp.dto';
 
 @Controller('user-vp-scoring')
 @ApiTags('user-vp-scoring')
@@ -37,8 +38,12 @@ export class UserVpScoringController {
   }
 
   @Get(':id')
-  findOneUserVpScoring(@Param('id') id: string) {
-    return this.userVpScoringService.findOneUserVpScoring(id);
+  findOneUserVpScoring(@Param('id') id: string,  @Headers('tenantId') tenantId: string,) {
+    return this.userVpScoringService.findOneUserVpScoring(id,tenantId);
+  }
+  @Get('/score/:userId')
+  findOneUserVpScoringByUSerId(@Param('id') id: string, @Headers('tenantId') tenantId: string,) {
+    return this.userVpScoringService.findOneUserVpScoringByUSerId(id,tenantId);
   }
 
   @Put(':id')
@@ -56,7 +61,7 @@ export class UserVpScoringController {
 
   @Delete(':id')
   get(@Headers('tenantId') tenantId: string, @Param('id') id: string) {
-    return this.userVpScoringService.removeUserVpScoring(id);
+    return this.userVpScoringService.removeUserVpScoring(id,tenantId);
   }
 
   @Get('/user-vp-scoring-by-user/:userId')
@@ -64,8 +69,13 @@ export class UserVpScoringController {
     return this.userVpScoringService.findOneUserVpScoringByUserId(userId,tenantId);
   }
 
-  @Delete('/calculate/vp')
-  calculateVP(@Headers('tenantId') tenantId: string, @Headers('userId') userId: string) {
+  @Get('/calculate/vp/:userId')
+  calculateVP(@Headers('tenantId') tenantId: string, @Param('userId') userId: string) {
     return this.userVpScoringService.calculateVP(userId,tenantId);
+  }
+
+  @Get('/refresh/vp')
+  refreshVP(@Headers('tenantId') tenantId: string, @Body()refreshVPDto:RefreshVPDto) {
+    return this.userVpScoringService.refreshVP(refreshVPDto,tenantId);
   }
 }

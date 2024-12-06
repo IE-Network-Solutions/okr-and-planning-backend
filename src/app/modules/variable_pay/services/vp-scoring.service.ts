@@ -10,6 +10,7 @@ import { IPaginationOptions, Pagination } from 'nestjs-typeorm-paginate';
 import { CreateUserVpScoringDto } from '../dtos/user-vp-scoring-dto/create-user-vp-scoring.dto';
 import { UserVpScoringService } from './user-vp-scoring.service';
 import { CreateVpScoringCriterionDto } from '../dtos/vp-scoring-criteria-dto/create-vp-scoring-criterion.dto';
+import { VpScoringCriteriaService } from './vp-scoring-criteria.service';
 
 
 @Injectable()
@@ -18,8 +19,7 @@ export class VpScoringService {  constructor(
   private vpScoringRepository: Repository<VpScoring>,
   private readonly paginationService: PaginationService,
   private readonly userVpScoringService: UserVpScoringService,
-
-
+  private readonly vpScoringCriteriaService:VpScoringCriteriaService,
   private readonly connection: Connection)
   {}
 async createVpScoring(
@@ -46,11 +46,12 @@ async createVpScoring(
 
         await Promise.all(
           createVpScoringDto.createUserVpScoringDto.map(async (createUserVpScoring) => {
+            console.log(createUserVpScoring.userId,"createUserVpScoring")
             const userVPScoring = new CreateUserVpScoringDto();
             userVPScoring.vpScoringId = savedVpScoring.id;
             userVPScoring.userId = createUserVpScoring.userId;
          
-            const createMonth = await this.userVpScoringService.createUserVpScoring(
+            await this.userVpScoringService.createUserVpScoring(
               userVPScoring,
               tenantId,
               queryRunner,
@@ -66,9 +67,9 @@ async createVpScoring(
           createVpScoringDto.vpScoringCriteria.map(async (criteria) => {
             const vpCriteria = new CreateVpScoringCriterionDto();
             vpCriteria.vpScoringId = savedVpScoring.id;
-            vpCriteria.vpCriteriaId = vpCriteria.vpCriteriaId;
-            vpCriteria.weight = vpCriteria.weight;
-            const createVpScoringCriteria = await this.userVpScoringService.createUserVpScoring(
+            vpCriteria.vpCriteriaId = criteria.vpCriteriaId;
+            vpCriteria.weight = criteria.weight;
+          await this.vpScoringCriteriaService.createVpScoringCriterion(
               vpCriteria,
               tenantId,
               queryRunner,
@@ -101,9 +102,8 @@ async createVpScoring(
       .createQueryBuilder('VpScoring')
       .leftJoinAndSelect('VpScoring.vpScoreInstance', 'vpScoreInstance')
       .leftJoinAndSelect('VpScoring.vpScoringCriterions', 'vpScoringCriterions')
-
+      .leftJoinAndSelect('vpScoringCriterions.vpCriteria', 'vpCriteria')
       .leftJoinAndSelect('VpScoring.userVpScoring', 'userVpScoring')
-
       .where('VpScoring.tenantId = :tenantId', { tenantId })
   
     const paginatedData = await this.paginationService.paginate<VpScoring>(
@@ -139,7 +139,21 @@ async updateVpScoring(
   if (!vpScoring) {
     throw new NotFoundException(`VpScoring Not Found`);
   }
+  const vpScoringCriteria=updateVpScoringDto.vpScoringCriteria
+const updateVpScoring=updateVpScoringDto.createUserVpScoringDto
+delete updateVpScoringDto.createUserVpScoringDto
+delete updateVpScoringDto.vpScoringCriteria
+  
   await this.vpScoringRepository.update({ id }, updateVpScoringDto);
+
+  if(updateVpScoring.length&&updateVpScoring.length>0){
+    for(const criteria of vpScoringCriteria)
+    await this.vpScoringCriteriaService.updateVpScoringCriterion(criteria.id,criteria,tenantId)
+  }
+  if(updateVpScoring.length&&updateVpScoring.length>0){
+    for(const score of updateVpScoring)
+    await this.userVpScoringService.updateUserVpScoring(score.id,score,tenantId)
+  }
   return await this.findOneVpScoring(id);
 }catch(error){
 throw new BadRequestException(error.message)

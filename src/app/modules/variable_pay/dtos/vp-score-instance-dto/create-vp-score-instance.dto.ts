@@ -1,4 +1,6 @@
-import { IsArray, IsDecimal, IsUUID } from "class-validator";
+import { Type } from "class-transformer";
+import { IsArray, IsDecimal, IsUUID, ValidateNested } from "class-validator";
+import { VpScoreBreakDownDto } from "./vp-score-break-down.dto";
 
 export class CreateVpScoreInstanceDto {
   
@@ -11,8 +13,10 @@ export class CreateVpScoreInstanceDto {
     @IsDecimal()
     vpScore: number;
   
-  @IsArray()
-    breakdown: Record<string, any>;
+  
+    @ValidateNested({ each: true })
+    @Type(() => VpScoreBreakDownDto)
+    breakdown?:VpScoreBreakDownDto[];
   
     @IsUUID()
     monthId: string;

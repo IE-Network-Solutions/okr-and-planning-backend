@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Headers, Put, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Headers, Put, Query, Req } from '@nestjs/common';
 
 import { ApiTags } from '@nestjs/swagger';
 import { VpScoreInstance } from '../entities/vp-score-instance.entity';
@@ -6,6 +6,7 @@ import { PaginationDto } from '@root/src/core/commonDto/pagination-dto';
 import { VpScoreInstanceService } from '../services/vp-score-instance.service';
 import { CreateVpScoreInstanceDto } from '../dtos/vp-score-instance-dto/create-vp-score-instance.dto';
 import { UpdateVpScoreInstanceDto } from '../dtos/vp-score-instance-dto/update-vp-score-instance.dto';
+import { VpScoreTargetFilterDto } from '../dtos/vp-score-instance-dto/vp-filter-dto';
 
 @Controller('vp-score-instance')
 @ApiTags('vp-score-instance')
@@ -41,6 +42,15 @@ export class VpScoreInstanceController {
   findOneVpScoreInstance(@Param('id') id: string) {
     return this.vpScoreInstanceService.findOneVpScoreInstance(id);
   }
+  @Get('/by-user/:id')
+  findOneVpScoreInstanceOfUserScore(@Param('userId') userId: string,  @Headers('tenantId') tenantId: string,@Req() request: any, ) {
+    const token = request.token;
+    return this.vpScoreInstanceService.findOneVpScoreInstanceOfUserScore(userId,tenantId);
+  }
+  @Get('/score/:id')
+  findOneVpScoreInstanceOfUser(@Param('userId') userId: string,  @Headers('tenantId') tenantId: string,) {
+    return this.vpScoreInstanceService.findOneVpScoreInstanceOfUser(userId,tenantId);
+  }
 
   @Put(':id')
   updateVpScoreInstance(
@@ -53,6 +63,11 @@ export class VpScoreInstanceController {
       updateVpScoreInstanceDto,
       tenantId,
     );
+  }
+  
+  @Post('/score/target')
+  findOneVpScoreInstanceOfUserTarget(@Body() vpScoreTargetFilterDto:VpScoreTargetFilterDto,@Headers('tenantId') tenantId: string) {
+    return this.vpScoreInstanceService.findOneVpScoreInstanceOfUserTarget(tenantId,vpScoreTargetFilterDto);
   }
 
   @Delete(':id')

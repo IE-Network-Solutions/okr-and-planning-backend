@@ -5,6 +5,8 @@ import { UpdateCriteriaTargetDto } from '../dtos/criteria-target-dto/update-crit
 import { ApiTags } from '@nestjs/swagger';
 import { CriteriaTarget } from '../entities/criteria-target.entity';
 import { PaginationDto } from '@root/src/core/commonDto/pagination-dto';
+import { CreateCriteriaTargetForMultipleDto } from '../dtos/criteria-target-dto/create-vp-criteria-bulk-dto';
+import { UpdateCriteriaTargetForMultipleDto } from '../dtos/criteria-target-dto/update-vp-criteria-bulk-dto';
 
 
 @Controller('criteria-targets')
@@ -16,9 +18,9 @@ export class CriteriaTargetController {
 
   @Post()
   async createCriteriaTarget(
-    @Body() createCriteriaTargetDto: CreateCriteriaTargetDto,
+    @Body() createCriteriaTargetDto: CreateCriteriaTargetForMultipleDto,
     @Headers('tenantId') tenantId: string,
-  ): Promise<CriteriaTarget> {
+  ): Promise<CriteriaTarget[]> {
     return await this.criteriaTargetService.createCriteriaTarget(
       createCriteriaTargetDto,
       tenantId,
@@ -54,7 +56,18 @@ export class CriteriaTargetController {
       tenantId,
     );
   }
-
+  @Put('/bulk/:id')
+  updateCriteriaTargetBulk(
+    @Headers('tenantId') tenantId: string,
+    @Param('id') id: string,
+    @Body() updateCriteriaTargetDto: UpdateCriteriaTargetForMultipleDto,
+  ) {
+    return this.criteriaTargetService.updateCriteriaTargetBulk(
+      id,
+      updateCriteriaTargetDto,
+      tenantId,
+    );
+  }
   @Delete(':id')
   removeCriteriaTarget(@Headers('tenantId') tenantId: string, @Param('id') id: string) {
     return this.criteriaTargetService.removeCriteriaTarget(id);
