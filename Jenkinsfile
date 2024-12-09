@@ -81,30 +81,30 @@ pipeline {
         success {
             echo 'Nest js application deployed successfully!'
         }
-failure {
-    echo 'Deployment failed.'
-    script {
-        
-def commitAuthorEmail = sh(script: "git log -1 --pretty=%ae", returnStdout: true).trim()
-emailext (
-subject: "FAILED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' - Build Failed",
-body: """<html>
-    <body>
-        <ul>
-            <li><strong>Job Name:</strong> ${env.JOB_NAME} build no. ${env.BUILD_NUMBER} </li>
-            <li><strong>Build URL:</strong> <a href='${env.BUILD_URL}console'>Click here to view the build details</a></li>
-        </ul>
-    </body>
-</html>""",
-recipientProviders: [[$class: 'DevelopersRecipientProvider']],
-to: ['yonas.t@ienetworksolutions.com', commitAuthorEmail]
+ failure {
+            script {
+                // Get the latest commit author email
+                def commitAuthor = sh(script: "git log -1 --pretty=format:'%ae'", returnStdout: true).trim()
 
+                // Specify additional email addresses
+                def additionalEmails = ['yonas.t@ienetworksolutions.com']
 
-            
-        )
-        echo "Email sent successfully"
-    }
-}
+                // Send email notification dynamically to the commit author and additional email addresses
+                emailext(
+                    subject: "FAILED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' - Build Failed",
+                    body: """<html>
+                                <body>
+                                    <ul>
+                                        <li><strong>Job Name:</strong> ${env.JOB_NAME} build no. ${env.BUILD_NUMBER}</li>
+                                        <li><strong>Build URL:</strong> <a href='${env.BUILD_URL}console'>Click here to view the build details</a></li>
+                                    </ul>
+                                </body>
+                              </html>""",
+                    recipientProviders: [[$class: 'DevelopersRecipientProvider']],
+                    to: [commitAuthor] + additionalEmails
+                )
+            }
+        }
 
     }
 }
