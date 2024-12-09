@@ -81,8 +81,18 @@ pipeline {
         success {
             echo 'Nest js application deployed successfully!'
         }
-        failure {
+ failure {
             echo 'Deployment failed.'
+             mail(
+                to: 'yonas.t@ienetworksolutions.co',
+                subject: "Build Failure: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                body: """The build has failed for the following Jenkins job:
+                
+                Job: ${env.JOB_NAME}
+                Build Number: ${env.BUILD_NUMBER}
+                View the console output: ${env.BUILD_URL}"""
+            )
         }
     }
 }
+
