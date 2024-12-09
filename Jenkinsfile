@@ -91,11 +91,9 @@ subject: "FAILED: Job '${env.JOB_NAME}' - Build Failed",
 body: """<html>
     <body>
         <ul>
-            <li><strong>Job Name:</strong> ${env.JOB_NAME}</li>
-            <li><strong>Build Number:</strong> ${env.BUILD_NUMBER}</li>
+            <li><strong>Job Name:</strong> ${env.JOB_NAME} build no. ${env.BUILD_NUMBER} </li>
             <li><strong>Build URL:</strong> <a href='${env.BUILD_URL}console'>Click here to view the build details</a></li>
         </ul>
-        <p><a href='${env.BUILD_URL}console'>View Console Output for ${env.JOB_NAME} [${env.BUILD_NUMBER}]</a></p>
     </body>
 </html>""",
 recipientProviders: [[$class: 'DevelopersRecipientProvider']],
