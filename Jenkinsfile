@@ -90,8 +90,8 @@ emailext (
 subject: "FAILED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
 body: """<html>
     <body>
-        <p><strong>FAILED:</strong> Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'</p>
-        <p>Check the console output at <a href='${env.BUILD_URL}'>${env.JOB_NAME} [${env.BUILD_NUMBER}]</a></p>
+        <p><strong>FAILED:</strong> Job '${env.JOB_NAME} build no. ${env.BUILD_NUMBER}'</p>
+        <p>Check the console output at <a href='${env.BUILD_URL}'>${env.JOB_NAME} ${env.BUILD_NUMBER}/console</a></p>
     </body>
 </html>""",
 recipientProviders: [[$class: 'DevelopersRecipientProvider']],
