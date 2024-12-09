@@ -98,3 +98,4 @@ failure {
         echo "Email sent successfully"
     }
 }
+    }
