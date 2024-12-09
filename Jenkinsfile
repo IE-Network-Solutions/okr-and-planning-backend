@@ -84,7 +84,6 @@ pipeline {
 failure {
             echo 'Deployment failed.'
              emailext(
-                 from: 'selamnew@ienetworksolutions.com',
                 to: 'yonas.t@ienetworksolutions.com',
                 subject: "Build Failure: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
                 body: """The build has failed for the following Jenkins job:
