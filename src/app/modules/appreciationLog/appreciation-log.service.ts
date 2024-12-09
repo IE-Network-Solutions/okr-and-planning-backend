@@ -33,7 +33,7 @@ export class AppreciationService {
 
     // Find the recognition type by its ID
     const recognitionType = await this.recognitionTypeService.findOne(typeId);
-    if (!recognitionType) {
+    // if (!recognitionType) {
       throw new Error(`Recognition Type ID ${typeId} not found`);
     }
 
