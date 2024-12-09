@@ -84,7 +84,8 @@ pipeline {
 failure {
     echo 'Deployment failed.'
     script {
-        def consoleOutput = currentBuild.rawBuild.getLog(100).join("\n")
+        // Capture the console output using shell command
+        def consoleOutput = sh(script: "tail -n 100 ${env.WORKSPACE}/logs/jenkins-console.log", returnStdout: true).trim()
         
         emailext(
             subject: "FAILED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
@@ -98,5 +99,6 @@ failure {
         echo "Email sent successfully"
     }
 }
+
     }
 }
