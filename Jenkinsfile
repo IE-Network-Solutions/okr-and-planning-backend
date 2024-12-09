@@ -89,19 +89,14 @@ failure {
     //         returnStdout: true
     //     ).trim()
 
-        mail(
-           subject: "FAILED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' - Build Failed",
-body: """<html>
-    <body>
-        The build has failed for the following Jenkins job:
-                    
-                    Job: ${env.JOB_NAME}
-                    Build Number: ${env.BUILD_NUMBER}
-                    View the console output: ${env.BUILD_URL}
-    </body>
-</html>""",
-recipientProviders: [[$class: 'DevelopersRecipientProvider']],
-to: 'yonas.t@ienetworksolutions.com'
+
+          emailext (
+                subject: "FAILED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
+                body: """<p>FAILED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]':</p>
+                <p>Check console output at &QUOT;<a href='${env.BUILD_URL}'>${env.JOB_NAME} [${env.BUILD_NUMBER}]</a>&QUOT;</p>""",
+                recipientProviders: [[$class: 'DevelopersRecipientProvider']],
+                to: 'yonas.t@ienetworksolutions.com'
+            
 )
     }
 
