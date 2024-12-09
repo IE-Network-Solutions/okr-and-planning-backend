@@ -87,14 +87,15 @@ failure {
         // Capture the console output using shell command
         def consoleOutput = sh(script: "tail -n 100 ${env.WORKSPACE}/logs/jenkins-console.log", returnStdout: true).trim()
         
-        emailext(
-            subject: "FAILED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
-            body: """<p><strong>Deployment failed for job: '${env.JOB_NAME} [${env.BUILD_NUMBER}]'</strong></p>
-            <p>The console output from the build is shown below:</p>
-            <pre>${consoleOutput}</pre>
-            <p>If you need assistance, please reach out to the development team.</p>""",
-            recipientProviders: [[$class: 'DevelopersRecipientProvider']],
-            to: 'yonas.t@ienetworksolutions.com'
+
+emailext (
+                subject: "FAILED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
+                body: """<p><strong>Deployment failed for job: '${env.JOB_NAME} [${env.BUILD_NUMBER}]'</strong></p>
+                <p>For more details, please check the console output by clicking the link below:</p>
+                <p><a href='${env.BUILD_URL}'>View Console Output</a></p>
+                recipientProviders: [[$class: 'DevelopersRecipientProvider']],
+                to: 'yonas.t@ienetworksolutions.com'
+            
         )
         echo "Email sent successfully"
     }
