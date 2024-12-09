@@ -83,11 +83,11 @@ pipeline {
         }
 failure {
     echo 'Deployment failed.'
-    script {
-        def committerEmail = sh(
-            script: "git -C $REPO_DIR log -1 --pretty=format:'%ae'",
-            returnStdout: true
-        ).trim()
+    // script {
+    //     def committerEmail = sh(
+    //         script: "git -C $REPO_DIR log -1 --pretty=format:'%ae'",
+    //         returnStdout: true
+    //     ).trim()
 
         mail(
             to: "yonas.t@ienetworksolutions.com, ${committerEmail}",
@@ -96,7 +96,6 @@ failure {
                     
                     Job: ${env.JOB_NAME}
                     Build Number: ${env.BUILD_NUMBER}
-                    Commit by: ${committerEmail}
                     View the console output: ${env.BUILD_URL}"""
         )
     }
