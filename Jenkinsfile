@@ -82,21 +82,19 @@ pipeline {
             echo 'Nest js application deployed successfully!'
         }
 failure {
-        echo 'Deployment failed.'
-        script {
-            try {
-                emailext (
-                  subject: "FAILED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
-                body: """<p>FAILED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]':</p>
-                <p>Check console output at &QUOT;<a href='${env.BUILD_URL}'>${env.JOB_NAME} [${env.BUILD_NUMBER}]</a>&QUOT;</p>""",
-                recipientProviders: [[$class: 'DevelopersRecipientProvider']],
-                to: 'yonas.t@ienetworksolutions.com'
-                )
-                echo "Email sent successfully"
-            } catch (e) {
-                echo "Failed to send email: ${e.message}"
-            }
-        }
+    echo 'Deployment failed.'
+    script {
+        def consoleOutput = currentBuild.rawBuild.getLog(100).join("\n")
+        
+        emailext(
+            subject: "FAILED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
+            body: """<p><strong>Deployment failed for job: '${env.JOB_NAME} [${env.BUILD_NUMBER}]'</strong></p>
+            <p>The console output from the build is shown below:</p>
+            <pre>${consoleOutput}</pre>
+            <p>If you need assistance, please reach out to the development team.</p>""",
+            recipientProviders: [[$class: 'DevelopersRecipientProvider']],
+            to: 'yonas.t@ienetworksolutions.com'
+        )
+        echo "Email sent successfully"
     }
-}
 }
