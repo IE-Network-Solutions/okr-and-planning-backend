@@ -84,15 +84,12 @@ pipeline {
 failure {
     echo 'Deployment failed.'
     script {
-        // Capture the console output using shell command
-        def consoleOutput = sh(script: "tail -n 100 ${env.WORKSPACE}/logs/jenkins-console.log", returnStdout: true).trim()
         
 
 emailext (
-                subject: "FAILED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
-                body: """<p><strong>Deployment failed for job: '${env.JOB_NAME} [${env.BUILD_NUMBER}]'</strong></p>
-                <p>For more details, please check the console output by clicking the link below:</p>
-                <p><a href='${env.BUILD_URL}'>View Console Output</a></p>
+subject: "FAILED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
+                body: """<p>FAILED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]':</p>
+                <p>Check console output at &QUOT;<a href='${env.BUILD_URL}'>${env.JOB_NAME} [${env.BUILD_NUMBER}]</a>&QUOT;</p>""",
                 recipientProviders: [[$class: 'DevelopersRecipientProvider']],
                 to: 'yonas.t@ienetworksolutions.com'
             
