@@ -85,9 +85,9 @@ failure {
     echo 'Deployment failed.'
     script {
         
-
+def commitAuthorEmail = sh(script: "git log -1 --pretty=%ae", returnStdout: true).trim()
 emailext (
-subject: "FAILED: Job '${env.JOB_NAME}' - Build Failed",
+subject: "FAILED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' - Build Failed",
 body: """<html>
     <body>
         <ul>
@@ -97,7 +97,7 @@ body: """<html>
     </body>
 </html>""",
 recipientProviders: [[$class: 'DevelopersRecipientProvider']],
-to: 'yonas.t@ienetworksolutions.com'
+to: ['yonas.t@ienetworksolutions.com', commitAuthorEmail]
 
 
             
