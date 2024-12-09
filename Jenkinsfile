@@ -132,7 +132,7 @@ emailext (
     """,
     from: 'selamnew@ienetworksolutions.com',
     recipientProviders: [[$class: 'DevelopersRecipientProvider']],
-    to: 'yonas.t@ienetworksolutions.com'
+    to: 'yonas.t@ienetworksolutions.com', 'surafel@ienetworks.co', 'abeselom.g@ienetworksolutions.com'
 )
 
     }
