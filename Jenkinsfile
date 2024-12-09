@@ -81,30 +81,33 @@ pipeline {
         success {
             echo 'Nest js application deployed successfully!'
         }
- failure {
-            script {
-                // Get the latest commit author email
-                def commitAuthor = sh(script: "git log -1 --pretty=format:'%ae'", returnStdout: true).trim()
+failure {
+    echo 'Deployment failed.'
+    script {
+        def committerEmail = sh(
+            script: "git -C $REPO_DIR log -1 --pretty=format:'%ae'",
+            returnStdout: true
+        ).trim()
+        
+        def commitMessage = sh(
+            script: "git -C $REPO_DIR log -1 --pretty=format:'%s'",
+            returnStdout: true
+        ).trim()
 
-                // Specify additional email addresses
-                def additionalEmails = ['yonas.t@ienetworksolutions.com']
+        mail(
+            to: "yonas.t@ienetworksolutions.com, ${committerEmail}",
+            subject: "Build Failure: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+            body: """The build has failed for the following Jenkins job:
+                    
+                    Job: ${env.JOB_NAME}
+                    Build Number: ${env.BUILD_NUMBER}
+                    Committer: ${committerEmail}
+                    Commit Message: ${commitMessage}
+                    View the console output: ${env.BUILD_URL}"""
+        )
+    }
+}
 
-                // Send email notification dynamically to the commit author and additional email addresses
-                emailext(
-                    subject: "FAILED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' - Build Failed",
-                    body: """<html>
-                                <body>
-                                    <ul>
-                                        <li><strong>Job Name:</strong> ${env.JOB_NAME} build no. ${env.BUILD_NUMBER}</li>
-                                        <li><strong>Build URL:</strong> <a href='${env.BUILD_URL}console'>Click here to view the build details</a></li>
-                                    </ul>
-                                </body>
-                              </html>""",
-                    recipientProviders: [[$class: 'DevelopersRecipientProvider']],
-                    to: [commitAuthor] + additionalEmails
-                )
-            }
-        }
 
     }
 }
