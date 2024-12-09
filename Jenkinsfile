@@ -81,19 +81,18 @@ pipeline {
         success {
             echo 'Nest js application deployed successfully!'
         }
- failure {
+failure {
             echo 'Deployment failed.'
-             failure {
-        emailext(
-            subject: "Build Failed: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-            body: """<p>The build for <strong>${env.JOB_NAME}</strong> has failed.</p>
-                     <p>Build URL: <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>
-                  """,
-            recipientProviders: [[$class: 'CulpritsRecipientProvider'], [$class: 'DevelopersRecipientProvider']],
-            to: 'yonas.t@ienetworksolutions.com',
-            from: 'selamnew@ienetworksolutions.com'
-        )
-    }
+             emailext(
+                 from: 'selamnew@ienetworksolutions.com',
+                to: 'yonas.t@ienetworksolutions.com',
+                subject: "Build Failure: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                body: """The build has failed for the following Jenkins job:
+                
+                Job: ${env.JOB_NAME}
+                Build Number: ${env.BUILD_NUMBER}
+                View the console output: ${env.BUILD_URL}"""
+            )
+        }
     }
 }
-
