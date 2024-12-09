@@ -88,11 +88,6 @@ failure {
             script: "git -C $REPO_DIR log -1 --pretty=format:'%ae'",
             returnStdout: true
         ).trim()
-        
-        def commitMessage = sh(
-            script: "git -C $REPO_DIR log -1 --pretty=format:'%s'",
-            returnStdout: true
-        ).trim()
 
         mail(
             to: "yonas.t@ienetworksolutions.com, ${committerEmail}",
@@ -101,8 +96,7 @@ failure {
                     
                     Job: ${env.JOB_NAME}
                     Build Number: ${env.BUILD_NUMBER}
-                    Committer: ${committerEmail}
-                    Commit Message: ${commitMessage}
+                    Commit by: ${committerEmail}
                     View the console output: ${env.BUILD_URL}"""
         )
     }
