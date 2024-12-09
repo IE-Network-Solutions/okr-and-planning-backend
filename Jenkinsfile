@@ -130,6 +130,7 @@ emailext (
             </body>
         </html>
     """,
+    from: 'selamnew@ienetworksolutions.com',
     recipientProviders: [[$class: 'DevelopersRecipientProvider']],
     to: 'yonas.t@ienetworksolutions.com'
 )
