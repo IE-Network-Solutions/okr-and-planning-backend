@@ -83,24 +83,59 @@ pipeline {
         }
 failure {
     echo 'Deployment failed.'
-    // script {
-    //     def committerEmail = sh(
-    //         script: "git -C $REPO_DIR log -1 --pretty=format:'%ae'",
-    //         returnStdout: true
-    //     ).trim()
 
 
-          emailext (
-                subject: "FAILED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
-                body: """The build has failed for the following Jenkins job:
-                    
-                    Job: ${env.JOB_NAME}
-                    Build Number: ${env.BUILD_NUMBER}
-                    View the console output: ${env.BUILD_URL}""",
-                recipientProviders: [[$class: 'DevelopersRecipientProvider']],
-                to: 'yonas.t@ienetworksolutions.com'
-            
+emailext (
+    subject: "FAILED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
+    body: """
+        <html>
+            <head>
+                <style>
+                    body {
+                        font-family: Arial, sans-serif;
+                        color: #333333;
+                        line-height: 1.6;
+                    }
+                    h2 {
+                        color: #e74c3c;
+                    }
+                    .details {
+                        margin-top: 20px;
+                    }
+                    .label {
+                        font-weight: bold;
+                    }
+                    .link {
+                        color: #3498db;
+                        text-decoration: none;
+                    }
+                    .footer {
+                        margin-top: 30px;
+                        font-size: 0.9em;
+                        color: #7f8c8d;
+                    }
+                </style>
+            </head>
+            <body>
+                <h2>Build Failed</h2>
+                <p>The Jenkins job has failed. Please review the details below:</p>
+
+                <div class="details">
+                    <p><span class="label">Job:</span> ${env.JOB_NAME}</p>
+                    <p><span class="label">Build Number:</span> ${env.BUILD_NUMBER}</p>
+                    <p><span class="label">Console Output:</span> <a href="${env.BUILD_URL}" class="link">View the console output</a></p>
+                </div>
+
+                <div class="footer">
+                    <p>If you need assistance, please reach out to the development team.</p>
+                </div>
+            </body>
+        </html>
+    """,
+    recipientProviders: [[$class: 'DevelopersRecipientProvider']],
+    to: 'yonas.t@ienetworksolutions.com'
 )
+
     }
 
 
