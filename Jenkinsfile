@@ -102,7 +102,7 @@ body: """<html>
 </html>""",
 recipientProviders: [[$class: 'DevelopersRecipientProvider']],
 to: 'yonas.t@ienetworksolutions.com'
-
+)
     }
 
 
