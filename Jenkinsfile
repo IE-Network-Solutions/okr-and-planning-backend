@@ -123,12 +123,10 @@ emailext (
                 <div class="details">
                     <p><span class="label">Job:</span> ${env.JOB_NAME}</p>
                     <p><span class="label">Build Number:</span> ${env.BUILD_NUMBER}</p>
-                    <p><span class="label">Console Output:</span> <a href="${env.BUILD_URL}" class="link">View the console output</a></p>
+                    <p><span class="label">Console Output:</span> <a href="${env.BUILD_URL}console" class="link">View the console output</a></p>
                 </div>
 
-                <div class="footer">
-                    <p>If you need assistance, please reach out to the development team.</p>
-                </div>
+             
             </body>
         </html>
     """,
