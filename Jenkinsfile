@@ -83,6 +83,52 @@ pipeline {
         }
         failure {
             echo 'Deployment failed.'
+            emailext(
+                subject: "FAILED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
+                body: """
+                    <html>
+                        <head>
+                            <style>
+                                body {
+                                    font-family: Arial, sans-serif;
+                                    color: #333333;
+                                    line-height: 1.6;
+                                }
+                                h2 {
+                                    color: #e74c3c;
+                                }
+                                .details {
+                                    margin-top: 20px;
+                                }
+                                .label {
+                                    font-weight: bold;
+                                }
+                                .link {
+                                    color: #3498db;
+                                    text-decoration: none;
+                                }
+                                .footer {
+                                    margin-top: 30px;
+                                    font-size: 0.9em;
+                                    color: #7f8c8d;
+                                }
+                            </style>
+                        </head>
+                        <body>
+                            <h2>Build Failed</h2>
+                            <p>The Jenkins job has failed. Please review the details below:</p>
+                            <div class="details">
+                                <p><span class="label">Job:</span> ${env.JOB_NAME}</p>
+                                <p><span class="label">Build Number:</span> ${env.BUILD_NUMBER}</p>
+                                <p><span class="label">Console Output:</span> <a href="${env.BUILD_URL}console" class="link">View the console output</a></p>
+                            </div>
+                        </body>
+                    </html>
+                """,
+                from: 'selamnew@ienetworksolutions.com',
+                recipientProviders: [[$class: 'DevelopersRecipientProvider']],
+                to: 'yonas.t@ienetworksolutions.com, surafel@ienetworks.co, abeselom.g@ienetworksolutions.com'
+            )
         }
     }
 }
