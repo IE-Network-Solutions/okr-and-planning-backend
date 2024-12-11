@@ -1,5 +1,5 @@
 export enum SourceService {
-    OKR = 'OKR',
-    CFR = 'CFR',
-    EIM = 'EIM',
-  }
+  OKR = 'OKR',
+  CFR = 'CFR',
+  EIM = 'EIM',
+}

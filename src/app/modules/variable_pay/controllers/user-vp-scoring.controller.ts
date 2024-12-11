@@ -1,4 +1,15 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, Headers, Put } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+  Headers,
+  Put,
+} from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { UserVpScoringService } from '../services/user-vp-scoring.service';
 import { CreateUserVpScoringDto } from '../dtos/user-vp-scoring-dto/create-user-vp-scoring.dto';
@@ -10,9 +21,7 @@ import { RefreshVPDto } from '../dtos/user-vp-scoring-dto/refresh-vp.dto';
 @Controller('user-vp-scoring')
 @ApiTags('user-vp-scoring')
 export class UserVpScoringController {
-  constructor(
-    private readonly userVpScoringService: UserVpScoringService,
-  ) {}
+  constructor(private readonly userVpScoringService: UserVpScoringService) {}
 
   @Post()
   async createUserVpScoring(
@@ -30,7 +39,6 @@ export class UserVpScoringController {
     @Headers('tenantId') tenantId: string,
     @Query() paginationOptions?: PaginationDto,
   ) {
-    
     return this.userVpScoringService.findAllUserVpScorings(
       tenantId,
       paginationOptions,
@@ -38,12 +46,18 @@ export class UserVpScoringController {
   }
 
   @Get(':id')
-  findOneUserVpScoring(@Param('id') id: string,  @Headers('tenantId') tenantId: string,) {
-    return this.userVpScoringService.findOneUserVpScoring(id,tenantId);
+  findOneUserVpScoring(
+    @Param('id') id: string,
+    @Headers('tenantId') tenantId: string,
+  ) {
+    return this.userVpScoringService.findOneUserVpScoring(id, tenantId);
   }
   @Get('/score/:userId')
-  findOneUserVpScoringByUSerId(@Param('id') id: string, @Headers('tenantId') tenantId: string,) {
-    return this.userVpScoringService.findOneUserVpScoringByUSerId(id,tenantId);
+  findOneUserVpScoringByUSerId(
+    @Param('id') id: string,
+    @Headers('tenantId') tenantId: string,
+  ) {
+    return this.userVpScoringService.findOneUserVpScoringByUSerId(id, tenantId);
   }
 
   @Put(':id')
@@ -60,22 +74,37 @@ export class UserVpScoringController {
   }
 
   @Delete(':id')
-  get(@Headers('tenantId') tenantId: string, @Param('id') id: string) {
-    return this.userVpScoringService.removeUserVpScoring(id,tenantId);
+  removeUserVpScoring(
+    @Headers('tenantId') tenantId: string,
+    @Param('id') id: string,
+  ) {
+    return this.userVpScoringService.removeUserVpScoring(id, tenantId);
   }
 
   @Get('/user-vp-scoring-by-user/:userId')
-  findOneUserVpScoringByUserId(@Headers('tenantId') tenantId: string, @Param('userId') userId: string) {
-    return this.userVpScoringService.findOneUserVpScoringByUserId(userId,tenantId);
+  findOneUserVpScoringByUserId(
+    @Headers('tenantId') tenantId: string,
+    @Param('userId') userId: string,
+  ) {
+    return this.userVpScoringService.findOneUserVpScoringByUserId(
+      userId,
+      tenantId,
+    );
   }
 
   @Get('/calculate/vp/:userId')
-  calculateVP(@Headers('tenantId') tenantId: string, @Param('userId') userId: string) {
-    return this.userVpScoringService.calculateVP(userId,tenantId);
+  calculateVP(
+    @Headers('tenantId') tenantId: string,
+    @Param('userId') userId: string,
+  ) {
+    return this.userVpScoringService.calculateVP(userId, tenantId);
   }
 
   @Get('/refresh/vp')
-  refreshVP(@Headers('tenantId') tenantId: string, @Body()refreshVPDto:RefreshVPDto) {
-    return this.userVpScoringService.refreshVP(refreshVPDto,tenantId);
+  refreshVP(
+    @Headers('tenantId') tenantId: string,
+    @Body() refreshVPDto: RefreshVPDto,
+  ) {
+    return this.userVpScoringService.refreshVP(refreshVPDto, tenantId);
   }
 }

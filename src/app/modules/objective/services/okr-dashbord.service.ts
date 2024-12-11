@@ -29,6 +29,10 @@ export class OKRDashboardService {
     paginationOptions?: PaginationDto,
   ): Promise<ViewUserAndSupervisorOKRDto> {
     try {
+      const options: IPaginationOptions = {
+        page: paginationOptions.page,
+        limit: paginationOptions.limit,
+      };
       const response =
         await this.getFromOrganizatiAndEmployeInfoService.getUsers(
           userId,
@@ -40,7 +44,6 @@ export class OKRDashboardService {
         await this.averageOkrRuleService.findOneAverageOkrRuleByTenant(
           tenantId,
         );
-
       const {
         totalOkr,
         completedOkr,
@@ -61,7 +64,7 @@ export class OKRDashboardService {
             await this.supervisorOkr(
               response.reportingTo.id,
               tenantId,
-              paginationOptions,
+              //   paginationOptions,
             )
           ).userOkr
         : 0;
@@ -96,7 +99,7 @@ export class OKRDashboardService {
 
     const departments =
       await this.getFromOrganizatiAndEmployeInfoService.getDepartmentsWithUsers(
-        tenantId
+        tenantId,
       );
     const department = departments.find(
       (item) => item.id === employeeJobInfo.departmentId,
@@ -114,7 +117,7 @@ export class OKRDashboardService {
           null,
           paginationOptions,
         ),
-       this.objectiveService.getCompanyOkr(
+        this.objectiveService.getCompanyOkr(
           tenantId,
           userId,
           null,
@@ -196,9 +199,6 @@ export class OKRDashboardService {
     returnedObject.userOkr = totalOkr;
     return returnedObject;
   }
-
-
-
   async getOkrOfSingleUser(
     userId: string,
     tenantId: string,
@@ -208,10 +208,8 @@ export class OKRDashboardService {
       const response =
         await this.getFromOrganizatiAndEmployeInfoService.getUsers(
           userId,
-          tenantId
+          tenantId,
         );
-        console.log(response,"response")
-
       const employeeJobInfo = response.employeeJobInformation[0];
       const averageOKrrule =
         await this.averageOkrRuleService.findOneAverageOkrRuleByTenant(
@@ -230,7 +228,7 @@ export class OKRDashboardService {
         tenantId,
         employeeJobInfo,
         averageOKrrule,
-        paginationOptions
+        paginationOptions,
       );
       return totalOkr;
     } catch (error) {
@@ -249,7 +247,7 @@ export class OKRDashboardService {
           userId,
           tenantId,
         );
-        const supervisorOkr = response.reportingTo?.id
+      const supervisorOkr = response.reportingTo?.id
         ? (
             await this.supervisorOkr(
               response.reportingTo.id,
@@ -259,7 +257,6 @@ export class OKRDashboardService {
           ).userOkr
         : 0;
 
-      
       return supervisorOkr;
     } catch (error) {
       throw new Error(error.message);

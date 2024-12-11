@@ -1,4 +1,15 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Headers, Put, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Headers,
+  Put,
+  Query,
+} from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { VpScoringService } from '../services/vp-scoring.service';
 import { CreateVpScoringDto } from '../dtos/vp-scoring-dto/create-vp-scoring.dto';
@@ -9,9 +20,7 @@ import { UpdateVpScoringDto } from '../dtos/vp-scoring-dto/update-vp-scoring.dto
 @Controller('vp-scoring')
 @ApiTags('vp-scoring')
 export class VpScoringController {
-  constructor(
-    private readonly vpScoringService: VpScoringService,
-  ) {}
+  constructor(private readonly vpScoringService: VpScoringService) {}
 
   @Post()
   async createVpScoring(
@@ -29,11 +38,7 @@ export class VpScoringController {
     @Headers('tenantId') tenantId: string,
     @Query() paginationOptions?: PaginationDto,
   ) {
-    
-    return this.vpScoringService.findAllVpScorings(
-      tenantId,
-      paginationOptions,
-    );
+    return this.vpScoringService.findAllVpScorings(tenantId, paginationOptions);
   }
 
   @Get(':id')
@@ -55,7 +60,10 @@ export class VpScoringController {
   }
 
   @Delete(':id')
-  removeVpScoring(@Headers('tenantId') tenantId: string, @Param('id') id: string) {
+  removeVpScoring(
+    @Headers('tenantId') tenantId: string,
+    @Param('id') id: string,
+  ) {
     return this.vpScoringService.removeVpScoring(id);
   }
 }

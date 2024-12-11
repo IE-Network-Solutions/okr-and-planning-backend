@@ -84,11 +84,13 @@ export class ObjectiveController {
   calculateUSerOkr(
     @Req() req: Request,
     @Param('userId') userId: string,
+    @Query() paginationOptions?: PaginationDto,
   ) {
-    const tenantId = req['tenantId']
+    const tenantId = req['tenantId'];
     return this.okrDashboardService.handleUserOkr(
       userId,
       tenantId,
+      paginationOptions,
     );
   }
 
@@ -137,35 +139,31 @@ export class ObjectiveController {
     );
   }
 
-  
   @Post('/single-user-okr')
   @ExcludeAuthGuard()
   getOkrOfSingleUser(
     @Headers('tenantId') tenantId: string,
     @Headers('userId') userId: string,
     @Query() paginationOptions?: PaginationDto,
-    
   ) {
-    console.log()
     return this.okrDashboardService.getOkrOfSingleUser(
       userId,
       tenantId,
-      paginationOptions
+      paginationOptions,
     );
   }
 
-
-  @Post('/supervisor-ok')
+  @Post('/supervisor-okr')
   @ExcludeAuthGuard()
   getOkrOfSupervisor(
     @Headers('tenantId') tenantId: string,
-    @Headers('userId') userId: string, 
+    @Headers('userId') userId: string,
     @Query() paginationOptions?: PaginationDto,
   ) {
     return this.okrDashboardService.getOkrOfSupervisor(
       userId,
       tenantId,
-      paginationOptions
+      paginationOptions,
     );
   }
 
@@ -173,13 +171,13 @@ export class ObjectiveController {
   @ExcludeAuthGuard()
   getOkrOfTeam(
     @Headers('tenantId') tenantId: string,
-    @Headers('userId') userId: string,  
+    @Headers('userId') userId: string,
     @Query() paginationOptions?: PaginationDto,
   ) {
     return this.okrDashboardService.getOkrOfTeam(
       userId,
       tenantId,
-      paginationOptions
+      paginationOptions,
     );
   }
 }

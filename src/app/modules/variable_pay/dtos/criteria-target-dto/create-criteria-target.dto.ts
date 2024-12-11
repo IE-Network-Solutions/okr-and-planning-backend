@@ -1,24 +1,20 @@
-import { IsDecimal, IsOptional, IsString, IsUUID } from "class-validator";
+import { IsDecimal, IsOptional, IsString, IsUUID } from 'class-validator';
 
 export class CreateCriteriaTargetDto {
+  @IsOptional()
+  @IsUUID()
+  departmentId?: string;
 
-    @IsOptional()
-    @IsUUID()
-    departmentId?: string;
-  
-    @IsUUID()
-    vpCriteriaId: string;
-  
-    @IsDecimal()
-    target: number;
-  
-    @IsOptional()
-    @IsString()
-    month?: string;
+  @IsUUID()
+  vpCriteriaId: string;
 
-    @IsUUID()
-    createdBy: string;
+  @IsDecimal()
+  target: number;
+
+  @IsOptional()
+  @IsString()
+  month?: string;
+
+  @IsUUID()
+  createdBy: string;
 }
-
-
-

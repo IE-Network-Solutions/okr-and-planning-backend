@@ -1,4 +1,15 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Headers, Query, Put } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Headers,
+  Query,
+  Put,
+} from '@nestjs/common';
 import { CriteriaTargetService } from '../services/criteria-target.service';
 import { CreateCriteriaTargetDto } from '../dtos/criteria-target-dto/create-criteria-target.dto';
 import { UpdateCriteriaTargetDto } from '../dtos/criteria-target-dto/update-criteria-target.dto';
@@ -8,13 +19,10 @@ import { PaginationDto } from '@root/src/core/commonDto/pagination-dto';
 import { CreateCriteriaTargetForMultipleDto } from '../dtos/criteria-target-dto/create-vp-criteria-bulk-dto';
 import { UpdateCriteriaTargetForMultipleDto } from '../dtos/criteria-target-dto/update-vp-criteria-bulk-dto';
 
-
 @Controller('criteria-targets')
 @ApiTags('criteria-target')
 export class CriteriaTargetController {
-  constructor(
-    private readonly criteriaTargetService: CriteriaTargetService,
-  ) {}
+  constructor(private readonly criteriaTargetService: CriteriaTargetService) {}
 
   @Post()
   async createCriteriaTarget(
@@ -32,7 +40,6 @@ export class CriteriaTargetController {
     @Headers('tenantId') tenantId: string,
     @Query() paginationOptions?: PaginationDto,
   ) {
-    
     return this.criteriaTargetService.findAllCriteriaTargets(
       tenantId,
       paginationOptions,
@@ -69,7 +76,10 @@ export class CriteriaTargetController {
     );
   }
   @Delete(':id')
-  removeCriteriaTarget(@Headers('tenantId') tenantId: string, @Param('id') id: string) {
+  removeCriteriaTarget(
+    @Headers('tenantId') tenantId: string,
+    @Param('id') id: string,
+  ) {
     return this.criteriaTargetService.removeCriteriaTarget(id);
   }
 }

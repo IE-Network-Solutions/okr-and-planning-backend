@@ -1,33 +1,34 @@
-import { Type } from "class-transformer";
-import { IsDecimal, IsOptional, IsString, IsUUID, ValidateNested } from "class-validator";
-import { optional } from "joi";
+import { Type } from 'class-transformer';
+import {
+  IsDecimal,
+  IsOptional,
+  IsString,
+  IsUUID,
+  ValidateNested,
+} from 'class-validator';
+import { optional } from 'joi';
 
 export class CreateCriteriaTargetForMultipleDto {
-
-    @IsOptional()
-    @IsUUID()
-    departmentId?: string;
-  
-    @IsUUID()
-    vpCriteriaId: string;
   @IsOptional()
-    @ValidateNested({ each: true })
-    @Type(() => TargetDto)
-    target?:TargetDto[];
-  
-    @IsUUID()
-    createdBy: string;
+  @IsUUID()
+  departmentId?: string;
+
+  @IsUUID()
+  vpCriteriaId: string;
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => TargetDto)
+  target?: TargetDto[];
+  @IsOptional()
+  @IsUUID()
+  createdBy?: string;
 }
 
-
-
 export class TargetDto {
+  @IsDecimal()
+  target: number;
 
-    @IsDecimal()
-    target: number;
-  
-    @IsOptional()
-    @IsString()
-    month?: string;
-
-  }
+  @IsOptional()
+  @IsString()
+  month?: string;
+}

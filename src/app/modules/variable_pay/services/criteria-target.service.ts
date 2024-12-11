@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CriteriaTarget } from '../entities/criteria-target.entity';
 import { Repository } from 'typeorm';
@@ -10,20 +14,22 @@ import { UpdateCriteriaTargetDto } from '../dtos/criteria-target-dto/update-crit
 import { CreateCriteriaTargetForMultipleDto } from '../dtos/criteria-target-dto/create-vp-criteria-bulk-dto';
 import { UpdateCriteriaTargetForMultipleDto } from '../dtos/criteria-target-dto/update-vp-criteria-bulk-dto';
 
-
 @Injectable()
 export class CriteriaTargetService {
-  constructor( 
+  constructor(
     @InjectRepository(CriteriaTarget)
     private criteriaTargetRepository: Repository<CriteriaTarget>,
-    private readonly paginationService: PaginationService)
-    {}
+    private readonly paginationService: PaginationService,
+  ) {}
   async createCriteriaTarget(
     createCriteriaTargetDto: CreateCriteriaTargetForMultipleDto,
     tenantId: string,
   ): Promise<CriteriaTarget[]> {
     try {
-      if (createCriteriaTargetDto.target && createCriteriaTargetDto.target.length>0) {
+      if (
+        createCriteriaTargetDto.target &&
+        createCriteriaTargetDto.target.length > 0
+      ) {
         const allTargets = await Promise.all(
           createCriteriaTargetDto.target.map(async (target) => {
             const criteriaTarget = new CreateCriteriaTargetDto();
@@ -32,25 +38,20 @@ export class CriteriaTargetService {
             criteriaTarget.target = target.target;
             criteriaTarget.vpCriteriaId = createCriteriaTargetDto.vpCriteriaId;
             criteriaTarget.createdBy = createCriteriaTargetDto.createdBy;
-      
+
             const createdCriteriaTarget = this.criteriaTargetRepository.create({
               ...criteriaTarget,
               tenantId,
             });
             return this.criteriaTargetRepository.save(createdCriteriaTarget);
-          })
+          }),
         );
-      
+
         return allTargets;
       }
-      
-      }
-     
-    
-     catch (error) {
-     
+    } catch (error) {
       throw new BadRequestException(error.message);
-    } 
+    }
   }
   async findAllCriteriaTargets(
     tenantId: string,
@@ -64,14 +65,15 @@ export class CriteriaTargetService {
       const queryBuilder = this.criteriaTargetRepository
         .createQueryBuilder('CriteriaTarget')
         .leftJoinAndSelect('CriteriaTarget.vpCriteria', 'vpCriteria')
-        .where('CriteriaTarget.tenantId = :tenantId', { tenantId })
-    
-      const paginatedData = await this.paginationService.paginate<CriteriaTarget>(
-        queryBuilder,
-        options,
-      );
+        .where('CriteriaTarget.tenantId = :tenantId', { tenantId });
 
-      return paginatedData
+      const paginatedData =
+        await this.paginationService.paginate<CriteriaTarget>(
+          queryBuilder,
+          options,
+        );
+
+      return paginatedData;
     } catch (error) {
       throw new BadRequestException(error.message);
     }
@@ -94,28 +96,34 @@ export class CriteriaTargetService {
     updateCriteriaTargetDto: UpdateCriteriaTargetDto,
     tenantId: string,
   ): Promise<CriteriaTarget> {
-    try{
-    const criteriaTarget = await this.findOneCriteriaTarget(id);
-    if (!criteriaTarget) {
-      throw new NotFoundException(`CriteriaTarget Not Found`);
+    try {
+      const criteriaTarget = await this.findOneCriteriaTarget(id);
+      if (!criteriaTarget) {
+        throw new NotFoundException(`CriteriaTarget Not Found`);
+      }
+      await this.criteriaTargetRepository.update(
+        { id },
+        updateCriteriaTargetDto,
+      );
+      return await this.findOneCriteriaTarget(id);
+    } catch (error) {
+      throw new BadRequestException(error.message);
     }
-    await this.criteriaTargetRepository.update({ id }, updateCriteriaTargetDto);
-    return await this.findOneCriteriaTarget(id);
-  }catch(error){
-  throw new BadRequestException(error.message)
-  }
   }
   async updateCriteriaTargetBulk(
     id: string,
     updateCriteriaTargetDto: UpdateCriteriaTargetForMultipleDto,
     tenantId: string,
   ): Promise<CriteriaTarget> {
-    try{
+    try {
       const criteriaTarget = await this.findOneCriteriaTarget(id);
       if (!criteriaTarget) {
         throw new NotFoundException(`CriteriaTarget Not Found`);
       }
-      if (updateCriteriaTargetDto.target && updateCriteriaTargetDto.target.length>0) {
+      if (
+        updateCriteriaTargetDto.target &&
+        updateCriteriaTargetDto.target.length > 0
+      ) {
         const allTargets = await Promise.all(
           updateCriteriaTargetDto.target.map(async (target) => {
             const criteriaTarget = new UpdateCriteriaTargetDto();
@@ -124,29 +132,27 @@ export class CriteriaTargetService {
             criteriaTarget.target = target.target;
             criteriaTarget.vpCriteriaId = updateCriteriaTargetDto.vpCriteriaId;
             criteriaTarget.createdBy = updateCriteriaTargetDto.createdBy;
-      
+
             await this.criteriaTargetRepository.update({ id }, criteriaTarget);
-          })
+          }),
         );
-      
+
         return await this.findOneCriteriaTarget(id);
       }
-   
-  }catch(error){
-  throw new BadRequestException(error.message)
-  }
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
   }
   async removeCriteriaTarget(id: string): Promise<CriteriaTarget> {
-    try{
-    const criteriaTarget = await this.findOneCriteriaTarget(id);
-    if (!criteriaTarget) {
-      throw new NotFoundException(`CriteriaTarget Not Found`);
+    try {
+      const criteriaTarget = await this.findOneCriteriaTarget(id);
+      if (!criteriaTarget) {
+        throw new NotFoundException(`CriteriaTarget Not Found`);
+      }
+      await this.criteriaTargetRepository.softRemove({ id });
+      return criteriaTarget;
+    } catch (error) {
+      throw new BadRequestException(error.message);
     }
-    await this.criteriaTargetRepository.softRemove({ id });
-    return criteriaTarget;
-  }
-  catch(error){
-    throw new BadRequestException(error.message)
-  }
   }
 }

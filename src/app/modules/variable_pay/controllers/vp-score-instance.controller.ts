@@ -1,4 +1,16 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Headers, Put, Query, Req } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Headers,
+  Put,
+  Query,
+  Req,
+} from '@nestjs/common';
 
 import { ApiTags } from '@nestjs/swagger';
 import { VpScoreInstance } from '../entities/vp-score-instance.entity';
@@ -31,7 +43,6 @@ export class VpScoreInstanceController {
     @Headers('tenantId') tenantId: string,
     @Query() paginationOptions?: PaginationDto,
   ) {
-    
     return this.vpScoreInstanceService.findAllVpScoreInstances(
       tenantId,
       paginationOptions,
@@ -43,13 +54,26 @@ export class VpScoreInstanceController {
     return this.vpScoreInstanceService.findOneVpScoreInstance(id);
   }
   @Get('/by-user/:id')
-  findOneVpScoreInstanceOfUserScore(@Param('userId') userId: string,  @Headers('tenantId') tenantId: string,@Req() request: any, ) {
+  findOneVpScoreInstanceOfUserScore(
+    @Param('userId') userId: string,
+    @Headers('tenantId') tenantId: string,
+    @Req() request: any,
+  ) {
     const token = request.token;
-    return this.vpScoreInstanceService.findOneVpScoreInstanceOfUserScore(userId,tenantId);
+    return this.vpScoreInstanceService.findOneVpScoreInstanceOfUserScore(
+      userId,
+      tenantId,
+    );
   }
   @Get('/score/:id')
-  findOneVpScoreInstanceOfUser(@Param('userId') userId: string,  @Headers('tenantId') tenantId: string,) {
-    return this.vpScoreInstanceService.findOneVpScoreInstanceOfUser(userId,tenantId);
+  findOneVpScoreInstanceOfUser(
+    @Param('userId') userId: string,
+    @Headers('tenantId') tenantId: string,
+  ) {
+    return this.vpScoreInstanceService.findOneVpScoreInstanceOfUser(
+      userId,
+      tenantId,
+    );
   }
 
   @Put(':id')
@@ -64,15 +88,23 @@ export class VpScoreInstanceController {
       tenantId,
     );
   }
-  
+
   @Post('/score/target')
-  findOneVpScoreInstanceOfUserTarget(@Body() vpScoreTargetFilterDto:VpScoreTargetFilterDto,@Headers('tenantId') tenantId: string) {
-    return this.vpScoreInstanceService.findOneVpScoreInstanceOfUserTarget(tenantId,vpScoreTargetFilterDto);
+  findOneVpScoreInstanceOfUserTarget(
+    @Body() vpScoreTargetFilterDto: VpScoreTargetFilterDto,
+    @Headers('tenantId') tenantId: string,
+  ) {
+    return this.vpScoreInstanceService.findOneVpScoreInstanceOfUserTarget(
+      tenantId,
+      vpScoreTargetFilterDto,
+    );
   }
 
   @Delete(':id')
-  removeVpScoreInstance(@Headers('tenantId') tenantId: string, @Param('id') id: string) {
+  removeVpScoreInstance(
+    @Headers('tenantId') tenantId: string,
+    @Param('id') id: string,
+  ) {
     return this.vpScoreInstanceService.removeVpScoreInstance(id);
   }
-
 }

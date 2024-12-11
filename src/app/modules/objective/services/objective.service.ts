@@ -95,7 +95,6 @@ export class ObjectiveService {
     paginationOptions?: PaginationDto,
   ): Promise<Pagination<Objective>> {
     try {
-      console.log(paginationOptions,"paginationOptions")
       const options: IPaginationOptions = {
         page: paginationOptions.page,
         limit: paginationOptions.limit,
@@ -227,20 +226,18 @@ export class ObjectiveService {
         queryBuilder,
         options,
       );
-      if(paginatedData.items.length>0){
-      for (const objective of paginatedData.items) {
-        try {
-          const user =
-            await this.getFromOrganizatiAndEmployeInfoService.getUsers(
-              objective.userId,
-              tenantId,
-            );
-          objective['user'] = user;
-        } catch(error) {
-          console.log(error.message,"gggg")
+      if (paginatedData.items.length > 0) {
+        for (const objective of paginatedData.items) {
+          try {
+            const user =
+              await this.getFromOrganizatiAndEmployeInfoService.getUsers(
+                objective.userId,
+                tenantId,
+              );
+            objective['user'] = user;
+          } catch (error) {}
         }
       }
-    }
       return paginatedData;
     } catch (error) {
       throw new BadRequestException(error.message);

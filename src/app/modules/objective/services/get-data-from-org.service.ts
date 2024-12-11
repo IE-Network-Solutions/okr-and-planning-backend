@@ -34,10 +34,9 @@ export class GetFromOrganizatiAndEmployeInfoService {
     return response.data;
   }
 
-
   async getActiveMonth(tenantId: string) {
     const response = await this.httpService
-    .get(`${this.orgUrl}/month/active/month`, {
+      .get(`${this.orgUrl}/month/active/month`, {
         headers: {
           tenantid: tenantId,
         },
@@ -46,10 +45,20 @@ export class GetFromOrganizatiAndEmployeInfoService {
     return response.data;
   }
 
-
   async activatePreviousActiveMonth(tenantId: string) {
     const response = await this.httpService
-    .get(`${this.orgUrl}/month/previousMonth/month`, {
+      .get(`${this.orgUrl}/month/previousMonth/month`, {
+        headers: {
+          tenantid: tenantId,
+        },
+      })
+      .toPromise();
+    return response.data;
+  }
+
+  async getAllUsers(tenantId: string) {
+    const response = await this.httpService
+      .get(`${this.orgUrl}/users`, {
         headers: {
           tenantid: tenantId,
         },

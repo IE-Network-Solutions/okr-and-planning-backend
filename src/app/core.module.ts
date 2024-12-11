@@ -40,7 +40,7 @@ import { VariablePayModule } from './modules/variable_pay/variable-pay.module';
     AppreciationModule,
     CarbonCopyLog,
     DashboardModule,
-    VariablePayModule
+    VariablePayModule,
   ],
 })
 export class CoreModule {}

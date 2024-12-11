@@ -9,7 +9,7 @@ export class Objective extends BaseModel {
   description: string;
   @Column({ type: 'uuid' })
   userId: string;
-  @Column({ type: 'uuid' ,nullable:true})
+  @Column({ type: 'uuid', nullable: true })
   sessionId: string;
   @Column({ type: 'date' })
   deadline: Date;

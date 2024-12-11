@@ -24,10 +24,42 @@ import { HttpModule } from '@nestjs/axios';
 import { ObjectiveModule } from '../objective/objective.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([VpCriteria,VpScoring,VpScoringCriterion,VpScoreInstance,UserVpScoring,CriteriaTarget]),PaginationModule, HttpModule.register({}),ObjectiveModule],
-  controllers: [CriteriaTargetController,UserVpScoringController,VpCriteriaController,VpScoreInstanceController,VpScoringController,VpScoringCriteriaController],
-  providers: [CriteriaTargetService,UserVpScoringService,VpCriteriaService,VpScoreInstanceService,VpScoringService,VpScoringCriteriaService],
-  exports:[CriteriaTargetService,UserVpScoringService,VpCriteriaService,VpScoreInstanceService,VpScoringService,VpScoringCriteriaService,],
-
+  imports: [
+    TypeOrmModule.forFeature([
+      VpCriteria,
+      VpScoring,
+      VpScoringCriterion,
+      VpScoreInstance,
+      UserVpScoring,
+      CriteriaTarget,
+    ]),
+    PaginationModule,
+    HttpModule.register({}),
+    ObjectiveModule,
+  ],
+  controllers: [
+    CriteriaTargetController,
+    UserVpScoringController,
+    VpCriteriaController,
+    VpScoreInstanceController,
+    VpScoringController,
+    VpScoringCriteriaController,
+  ],
+  providers: [
+    CriteriaTargetService,
+    UserVpScoringService,
+    VpCriteriaService,
+    VpScoreInstanceService,
+    VpScoringService,
+    VpScoringCriteriaService,
+  ],
+  exports: [
+    CriteriaTargetService,
+    UserVpScoringService,
+    VpCriteriaService,
+    VpScoreInstanceService,
+    VpScoringService,
+    VpScoringCriteriaService,
+  ],
 })
 export class VariablePayModule {}

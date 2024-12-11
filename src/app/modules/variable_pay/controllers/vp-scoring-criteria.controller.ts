@@ -1,4 +1,15 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Headers, Put, Query } from '@nestjs/common'
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Headers,
+  Put,
+  Query,
+} from '@nestjs/common';
 import { PaginationDto } from '@root/src/core/commonDto/pagination-dto';
 import { VpScoringCriterion } from '../entities/vp-scoring-criterion.entity';
 import { VpScoringCriteriaService } from '../services/vp-scoring-criteria.service';
@@ -10,7 +21,7 @@ import { ApiTags } from '@nestjs/swagger';
 @ApiTags('vp-scoring-criteria')
 export class VpScoringCriteriaController {
   constructor(
-    private readonly VpScoringCriteriaService: VpScoringCriteriaService,
+    private readonly vpScoringCriteriaService: VpScoringCriteriaService,
   ) {}
 
   @Post()
@@ -18,7 +29,7 @@ export class VpScoringCriteriaController {
     @Body() createVpScoringCriteriaDto: CreateVpScoringCriterionDto,
     @Headers('tenantId') tenantId: string,
   ): Promise<VpScoringCriterion> {
-    return await this.VpScoringCriteriaService.createVpScoringCriterion(
+    return await this.vpScoringCriteriaService.createVpScoringCriterion(
       createVpScoringCriteriaDto,
       tenantId,
     );
@@ -29,8 +40,7 @@ export class VpScoringCriteriaController {
     @Headers('tenantId') tenantId: string,
     @Query() paginationOptions?: PaginationDto,
   ) {
-    
-    return this.VpScoringCriteriaService.findAllVpScoringCriterions(
+    return this.vpScoringCriteriaService.findAllVpScoringCriterions(
       tenantId,
       paginationOptions,
     );
@@ -38,7 +48,7 @@ export class VpScoringCriteriaController {
 
   @Get(':id')
   findOneVpScoringCriterion(@Param('id') id: string) {
-    return this.VpScoringCriteriaService.findOneVpScoringCriterion(id);
+    return this.vpScoringCriteriaService.findOneVpScoringCriterion(id);
   }
 
   @Put(':id')
@@ -47,7 +57,7 @@ export class VpScoringCriteriaController {
     @Param('id') id: string,
     @Body() updateVpScoringCriteriaDto: UpdateVpScoringCriterionDto,
   ) {
-    return this.VpScoringCriteriaService.updateVpScoringCriterion(
+    return this.vpScoringCriteriaService.updateVpScoringCriterion(
       id,
       updateVpScoringCriteriaDto,
       tenantId,
@@ -55,7 +65,10 @@ export class VpScoringCriteriaController {
   }
 
   @Delete(':id')
-  removeVpScoringCriteria(@Headers('tenantId') tenantId: string, @Param('id') id: string) {
-    return this.VpScoringCriteriaService.removeVpScoringCriterion(id);
+  removeVpScoringCriteria(
+    @Headers('tenantId') tenantId: string,
+    @Param('id') id: string,
+  ) {
+    return this.vpScoringCriteriaService.removeVpScoringCriterion(id);
   }
 }
