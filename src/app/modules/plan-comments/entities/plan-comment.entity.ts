@@ -13,6 +13,9 @@ export class PlanComment extends BaseModel {
   @Column({ type: 'uuid' })
   tenantId: string;
 
+  @Column({ type: 'uuid', nullable: true })
+  planId: string;
+
   @ManyToOne(() => Plan, (plan) => plan.comments, {
     onDelete: 'SET NULL',
     onUpdate: 'CASCADE',

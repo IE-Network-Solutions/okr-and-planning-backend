@@ -9,6 +9,9 @@ import {
   Query,
   Put,
   Headers,
+  BadRequestException,
+  InternalServerErrorException,
+  NotFoundException,
 } from '@nestjs/common';
 import { ObjectiveService } from './services/objective.service';
 import { CreateObjectiveDto } from './dto/create-objective.dto';
@@ -81,7 +84,7 @@ export class ObjectiveController {
   }
 
   @Get('/user/:userId')
-  calculateUSerOkr(
+  async calculateUSerOkr(
     @Req() req: Request,
     @Param('userId') userId: string,
     @Query() paginationOptions?: PaginationDto,
@@ -93,7 +96,6 @@ export class ObjectiveController {
       paginationOptions,
     );
   }
-
   @Get('/objective-filter')
   objectiveFilter(
     @Req() req: Request,

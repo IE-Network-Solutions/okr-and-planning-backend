@@ -19,6 +19,7 @@ import { CarbonCopyLog } from './modules/carbonCopyLlog/entities/carbon-copy-log
 import { RecognitionTypeModule } from './modules/recognitionType/recognition-type.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { VariablePayModule } from './modules/variable_pay/variable-pay.module';
+import { PlanCommentsModule } from './modules/plan-comments/plan-comments.module';
 @Global()
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { VariablePayModule } from './modules/variable_pay/variable-pay.module';
     PlanningPeriodsModule,
     PlanModule,
     PlanTasksModule,
+    PlanCommentsModule,
 
     ReportCommentsModule,
     OkrReportModule,

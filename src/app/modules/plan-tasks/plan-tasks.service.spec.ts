@@ -2,7 +2,7 @@ import { Test } from '@nestjs/testing';
 import { PaginationService } from '@root/src/core/pagination/pagination.service';
 import { mock } from 'jest-mock-extended';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { PlanTasksService } from './plan-tasks.service';
 import { PlanTask } from './entities/plan-task.entity';
 import { PlanningPeriodUser } from '../planningPeriods/planning-periods/entities/planningPeriodUser.entity';
@@ -40,6 +40,10 @@ describe('PlanTasksService', () => {
         {
           provide: KeyResultsService,
           useValue: mock<KeyResultsService>(),
+        },
+        {
+          provide: DataSource,
+          useValue: mock<DataSource>(), // Mock the DataSource
         },
       ],
     }).compile();

@@ -36,10 +36,7 @@ export class Report extends BaseModel {
   @Column({ nullable: true })
   userId: string;
 
-  @Column({ type: 'uuid', nullable: true })
-  sessionId: string;
-
-  @OneToOne(() => Plan, (plan) => plan.plan, {
+  @ManyToOne(() => Plan, (plan) => plan.plan, {
     onDelete: 'SET NULL',
     onUpdate: 'CASCADE',
     // eager: true,
@@ -52,6 +49,8 @@ export class Report extends BaseModel {
   })
   comments: ReportComment[];
 
-  @OneToMany(() => ReportTask, (reportTask) => reportTask.report)
-  reportTask: ReportTask[];
+  @OneToMany(() => ReportTask, (reportTask) => reportTask.report, {
+    cascade: true,
+  })
+  reportTask: ReportTask[]; 
 }

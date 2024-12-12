@@ -6,6 +6,8 @@ export const objectiveData = (): Objective => {
   return {
     id: '672ae79c-6499-4ab3-a71a-d8a76fd68821',
     title: 'obj 1',
+    objectiveId: 'f823f84b-ad37-445e-ae01-9920ce5c916a',
+    sessionId: 'f823f84b-ad37-445e-ae01-9920ce5c916a',
     description: 'obj 1',
     userId: 'f823f84b-ad37-445e-ae01-9920ce5c916a',
     deadline: new Date('2022-10-22 07:11:42'),
@@ -17,7 +19,6 @@ export const objectiveData = (): Objective => {
     createdAt: new Date('2022-10-22 07:11:42'),
     updatedBy: 'selam',
     createdBy: 'selam',
-    sessionId: 'sessionId',
   };
 };
 

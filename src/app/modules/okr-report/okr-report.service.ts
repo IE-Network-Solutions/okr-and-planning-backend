@@ -10,6 +10,10 @@ import { PlanningPeriodsService } from '../planningPeriods/planning-periods/plan
 import { PaginationDto } from '@root/src/core/commonDto/pagination-dto';
 import { startOfWeek, endOfWeek } from 'date-fns';
 import { GetFromOrganizatiAndEmployeInfoService } from '../objective/services/get-data-from-org.service';
+
+import { ReportStatusEnum } from '@root/src/core/interfaces/reportStatus.type';
+
+
 @Injectable()
 export class OkrReportService {
   constructor(
@@ -25,7 +29,7 @@ export class OkrReportService {
   ): Promise<Report> {
     // Step 1: Create the Report entity
     const report = this.reportRepository.create({
-      // status: ReportStatusEnum[`${reportData.reportScore}`],
+      status: ReportStatusEnum.Reported,
       reportScore: reportData.reportScore,
       reportTitle: reportData.reportTitle,
       tenantId: reportData?.tenantId,
@@ -35,7 +39,9 @@ export class OkrReportService {
 
     // Step 2: Save the Report entity
     const savedReport = await this.reportRepository.save(report);
-
+    if (!savedReport) {
+      throw new Error('Report not Saved');
+    }
     // Step 5: Return the saved report and its associated tasks
     return savedReport;
   }
@@ -49,6 +55,7 @@ export class OkrReportService {
     const reports = await this.reportRepository
       .createQueryBuilder('report') // Start from the 'report' entity
       .leftJoinAndSelect('report.reportTask', 'reportTask') // Join 'reportTask'
+      .leftJoinAndSelect('report.comments', 'ReportComment') // Join 'ReportComment' (adjust alias here)
       .leftJoinAndSelect('reportTask.planTask', 'planTask') // Join 'planTask'
       .leftJoinAndSelect('planTask.plan', 'plan') // Join 'plan'
       .leftJoinAndSelect('plan.planningUser', 'planningUser') // Join 'planningUser'

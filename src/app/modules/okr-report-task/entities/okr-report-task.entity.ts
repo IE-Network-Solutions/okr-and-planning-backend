@@ -22,8 +22,8 @@ export class ReportTask extends BaseModel {
   @Column({ nullable: true })
   actualValue: string;
 
-  @Column()
-  isAchived: boolean;
+  @Column({default:false})
+  isAchieved: boolean;
 
   @Column({ nullable: true })
   tenantId: string; // This stores the foreign key for Tenant
@@ -31,16 +31,15 @@ export class ReportTask extends BaseModel {
   @Column({ nullable: true })
   customReason: string;
 
-  // Many reports can belong to one Task
   @ManyToOne(() => Report, (report) => report.reportTask, {
     onDelete: 'SET NULL',
     onUpdate: 'CASCADE',
-    // eager: true,
   })
+  @JoinColumn({ name: 'reportId' }) // Ensure column matches your DB schema
   report: Report;
-
+  
   @Column({ nullable: true })
-  reportId: string;
+  reportId: string;  
 
   @ManyToOne(() => PlanTask, (plan) => plan.planTask, {
     onDelete: 'SET NULL',

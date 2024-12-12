@@ -1,7 +1,7 @@
-import { IsOptional, IsString } from 'class-validator';
+import { IsOptional, IsString , IsUUID} from 'class-validator';
 
 export class RockStarDto {
-  @IsString()
+  @IsUUID()
   planningPeriodId: string;
   @IsOptional()
   @IsString()

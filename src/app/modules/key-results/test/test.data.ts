@@ -6,7 +6,7 @@ export const keyResultData = (): KeyResult => {
   return {
     id: '8988e162-940a-4ae8-94f1-bfd598d6e9fc',
     objectiveId: '60ae2e8d-2904-40d0-ba3d-7e5ec7625774',
-
+    keyResultId: '8988e162-940a-4ae8-94f1-bfd598d6e9fc',
     title: 'key result',
     lastUpdateValue: 0,
     description: 'key result',
