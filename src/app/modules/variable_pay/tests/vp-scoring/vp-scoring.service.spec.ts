@@ -84,17 +84,17 @@ describe('VpScoringService', () => {
   //     rollbackTransaction: jest.fn(),
   //     release: jest.fn(),
   //   };
-  
+
   //   let vpScoring: VpScoring;
   //   const tenantId = '57577865-7625-4170-a803-a73567e19216';
-  
+
   //   beforeEach(() => {
   //     vpScoringRepository.create.mockReturnValue(
   //       createVpScoringData() as any,
   //     );
   //     queryRunner.manager.save = jest.fn().mockResolvedValue(VpScoringData());
   //   });
-  
+
   //   it('should call vpScoringRepository.create', async () => {
   //     vpScoring = await vpScoringService.createVpScoring(createVpScoringData(), tenantId);
   //     expect(vpScoringRepository.create).toHaveBeenCalledWith({
@@ -102,19 +102,18 @@ describe('VpScoringService', () => {
   //       tenantId,
   //     });
   //   });
-  
+
   //   it('should call queryRunner.manager.save', async () => {
   //     vpScoring = await vpScoringService.createVpScoring(createVpScoringData(), tenantId);
-  //     expect(queryRunner.manager.save).toHaveBeenCalledWith(VpScoring, 
+  //     expect(queryRunner.manager.save).toHaveBeenCalledWith(VpScoring,
   //       createVpScoringData(),);
   //   });
-  
+
   //   it('should return the created VpScoring', async () => {
   //     vpScoring = await vpScoringService.createVpScoring(createVpScoringData(), tenantId);
   //     expect(vpScoring).toEqual(VpScoringData());
   //   });
   // });
-  
 
   describe('findOne', () => {
     describe('when findOne objectVpScoring is called', () => {
@@ -191,42 +190,40 @@ describe('VpScoringService', () => {
   //   it('should throw NotFoundException if work schedule not found', async () => {
   //     const id = 'be21f28b-4651-4d6f-8f08-d8128da64ee5';
   //     const tenantId = '8f2e3691-423f-4f21-b676-ba3a932b7c7c';
-  
+
   //     const updateDto = new UpdateVpScoringDto();
-  
+
   //     jest
   //       .spyOn(vpScoringService, 'findOneVpScoring')
   //       .mockResolvedValue(null); // Simulate entity not found
-  
+
   //     await expect(
   //       vpScoringService.updateVpScoring(id, updateDto, tenantId),
   //     ).rejects.toThrow(NotFoundException);
   //   });
-  
+
   //   it('should not call update repository if VP scoring not found', async () => {
   //     jest.spyOn(vpScoringService, 'findOneVpScoring').mockResolvedValue(null);
-  
+
   //     const vpScoringRepository = {
   //       update: jest.fn(),
   //       findOne: jest.fn(),
   //     };
-  
+
   //     const mockUpdateDto = {
   //       name: 'Updated VP Scoring',
   //       totalPercentage: 100,
   //       vpScoringCriteria: [],
   //       createUserVpScoringDto: [],
   //     };
-  
+
   //     await expect(
   //       vpScoringService.updateVpScoring('non-existent-id', mockUpdateDto, 'tenant-123'),
   //     ).rejects.toThrow(NotFoundException);
-  
+
   //     expect(vpScoringRepository.update).not.toHaveBeenCalled();
   //   });
   // });
-  
-  
 
   describe('remove', () => {
     describe('when VpScoring is called', () => {

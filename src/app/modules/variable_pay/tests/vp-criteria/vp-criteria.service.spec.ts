@@ -78,9 +78,7 @@ describe('VpCriteriaService', () => {
       let vpCriteria: VpCriteria;
 
       beforeEach(async () => {
-        vpCriteriaRepository.findOne.mockResolvedValue(
-          vpCriteriaData(),
-        );
+        vpCriteriaRepository.findOne.mockResolvedValue(vpCriteriaData());
         vpCriteria = await vpCriteriaService.findOneVpCriteria(
           vpCriteriaData().id,
         );

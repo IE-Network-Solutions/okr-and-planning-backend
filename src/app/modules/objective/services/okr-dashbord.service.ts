@@ -42,7 +42,6 @@ export class OKRDashboardService {
           userId,
           tenantId,
         );
-      
 
       const employeeJobInfo = response.employeeJobInformation[0];
 
@@ -107,107 +106,92 @@ export class OKRDashboardService {
       await this.getFromOrganizatiAndEmployeInfoService.getDepartmentsWithUsers(
         tenantId,
       );
-     
+
     const department = departments.find(
       (item) => item.id === employeeJobInfo.departmentId,
     );
     const users = department.users
       .filter((user) => user.id !== userId)
       .map((user) => user.id);
-      console.log( users,"users")
+    const [teamObjectives, individualObjectives, companyObjective] =
+      await Promise.all([
+        this.objectiveService.findUsersObjectives(tenantId, users),
+        this.objectiveService.findAllObjectives(
+          userId,
+          tenantId,
+          null,
+          paginationOptions,
+        ),
+        this.objectiveService.getCompanyOkr(
+          tenantId,
+          userId,
+          null,
+          paginationOptions,
+        ),
+      ]);
 
-
-      const [teamObjectives, individualObjectives, companyObjective] =
-        await Promise.all([
-          this.objectiveService.findUsersObjectives(tenantId, users),
-          this.objectiveService.findAllObjectives(
-            userId,
-            tenantId,
-            null,
-            paginationOptions,
-          ),
-          this.objectiveService.getCompanyOkr(
-            tenantId,
-            userId,
-            null,
-            paginationOptions,
-          ),
-        ]);
-
-      // Validate results
-      if (
-        !individualObjectives?.items?.length ||
-        !companyObjective?.items?.length
-      ) {
-        throw new NotFoundException('No objectives found.');
-      }
-
-      const individualOKRScore =
-        await this.averageOkrCalculation.calculateAverageOkr(
-          individualObjectives.items,
-        );
-        console.log( individualOKRScore,"individualOKRScore")
-      if (employeeJobInfo.departmentLeadOrNot) {
-        totalOkr +=
-          (individualOKRScore.okr * (averageOKrrule?.myOkrPercentage ?? 50)) /
-          100;
-        daysLeft = individualOKRScore.daysLeft;
-        completedOkr = individualOKRScore.okrCompleted;
-
-        if (teamObjectives) {
-          const teamOKRScore =
-            await this.averageOkrCalculation.calculateAverageOkr(
-              teamObjectives,
-            );
-          teamOkr = teamOKRScore.okr;
-          totalOkr +=
-            (teamOKRScore.okr * (averageOKrrule?.teamOkrPercentage ?? 50)) /
-            100;
-        }
-      } else {
-        totalOkr = individualOKRScore.okr;
-        daysLeft = individualOKRScore.daysLeft;
-        completedOkr = individualOKRScore.okrCompleted;
-        keyResultCount = individualOKRScore.keyResultcount;
-
-        if (teamObjectives) {
-          const teamOKRScore =
-            await this.averageOkrCalculation.calculateAverageOkr(
-              teamObjectives,
-            );
-          teamOkr = teamOKRScore.okr;
-        }
-      }
-      const progressSum = companyObjective.items.reduce(
-        (sum, item) => sum + (item['objectiveProgress'] || 0),
-        0,
-      );
-      companyOkr = progressSum / companyObjective.items.length;
-console.log( totalOkr,
-  completedOkr,
-  daysLeft,
-  keyResultCount,
-  teamOkr,
-  companyOkr,"calal")
-      return {
-        totalOkr,
-        completedOkr,
-        daysLeft,
-        keyResultCount,
-        teamOkr,
-        companyOkr,
-      };
-    } catch (error) {
-      return {
-        totalOkr: 0,
-        completedOkr: 0,
-        daysLeft: 0,
-        keyResultCount: 0,
-        teamOkr: 0,
-        companyOkr: 0,
-      };
+    // Validate results
+    if (
+      !individualObjectives?.items?.length ||
+      !companyObjective?.items?.length
+    ) {
+      throw new NotFoundException('No objectives found.');
     }
-  
+
+    const individualOKRScore =
+      await this.averageOkrCalculation.calculateAverageOkr(
+        individualObjectives.items,
+      );
+    if (employeeJobInfo.departmentLeadOrNot) {
+      totalOkr +=
+        (individualOKRScore.okr * (averageOKrrule?.myOkrPercentage ?? 50)) /
+        100;
+      daysLeft = individualOKRScore.daysLeft;
+      completedOkr = individualOKRScore.okrCompleted;
+
+      if (teamObjectives) {
+        const teamOKRScore =
+          await this.averageOkrCalculation.calculateAverageOkr(teamObjectives);
+        teamOkr = teamOKRScore.okr;
+        totalOkr +=
+          (teamOKRScore.okr * (averageOKrrule?.teamOkrPercentage ?? 50)) / 100;
+      }
+    } else {
+      totalOkr = individualOKRScore.okr;
+      daysLeft = individualOKRScore.daysLeft;
+      completedOkr = individualOKRScore.okrCompleted;
+      keyResultCount = individualOKRScore.keyResultcount;
+
+      if (teamObjectives) {
+        const teamOKRScore =
+          await this.averageOkrCalculation.calculateAverageOkr(teamObjectives);
+        teamOkr = teamOKRScore.okr;
+      }
+    }
+    const progressSum = companyObjective.items.reduce(
+      (sum, item) => sum + (item['objectiveProgress'] || 0),
+      0,
+    );
+    companyOkr = progressSum / companyObjective.items.length;
+    return {
+      totalOkr,
+      completedOkr,
+      daysLeft,
+      keyResultCount,
+      teamOkr,
+      companyOkr,
+    };
+  }
+  catch(error) {
+    return {
+      totalOkr: 0,
+      completedOkr: 0,
+      daysLeft: 0,
+      keyResultCount: 0,
+      teamOkr: 0,
+      companyOkr: 0,
+    };
+  }
 
   async supervisorOkr(
     userId: string,

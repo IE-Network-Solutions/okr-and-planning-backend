@@ -68,19 +68,20 @@ describe('CriteriaTargetController', () => {
   });
 
   describe('findAllCriteriaTargets', () => {
-   
     let mockCriteriaTargetService: { findAllCriteriaTargets: jest.Mock };
-  
+
     beforeEach(() => {
       // Define the mock service
       mockCriteriaTargetService = {
         findAllCriteriaTargets: jest.fn(),
       };
-  
+
       // Inject the mock service into the controller
-      controller = new CriteriaTargetController(mockCriteriaTargetService as any);
+      controller = new CriteriaTargetController(
+        mockCriteriaTargetService as any,
+      );
     });
-  
+
     it('should return paginated criteria targets when valid pagination params are provided', async () => {
       const paginationDto: PaginationDto = {
         page: 1,
@@ -88,26 +89,30 @@ describe('CriteriaTargetController', () => {
         orderBy: 'id',
         orderDirection: 'ASC',
       };
-  
-      const vpResult: Pagination<CriteriaTarget> = paginationResultCriteriaTargetData();
-  
+
+      const vpResult: Pagination<CriteriaTarget> =
+        paginationResultCriteriaTargetData();
+
       // Mock the service method
-      mockCriteriaTargetService.findAllCriteriaTargets.mockResolvedValue(vpResult);
-  
+      mockCriteriaTargetService.findAllCriteriaTargets.mockResolvedValue(
+        vpResult,
+      );
+
       // Call the controller method
-      const result = await controller.findAllCriteriaTargets('tenant1', paginationDto);
-  
-      // Verify that the mock service was called with the correct arguments
-      expect(mockCriteriaTargetService.findAllCriteriaTargets).toHaveBeenCalledWith(
+      const result = await controller.findAllCriteriaTargets(
         'tenant1',
         paginationDto,
       );
-  
+
+      // Verify that the mock service was called with the correct arguments
+      expect(
+        mockCriteriaTargetService.findAllCriteriaTargets,
+      ).toHaveBeenCalledWith('tenant1', paginationDto);
+
       // Verify the result
       expect(result).toEqual(vpResult);
     });
   });
-  
 
   describe('findOneCriteriaTarget', () => {
     it('should call service.findOneCriteriaTarget and return the result', async () => {

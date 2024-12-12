@@ -13,7 +13,6 @@ import { GetFromOrganizatiAndEmployeInfoService } from '../objective/services/ge
 
 import { ReportStatusEnum } from '@root/src/core/interfaces/reportStatus.type';
 
-
 @Injectable()
 export class OkrReportService {
   constructor(

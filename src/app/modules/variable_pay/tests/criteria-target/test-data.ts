@@ -28,7 +28,7 @@ export const createCriteriaTargetData = (): CreateCriteriaTargetDto => {
     departmentId: 'a1234567-b89c-123d-456e-789f12345678',
     target: 85,
     vpCriteriaId: 'b2345678-c91d-234e-567f-890g23456789',
-      
+
     month: 'month-one',
     createdBy: 'c3456789-d01e-345f-678g-901h34567890',
   };
@@ -39,7 +39,7 @@ export const updateCriteriaTargetData = (): UpdateCriteriaTargetDto => {
     departmentId: 'a1234567-b89c-123d-456e-789f12345678',
     target: 85,
     vpCriteriaId: 'b2345678-c91d-234e-567f-890g23456789',
-      
+
     month: 'month-one',
     updatedBy: '4697235a-007a-418b-b3d4-7ec5ebe8f8ab',
   };
@@ -70,7 +70,7 @@ export const testCreateCriteriaTargetForMultipleDto = () => {
   return {
     departmentId: 'a1234567-b89c-123d-456e-789f12345678',
     vpCriteriaId: 'b2345678-c91d-234e-567f-890g23456789',
-    target: [{ target: 85,  month: 'month-one', }],
+    target: [{ target: 85, month: 'month-one' }],
 
     createdBy: 'c3456789-d01e-345f-678g-901h34567890',
   };
@@ -79,6 +79,6 @@ export const testCreateCriteriaTargetForMultipleDto = () => {
 export const testTargetDto = () => {
   return {
     target: 85,
-   month: "month-one",
+    month: 'month-one',
   };
 };

@@ -8,7 +8,7 @@ export const VpScoringData = (): VpScoring => {
     id: '672ae79c-6499-4ab3-a71a-d8a76fd68821',
     name: 'Scoring Name',
     totalPercentage: 85,
-   tenantId: "57577865-7625-4170-a803-a73567e19216",
+    tenantId: '57577865-7625-4170-a803-a73567e19216',
     vpScoringCriterions: null,
     vpScoreInstance: null,
     userVpScoring: null,

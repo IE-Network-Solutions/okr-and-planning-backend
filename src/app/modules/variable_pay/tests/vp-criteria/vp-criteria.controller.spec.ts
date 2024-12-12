@@ -66,16 +66,16 @@ describe('VpCriteriaController', () => {
   describe('findAllVpCriteria', () => {
     let controller: VpCriteriaController;
     let mockVpCriteriaService: { findAllVpCriteria: jest.Mock };
-  
+
     beforeEach(() => {
       mockVpCriteriaService = {
         findAllVpCriteria: jest.fn(),
       };
-  
+
       // Inject the mock service into the controller
       controller = new VpCriteriaController(mockVpCriteriaService as any);
     });
-  
+
     it('should return paginated VP criteria when valid pagination params are provided', async () => {
       const paginationDto: PaginationDto = {
         page: 1,
@@ -83,25 +83,27 @@ describe('VpCriteriaController', () => {
         orderBy: 'id',
         orderDirection: 'ASC',
       };
-  
+
       const vpResult: Pagination<VpCriteria> = paginationResultVpCriteriaData();
-  
+
       // Mock the service method
       mockVpCriteriaService.findAllVpCriteria.mockResolvedValue(vpResult);
-  
+
       // Call the controller method
-      const result = await controller.findAllVpCriteria('tenant1', paginationDto);
-  
+      const result = await controller.findAllVpCriteria(
+        'tenant1',
+        paginationDto,
+      );
+
       // Verify that the mock service was called with the correct arguments
       expect(mockVpCriteriaService.findAllVpCriteria).toHaveBeenCalledWith(
         paginationDto,
       );
-  
+
       // Verify the result
       expect(result).toEqual(vpResult);
     });
   });
-  
 
   describe('findOneVpCriteria', () => {
     it('should call service.findOneVpCriteria and return the result', async () => {
