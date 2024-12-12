@@ -129,15 +129,6 @@ export class OKRDashboardService {
           paginationOptions,
         ),
       ]);
-
-    // Validate results
-    if (
-      !individualObjectives?.items?.length ||
-      !companyObjective?.items?.length
-    ) {
-      throw new NotFoundException('No objectives found.');
-    }
-
     const individualOKRScore =
       await this.averageOkrCalculation.calculateAverageOkr(
         individualObjectives.items,

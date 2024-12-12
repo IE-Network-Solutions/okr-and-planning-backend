@@ -119,8 +119,6 @@ export class VpScoreInstanceService {
         where: { userId: userId },
         relations: ['vpScoring'],
       });
-      for (const instance of vpScoreInstance) {
-      }
       return vpScoreInstance;
     } catch (error) {
       throw new NotFoundException(`VpScoreInstance Not Found`);

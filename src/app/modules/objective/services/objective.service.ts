@@ -38,7 +38,6 @@ import { AverageOkrRule } from '../../average-okr-rule/entities/average-okr-rule
 import { EmptyPaginationDto } from '@root/src/core/commonDto/return-empty-paginated.dto';
 import { GetFromOrganizatiAndEmployeInfoService } from './get-data-from-org.service';
 import { AverageOkrCalculation } from './average-okr-calculation.service';
-import { error } from 'console';
 
 @Injectable()
 export class ObjectiveService {
