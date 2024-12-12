@@ -225,15 +225,17 @@ export class ObjectiveService {
         queryBuilder,
         options,
       );
-      for (const objective of paginatedData.items) {
-        try {
-          const user =
-            await this.getFromOrganizatiAndEmployeInfoService.getUsers(
-              objective.userId,
-              tenantId,
-            );
-          objective['user'] = user;
-        } catch {}
+      if (paginatedData.items.length > 0) {
+        for (const objective of paginatedData.items) {
+          try {
+            const user =
+              await this.getFromOrganizatiAndEmployeInfoService.getUsers(
+                objective.userId,
+                tenantId,
+              );
+            objective['user'] = user;
+          } catch (error) {}
+        }
       }
       return paginatedData;
     } catch (error) {

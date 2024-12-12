@@ -15,8 +15,10 @@ import { UpdateMetricTypeDto } from './dto/update-metric-type.dto';
 import { PaginationDto } from '@root/src/core/commonDto/pagination-dto';
 import { MetricType } from './entities/metric-type.entity';
 import { ExcludeAuthGuard } from '@root/src/core/guards/exclud.guard';
+import { ApiTags } from '@nestjs/swagger';
 
 @Controller('metric-types')
+@ApiTags('metric-types')
 export class MetricTypesController {
   constructor(private readonly metricTypesService: MetricTypesService) {}
 

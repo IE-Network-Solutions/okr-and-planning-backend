@@ -28,6 +28,6 @@ import { OKRDashboardService } from './services/okr-dashbord.service';
     AverageOkrCalculation,
     OKRDashboardService,
   ],
-  exports: [ObjectiveService],
+  exports: [ObjectiveService, GetFromOrganizatiAndEmployeInfoService],
 })
 export class ObjectiveModule {}

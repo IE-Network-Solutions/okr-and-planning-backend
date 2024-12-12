@@ -22,7 +22,7 @@ export class ReportTask extends BaseModel {
   @Column({ nullable: true })
   actualValue: string;
 
-  @Column({default:false})
+  @Column({ default: false })
   isAchieved: boolean;
 
   @Column({ nullable: true })
@@ -37,9 +37,9 @@ export class ReportTask extends BaseModel {
   })
   @JoinColumn({ name: 'reportId' }) // Ensure column matches your DB schema
   report: Report;
-  
+
   @Column({ nullable: true })
-  reportId: string;  
+  reportId: string;
 
   @ManyToOne(() => PlanTask, (plan) => plan.planTask, {
     onDelete: 'SET NULL',

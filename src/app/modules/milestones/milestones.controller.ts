@@ -14,8 +14,10 @@ import { CreateMilestoneDto } from './dto/create-milestone.dto';
 import { UpdateMilestoneDto } from './dto/update-milestone.dto';
 import { Milestone } from './entities/milestone.entity';
 import { PaginationDto } from '@root/src/core/commonDto/pagination-dto';
+import { ApiTags } from '@nestjs/swagger';
 
 @Controller('milestones')
+@ApiTags('milestone')
 export class MilestonesController {
   constructor(private readonly milestonesService: MilestonesService) {}
 
