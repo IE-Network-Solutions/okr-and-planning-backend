@@ -12,6 +12,8 @@ import { PlanningPeriodsModule } from '../planningPeriods/planning-periods/plann
 import { PlanningPeriodsService } from '../planningPeriods/planning-periods/planning-periods.service';
 import { PlanningPeriod } from '../planningPeriods/planning-periods/entities/planningPeriod.entity';
 import { PaginationService } from '@root/src/core/pagination/pagination.service';
+import { GetFromOrganizatiAndEmployeInfoService } from '../objective/services/get-data-from-org.service';
+import { HttpModule } from '@nestjs/axios';
 
 @Module({
   imports: [
@@ -23,9 +25,14 @@ import { PaginationService } from '@root/src/core/pagination/pagination.service'
       Plan,
     ]),
     PlanningPeriodsModule,
+    HttpModule,
   ],
   controllers: [OkrReportController],
-  providers: [OkrReportService, OrgEmployeeInformationApiService],
+  providers: [
+    OkrReportService,
+    OrgEmployeeInformationApiService,
+    GetFromOrganizatiAndEmployeInfoService,
+  ],
   exports: [OkrReportService],
 })
 export class OkrReportModule {}

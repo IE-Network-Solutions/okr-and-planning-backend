@@ -9,11 +9,10 @@ pipeline {
         SSH_CREDENTIALS_ID = 'pepproduction'
     }
 
-    
     stages {
         stage('Prepare Repository') {
             steps {
-                sshagent (credentials: [SSH_CREDENTIALS_ID]) {
+                sshagent(credentials: [SSH_CREDENTIALS_ID]) {
                     sh """
                         ssh -o StrictHostKeyChecking=no $REMOTE_SERVER '
                         if [ -d "$REPO_DIR" ]; then
@@ -26,7 +25,7 @@ pipeline {
         }
         stage('Pull Latest Changes') {
             steps {
-                sshagent (credentials: [SSH_CREDENTIALS_ID]) {
+                sshagent(credentials: [SSH_CREDENTIALS_ID]) {
                     sh """
                         ssh -o StrictHostKeyChecking=no $REMOTE_SERVER '
                         if [ -d "$REPO_DIR" ]; then
@@ -40,7 +39,7 @@ pipeline {
         }
         stage('Install Dependencies') {
             steps {
-                sshagent (credentials: [SSH_CREDENTIALS_ID]) {
+                sshagent(credentials: [SSH_CREDENTIALS_ID]) {
                     sh """
                         ssh -o StrictHostKeyChecking=no $REMOTE_SERVER 'cp ~/backend-env/.okr-env ~/$REPO_DIR/.env'
                         ssh -o StrictHostKeyChecking=no $REMOTE_SERVER 'cd ~/$REPO_DIR && npm install'
@@ -48,27 +47,27 @@ pipeline {
                 }
             }
         }
-        stage('Run Migrations') {
-            steps {
-                sshagent (credentials: [SSH_CREDENTIALS_ID]) {
-                    script {
-                        def output = sh(
-                            script: "ssh -o StrictHostKeyChecking=no $REMOTE_SERVER 'cd ~/$REPO_DIR && npm run migration:generate-run || true'",
-                            returnStdout: true
-                        ).trim()
-                        echo output
-                        if (output.contains('No changes in database schema were found')) {
-                            echo 'No database schema changes found, skipping migration.'
-                        } else {
-                            sh "ssh -o StrictHostKeyChecking=no $REMOTE_SERVER 'cd ~/$REPO_DIR && npm run migration:run'"
-                        }
-                    }
-                }
-            }
-        }
+        // stage('Run Migrations') {
+        //     steps {
+        //         sshagent(credentials: [SSH_CREDENTIALS_ID]) {
+        //             script {
+        //                 def output = sh(
+        //                     script: "ssh -o StrictHostKeyChecking=no $REMOTE_SERVER 'cd ~/$REPO_DIR && npm run migration:generate-run || true'",
+        //                     returnStdout: true
+        //                 ).trim()
+        //                 echo output
+        //                 if (output.contains('No changes in database schema were found')) {
+        //                     echo 'No database schema changes found, skipping migration.'
+        //                 } else {
+        //                     sh "ssh -o StrictHostKeyChecking=no $REMOTE_SERVER 'cd ~/$REPO_DIR && npm run migration:run'"
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
         stage('Run Nest js App') {
             steps {
-                sshagent (credentials: [SSH_CREDENTIALS_ID]) {
+                sshagent(credentials: [SSH_CREDENTIALS_ID]) {
                     sh """
                         ssh -o StrictHostKeyChecking=no $REMOTE_SERVER 'cd ~/$REPO_DIR && npm run build && sudo npm run start:prod'
                     """
@@ -76,7 +75,7 @@ pipeline {
             }
         }
     }
-    
+
     post {
         success {
             echo 'Nest js application deployed successfully!'

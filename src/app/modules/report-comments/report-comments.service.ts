@@ -17,10 +17,9 @@ export class ReportCommentsService {
 
   async createComment(
     createReportCommentDto: CreateReportCommentDto,
-    tenantId:string,
+    tenantId: string,
   ): Promise<ReportComment> {
-    const { reportId, commentedBy, comment } =
-      createReportCommentDto;
+    const { reportId, commentedBy, comment } = createReportCommentDto;
 
     // Ensure the report, user, and tenant exist
     const report = await this.reportRepository.findOne({
