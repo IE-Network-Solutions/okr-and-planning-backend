@@ -12,12 +12,12 @@ import {
   vpCriteriaData,
 } from './test-data';
 import { VpCriteriaService } from '../../services/vp-criteria.service';
+import { PaginationDto } from '@root/src/core/commonDto/pagination-dto';
 
 describe('VpCriteriaService', () => {
   let vpCriteriaService: VpCriteriaService;
-  let vpCriteriaRepository: MockProxy<Repository<VpCriteria>>;
-  let paginationService: MockProxy<PaginationService>;
-
+  let vpCriteriaRepository: jest.Mocked<Repository<VpCriteria>>;
+  let paginationService: PaginationService;
   const VpCriteriaToken = getRepositoryToken(VpCriteria);
 
   beforeEach(async () => {
@@ -78,7 +78,7 @@ describe('VpCriteriaService', () => {
       let vpCriteria: VpCriteria;
 
       beforeEach(async () => {
-        vpCriteriaRepository.findOneByOrFail.mockResolvedValue(
+        vpCriteriaRepository.findOne.mockResolvedValue(
           vpCriteriaData(),
         );
         vpCriteria = await vpCriteriaService.findOneVpCriteria(
@@ -101,37 +101,44 @@ describe('VpCriteriaService', () => {
       });
     });
   });
-  describe('findAll', () => {
-    describe('when findAllVpCriterias is called', () => {
-      let tenantId: '57577865-7625-4170-a803-a73567e19216';
+  describe('findAllMonths', () => {
+    it('should return paginated Month', async () => {
+      const paginationOptions: PaginationDto = {
+        page: 1,
+        limit: 10,
+        orderBy: 'id',
+        orderDirection: 'ASC',
+      };
+      const tenantId = '8f2e3691-423f-4f21-b676-ba3a932b7c7c';
+      // const paginatedResult: Pagination<VpScoring> = paginationResultVpScoringData();
+      const queryBuilderMock = {
+        leftJoinAndSelect: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        getMany: jest.fn(),
+        getOne: jest.fn(),
+      };
+      vpCriteriaRepository.createQueryBuilder = jest
+        .fn()
+        .mockReturnValue(queryBuilderMock);
+      const options = {
+        page: paginationOptions.page,
+        limit: paginationOptions.limit,
+      };
 
-      beforeEach(async () => {
-        paginationService.paginate.mockResolvedValue(
-          paginationResultVpCriteriaData(),
-        );
-      });
+      paginationService.paginate = jest
+        .fn()
+        .mockResolvedValue(paginationResultVpCriteriaData());
 
-      it('should call paginationService.paginate with correct parameters', async () => {
-        await vpCriteriaService.findAllVpCriteria(paginationOptions());
-        expect(paginationService.paginate).toHaveBeenCalledWith(
-          vpCriteriaRepository,
-          'VpCriteria',
-          {
-            page: paginationOptions().page,
-            limit: paginationOptions().limit,
-          },
-          paginationOptions().orderBy,
-          paginationOptions().orderDirection,
-          { tenantId },
-        );
-      });
+      const result = await vpCriteriaService.findAllVpCriteria(
+        paginationOptions,
+      );
 
-      it('should return paginated clients', async () => {
-        const clients = await vpCriteriaService.findAllVpCriteria(
-          paginationOptions(),
-        );
-        expect(clients).toEqual(paginationResultVpCriteriaData());
-      });
+      expect(result).toEqual(paginationResultVpCriteriaData());
+      expect(paginationService.paginate).toHaveBeenCalledWith(
+        queryBuilderMock,
+        options,
+      );
     });
   });
 

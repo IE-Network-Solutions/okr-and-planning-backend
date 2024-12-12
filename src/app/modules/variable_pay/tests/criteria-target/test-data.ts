@@ -17,7 +17,7 @@ export const criteriaTargetData = (): CriteriaTarget => {
     target: 15,
     vpCriteriaId: '740c1ee2-f8b7-4a22-aff8-2766a8306627',
     month: 'month-one',
-    tenantId: '4697235a-007a-418b-b3d4-7ec5ebe8f8ab',
+    tenantId: '179055e7-a27c-4d9d-9538-2b2a115661bd',
     updatedAt: new Date('2022-10-22 07:11:42'),
     createdAt: new Date('2022-10-22 07:11:42'),
   };
@@ -25,19 +25,21 @@ export const criteriaTargetData = (): CriteriaTarget => {
 
 export const createCriteriaTargetData = (): CreateCriteriaTargetDto => {
   return {
-    departmentId: '3b1d8333-40a7-4b23-8e54-6345a254288a',
-    target: 15,
-    vpCriteriaId: '740c1ee2-f8b7-4a22-aff8-2766a8306627',
+    departmentId: 'a1234567-b89c-123d-456e-789f12345678',
+    target: 85,
+    vpCriteriaId: 'b2345678-c91d-234e-567f-890g23456789',
+      
     month: 'month-one',
-    createdBy: '4697235a-007a-418b-b3d4-7ec5ebe8f8ab',
+    createdBy: 'c3456789-d01e-345f-678g-901h34567890',
   };
 };
 
 export const updateCriteriaTargetData = (): UpdateCriteriaTargetDto => {
   return {
-    departmentId: '3b1d8333-40a7-4b23-8e54-6345a254288a',
-    target: 15,
-    vpCriteriaId: '740c1ee2-f8b7-4a22-aff8-2766a8306627',
+    departmentId: 'a1234567-b89c-123d-456e-789f12345678',
+    target: 85,
+    vpCriteriaId: 'b2345678-c91d-234e-567f-890g23456789',
+      
     month: 'month-one',
     updatedBy: '4697235a-007a-418b-b3d4-7ec5ebe8f8ab',
   };
@@ -68,7 +70,7 @@ export const testCreateCriteriaTargetForMultipleDto = () => {
   return {
     departmentId: 'a1234567-b89c-123d-456e-789f12345678',
     vpCriteriaId: 'b2345678-c91d-234e-567f-890g23456789',
-    target: [{ target: 85.0, month: 'April' }],
+    target: [{ target: 85,  month: 'month-one', }],
 
     createdBy: 'c3456789-d01e-345f-678g-901h34567890',
   };
@@ -76,7 +78,7 @@ export const testCreateCriteriaTargetForMultipleDto = () => {
 
 export const testTargetDto = () => {
   return {
-    target: 85.0,
-    month: 'April',
+    target: 85,
+   month: "month-one",
   };
 };

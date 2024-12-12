@@ -63,38 +63,45 @@ describe('VpCriteriaController', () => {
       expect(service.createVpCriteria).toHaveBeenCalledWith(dto);
     });
   });
-
   describe('findAllVpCriteria', () => {
-    it('should return paginated VP criteria when valid pagination params are provided', async () => {
-      const mockVpCriteriaService = {
+    let controller: VpCriteriaController;
+    let mockVpCriteriaService: { findAllVpCriteria: jest.Mock };
+  
+    beforeEach(() => {
+      mockVpCriteriaService = {
         findAllVpCriteria: jest.fn(),
       };
+  
+      // Inject the mock service into the controller
+      controller = new VpCriteriaController(mockVpCriteriaService as any);
+    });
+  
+    it('should return paginated VP criteria when valid pagination params are provided', async () => {
       const paginationDto: PaginationDto = {
         page: 1,
         limit: 10,
         orderBy: 'id',
         orderDirection: 'ASC',
       };
+  
       const vpResult: Pagination<VpCriteria> = paginationResultVpCriteriaData();
-      const paginationOptions = new PaginationDto();
-      jest.spyOn(service, 'findAllVpCriteria').mockResolvedValue(vpResult);
-
-      mockVpCriteriaService.findAllVpCriteria.mockResolvedValue(
-        vpCriteriaData(),
-      );
-
-      const result = await controller.findAllVpCriteria(
-        'tenant1',
-        paginationDto,
-      );
-
+  
+      // Mock the service method
+      mockVpCriteriaService.findAllVpCriteria.mockResolvedValue(vpResult);
+  
+      // Call the controller method
+      const result = await controller.findAllVpCriteria('tenant1', paginationDto);
+  
+      // Verify that the mock service was called with the correct arguments
       expect(mockVpCriteriaService.findAllVpCriteria).toHaveBeenCalledWith(
-        'tenant1',
         paginationDto,
       );
-      expect(result).toEqual(vpCriteriaData());
+  
+      // Verify the result
+      expect(result).toEqual(vpResult);
     });
   });
+  
 
   describe('findOneVpCriteria', () => {
     it('should call service.findOneVpCriteria and return the result', async () => {

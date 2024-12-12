@@ -14,11 +14,13 @@ import {
   updateCriteriaTargetData,
 } from './test-data';
 import { paginationOptions } from '@root/src/core/commonTestData/commonTest.data';
+import { PaginationDto } from '@root/src/core/commonDto/pagination-dto';
 
 describe('CriteriaTargetService', () => {
   let criteriaTargetService: CriteriaTargetService;
-  let criteriaTargetRepository: MockProxy<Repository<CriteriaTarget>>;
-  let paginationService: MockProxy<PaginationService>;
+
+  let criteriaTargetRepository: jest.Mocked<Repository<CriteriaTarget>>;
+  let paginationService: PaginationService;
 
   const CriteriaTargetToken = getRepositoryToken(CriteriaTarget);
 
@@ -48,7 +50,7 @@ describe('CriteriaTargetService', () => {
   describe('create', () => {
     describe('when createobjectCriteriaTarget is called', () => {
       let criteriaTarget: CriteriaTarget[];
-      let tenantId: '57577865-7625-4170-a803-a73567e19216';
+      let tenantId: '179055e7-a27c-4d9d-9538-2b2a115661bd';
       beforeEach(() => {
         criteriaTargetRepository.create.mockReturnValue(
           testCreateCriteriaTargetForMultipleDto() as any,
@@ -92,7 +94,7 @@ describe('CriteriaTargetService', () => {
       let criteriaTarget: CriteriaTarget;
 
       beforeEach(async () => {
-        criteriaTargetRepository.findOneByOrFail.mockResolvedValue(
+        criteriaTargetRepository.findOne.mockResolvedValue(
           criteriaTargetData(),
         );
         criteriaTarget = await criteriaTargetService.findOneCriteriaTarget(
@@ -120,42 +122,45 @@ describe('CriteriaTargetService', () => {
       });
     });
   });
-  describe('findAll', () => {
-    describe('when findAllCriteriaTargets is called', () => {
-      let tenantId: '57577865-7625-4170-a803-a73567e19216';
+  describe('findAllMonths', () => {
+    it('should return paginated Month', async () => {
+      const paginationOptions: PaginationDto = {
+        page: 1,
+        limit: 10,
+        orderBy: 'id',
+        orderDirection: 'ASC',
+      };
+      const tenantId = '8f2e3691-423f-4f21-b676-ba3a932b7c7c';
+      // const paginatedResult: Pagination<VpScoring> = paginationResultVpScoringData();
+      const queryBuilderMock = {
+        leftJoinAndSelect: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        getMany: jest.fn(),
+        getOne: jest.fn(),
+      };
+      criteriaTargetRepository.createQueryBuilder = jest
+        .fn()
+        .mockReturnValue(queryBuilderMock);
+      const options = {
+        page: paginationOptions.page,
+        limit: paginationOptions.limit,
+      };
 
-      beforeEach(async () => {
-        paginationService.paginate.mockResolvedValue(
-          paginationResultCriteriaTargetData(),
-        );
-      });
+      paginationService.paginate = jest
+        .fn()
+        .mockResolvedValue(paginationResultCriteriaTargetData());
 
-      it('should call paginationService.paginate with correct parameters', async () => {
-        await criteriaTargetService.findAllCriteriaTargets(
-          tenantId,
-          paginationOptions(),
-        );
-        expect(paginationService.paginate).toHaveBeenCalledWith(
-          criteriaTargetRepository,
-          'CriteriaTarget',
-          {
-            page: paginationOptions().page,
-            limit: paginationOptions().limit,
-          },
-          paginationOptions().orderBy,
-          paginationOptions().orderDirection,
-          { tenantId },
-        );
-      });
+      const result = await criteriaTargetService.findAllCriteriaTargets(
+        tenantId,
+        paginationOptions,
+      );
 
-      it('should return paginated clients', async () => {
-        const clients = await criteriaTargetService.findAllCriteriaTargets(
-          tenantId,
-
-          paginationOptions(),
-        );
-        expect(clients).toEqual(paginationResultCriteriaTargetData());
-      });
+      expect(result).toEqual(paginationResultCriteriaTargetData());
+      expect(paginationService.paginate).toHaveBeenCalledWith(
+        queryBuilderMock,
+        options,
+      );
     });
   });
 
@@ -189,7 +194,7 @@ describe('CriteriaTargetService', () => {
       it('should call criteriaTargetRepository.update to update the CriteriaTarget', async () => {
         expect(criteriaTargetRepository.update).toHaveBeenCalledWith(
           { id: criteriaTargetData().id },
-          criteriaTargetData(),
+          updateCriteriaTargetData(),
         );
       });
 

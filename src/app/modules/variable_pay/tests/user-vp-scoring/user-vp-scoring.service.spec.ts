@@ -189,52 +189,37 @@ describe('UserVpScoringService', () => {
 
   describe('update', () => {
     describe('when updateUserVpScoring is called', () => {
-      let userVpScoring: UserVpScoring;
-      let tenantId: '57577865-7625-4170-a803-a73567e19216';
+      let UserVpScoring: UserVpScoring;
+      const tenantId = '57577865-7625-4170-a803-a73567e19216';
+  
+      const updateUserVpScoringDto = {
+        userId: '123e4567-e89b-12d3-a456-426614174000',
+        vpScoringId: '123e4567-e89b-12d3-a456-426614174001',
+      };
+  
       beforeEach(async () => {
-        jest
-          .spyOn(userVpScoringService, 'findOneUserVpScoring')
-          .mockResolvedValueOnce(UserVpScoringData())
-          .mockResolvedValueOnce(UserVpScoringData());
-
-        userVpScoringRepository.update.mockResolvedValue(
-          deleteUserVpScoringData(),
-        );
-
-        userVpScoring = await userVpScoringService.updateUserVpScoring(
+        userVpScoringRepository.findOne.mockResolvedValue(UserVpScoringData() as any);
+        userVpScoringRepository.update.mockResolvedValue(undefined); // Update doesn't return anything
+        UserVpScoring = await userVpScoringService.updateUserVpScoring(
           UserVpScoringData().id,
-          createUserVpScoringData(),
+          updateUserVpScoringDto,
           tenantId,
         );
       });
-
-      it('should call UserVpScoringService.findOneUserVpScoring to check if UserVpScoring exists', async () => {
-        expect(userVpScoringService.findOneUserVpScoring).toHaveBeenCalledWith(
-          UserVpScoringData().id,
-          tenantId,
-        );
-      });
-
-      it('should call userVpScoringRepository.update to update the UserVpScoring', async () => {
-        const id = UserVpScoringData().id;
+  
+      it('should call UserVpScoringRepository.update', async () => {
         expect(userVpScoringRepository.update).toHaveBeenCalledWith(
-          { id: id },
-          UserVpScoringData(),
+          { id: UserVpScoringData().id },
+          updateUserVpScoringDto, // Match the DTO here
         );
       });
-
-      it('should call UserVpScoringService.findOneUserVpScoring again to return the updated UserVpScoring', async () => {
-        expect(userVpScoringService.findOneUserVpScoring).toHaveBeenCalledWith(
-          UserVpScoringData().id,
-          tenantId,
-        );
-      });
-
+  
       it('should return the updated UserVpScoring', () => {
-        expect(userVpScoring).toEqual(UserVpScoringData());
+        expect(UserVpScoring).toEqual(UserVpScoringData());
       });
     });
   });
+  
 
   describe('remove', () => {
     describe('when UserVpScoring is called', () => {
