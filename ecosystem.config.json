@@ -1,7 +1,7 @@
 {
   "apps": [
     {
-      "name": "okr-backend-staging",
+      "name": "okr-backend",
       "script": "node dist/main.js",
       "instances": 1,
       "autorestart": true,
