@@ -45,6 +45,16 @@ export class GetFromOrganizatiAndEmployeInfoService {
     return response.data;
   }
 
+  async getActiveSession(tenantId: string) {
+    const response = await this.httpService
+      .get(`${this.orgUrl}/session/active/session`, {
+        headers: {
+          tenantid: tenantId,
+        },
+      })
+      .toPromise();
+    return response.data;
+  }
   async activatePreviousActiveMonth(tenantId: string) {
     const response = await this.httpService
       .get(`${this.orgUrl}/month/previousMonth/month`, {
