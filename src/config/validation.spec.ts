@@ -16,6 +16,7 @@ describe('validationSchema', () => {
       DB_PASSWORD: 'password',
       DB_TYPE: 'postgres',
       DB_SYNCHRONIZE_ENTITIES: false,
+      ORG_SERVER:"http://localhost:8008/api/v1"
     };
 
     const result = validationSchema.validate(validConfig);
@@ -35,6 +36,10 @@ describe('validationSchema', () => {
       DB_NAME: 'mydb',
       DB_USER: 'postgres',
       DB_PASSWORD: 'password',
+      ORG_SERVER:"http://localhost:8008/api/v1",
+      FILE_SERVER_URL:"http://localhost:8008/api/v1",
+
+
     };
 
     expect(validationSchema.validate(invalidConfig).error).toBeDefined();
@@ -54,6 +59,9 @@ describe('validationSchema', () => {
       DB_USER: 'postgres',
       DB_PASSWORD: 'password',
       DB_SYNCHRONIZE_ENTITIES: false,
+      ORG_SERVER:"http://localhost:8008/api/v1",
+      FILE_SERVER_URL:"http://localhost:8008/api/v1",
+
     };
 
     expect(validationSchema.validate(invalidConfig).error).toBeDefined();

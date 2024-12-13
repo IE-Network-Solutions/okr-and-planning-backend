@@ -10,7 +10,7 @@ export class GetFromOrganizatiAndEmployeInfoService {
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
   ) {
-    this.orgUrl = this.configService.get<string>('ORG_SERVER');
+    this.orgUrl = this.configService.get<string>('orgUrl.orgUrl');
   }
   async getUsers(userId: string, tenantId: string, token?: string) {
     const response = await this.httpService
