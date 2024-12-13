@@ -19,6 +19,9 @@ export const createUserVpScoringData = (): CreateUserVpScoringDto => {
   return {
     userId: '123e4567-e89b-12d3-a456-426614174000',
     vpScoringId: '123e4567-e89b-12d3-a456-426614174001',
+    createdBy:'e6557018-6482-47fe-bd96-91790e7988e5'
+
+    
   };
 };
 
@@ -27,6 +30,7 @@ export const updateUserVpScoringData = (): UpdateUserVpScoringDto => {
     id: 'f4e9b94e-77ea-423c-b43c-ef75c8219b63',
     userId: '123e4567-e89b-12d3-a456-426614174000',
     vpScoringId: '123e4567-e89b-12d3-a456-426614174001',
+    createdBy:'e6557018-6482-47fe-bd96-91790e7988e5'
   };
 };
 

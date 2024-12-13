@@ -9,4 +9,7 @@ export class CreateUserVpScoringDto {
   @IsOptional()
   @IsUUID()
   vpScoringId?: string;
+  @IsOptional()
+  @IsUUID()
+  createdBy?:string
 }
