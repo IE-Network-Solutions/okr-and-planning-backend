@@ -1,4 +1,4 @@
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import {
   IsDateString,
   IsNumber,
@@ -23,17 +23,27 @@ export class CreateKeyResultDto {
   @IsString()
   metricTypeId?: string;
   @IsOptional()
+  @Transform(({ value }) => parseFloat(value))
+  @IsNumber({ maxDecimalPlaces: 2 })
   @IsNumber()
   initialValue?: number;
   @IsOptional()
+  @Transform(({ value }) => parseFloat(value))
+  @IsNumber({ maxDecimalPlaces: 2 })
   @IsNumber()
   targetValue?: number;
+  @Transform(({ value }) => parseFloat(value))
+  @IsNumber({ maxDecimalPlaces: 2 })
   @IsNumber()
   weight: number;
   @IsOptional()
+  @Transform(({ value }) => parseFloat(value))
+  @IsNumber({ maxDecimalPlaces: 2 })
   @IsNumber()
   currentValue?: number;
   @IsOptional()
+  @Transform(({ value }) => parseFloat(value))
+  @IsNumber({ maxDecimalPlaces: 2 })
   @IsNumber()
   progress?: number;
   @ValidateNested({ each: true })
