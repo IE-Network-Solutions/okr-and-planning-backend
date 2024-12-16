@@ -118,7 +118,7 @@ export class ObjectiveService {
         });
       }
       if (activeSession) {
-        queryBuilder.andWhere('objective.sessionId = :sessionId', { sessionId:activeSession.id })
+       queryBuilder.andWhere('objective.sessionId = :sessionId', { sessionId:activeSession.id })
 
       }
 
