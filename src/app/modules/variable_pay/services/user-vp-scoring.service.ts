@@ -211,6 +211,7 @@ export class UserVpScoringService {
             }
           }
           else {
+
             if (target.departmentId === userDepartmentId) {
               if (criteria.vpCriteria.isDeduction) {
                 result =

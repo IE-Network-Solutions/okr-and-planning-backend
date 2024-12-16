@@ -11,6 +11,7 @@ import { OkrReportService } from '../okr-report/okr-report.service';
 import { OkrProgressService } from '../okr-progress/okr-progress.service';
 import { Milestone } from '../milestones/entities/milestone.entity';
 import { Report } from '../okr-report/entities/okr-report.entity';
+import { UserVpScoringService } from '../variable_pay/services/user-vp-scoring.service';
 
 describe('OkrReportTaskService', () => {
   let okrReportTaskService: OkrReportTaskService;
@@ -50,6 +51,10 @@ describe('OkrReportTaskService', () => {
         {
           provide: OkrProgressService,
           useValue: mock<OkrProgressService>(),
+        },
+        {
+          provide: UserVpScoringService,
+          useValue: mock<UserVpScoringService>(),
         },
         {
           provide: DataSource,
