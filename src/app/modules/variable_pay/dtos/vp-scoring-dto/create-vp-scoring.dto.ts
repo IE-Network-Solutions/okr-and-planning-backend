@@ -29,4 +29,7 @@ export class CreateVpScoringDto {
   @ValidateNested({ each: true })
   @Type(() => CreateUserVpScoringDto)
   createUserVpScoringDto?: CreateUserVpScoringDto[];
+  @IsOptional()
+  @IsUUID()
+  createdBy?:string
 }

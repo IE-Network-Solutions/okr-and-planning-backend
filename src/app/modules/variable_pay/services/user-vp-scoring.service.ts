@@ -191,7 +191,7 @@ export class UserVpScoringService {
           userId,
         );
         for (const target of criteria.vpCriteria.criteriaTargets) {
-          if (target.month && target.departmentId === null) {
+          if (target.departmentId === null) {
             if (target.month === currentMonth.name) {
               if (criteria.vpCriteria.isDeduction) {
                 result =
@@ -210,7 +210,7 @@ export class UserVpScoringService {
               breakDownData.push(breakDownObject);
             }
           }
-          if (target.month === null && target.departmentId) {
+          else {
             if (target.departmentId === userDepartmentId) {
               if (criteria.vpCriteria.isDeduction) {
                 result =
