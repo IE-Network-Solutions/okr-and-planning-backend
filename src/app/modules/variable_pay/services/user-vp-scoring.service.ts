@@ -209,7 +209,9 @@ export class UserVpScoringService {
               breakDownObject.score = eachScore;
               breakDownData.push(breakDownObject);
             }
-          } else {
+          }
+          else {
+
             if (target.departmentId === userDepartmentId) {
               if (criteria.vpCriteria.isDeduction) {
                 result =
