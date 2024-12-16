@@ -13,6 +13,7 @@ import { NAME } from '../metric-types/enum/metric-type.enum';
 import { OkrProgressService } from '../okr-progress/okr-progress.service';
 import { Milestone } from '../milestones/entities/milestone.entity';
 import { Status } from '../milestones/enum/milestone.status.enum';
+import { UserVpScoringService } from '../variable_pay/services/user-vp-scoring.service';
 
 @Injectable()
 export class OkrReportTaskService {
@@ -35,8 +36,8 @@ export class OkrReportTaskService {
     private planTaskRepository: Repository<PlanTask>,
 
     private reportService: OkrReportService, // Injecting the report service
-
-    private okrProgressService: OkrProgressService, // Injecting the report service // private okrProgressService: OkrProgressService, // Injecting the report service
+    private okrProgressService: OkrProgressService, 
+    private userVpScoringService:UserVpScoringService
   ) {}
   async findMilestoneById(id: string): Promise<Milestone | null> {
     try {
@@ -108,6 +109,7 @@ export class OkrReportTaskService {
       }
       const check = await this.checkAndUpdateProgressByKey(savedReportTasks);
       if (check && checkPlanIsReported) {
+
         await queryRunner.commitTransaction();
       }
       return savedReportTasks;
