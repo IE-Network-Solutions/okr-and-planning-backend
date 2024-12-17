@@ -14,4 +14,7 @@ export class CreateVpScoringCriterionDto {
 
   @IsDecimal()
   weight: number;
+  @IsOptional()
+  @IsUUID()
+  createdBy?:string
 }

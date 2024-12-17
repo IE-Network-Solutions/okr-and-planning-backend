@@ -53,6 +53,7 @@ export class VpScoringService {
               const userVPScoring = new CreateUserVpScoringDto();
               userVPScoring.vpScoringId = savedVpScoring.id;
               userVPScoring.userId = createUserVpScoring.userId;
+            userVPScoring.createdBy=createVpScoringDto.createdBy
 
               await this.userVpScoringService.createUserVpScoring(
                 userVPScoring,
@@ -74,6 +75,8 @@ export class VpScoringService {
             vpCriteria.vpScoringId = savedVpScoring.id;
             vpCriteria.vpCriteriaId = criteria.vpCriteriaId;
             vpCriteria.weight = criteria.weight;
+            vpCriteria.createdBy=createVpScoringDto.createdBy
+
             await this.vpScoringCriteriaService.createVpScoringCriterion(
               vpCriteria,
               tenantId,
@@ -192,6 +195,7 @@ export class VpScoringService {
       if (updateVpScoring.length && updateVpScoring.length > 0) {
         for (const criteria of vpScoringCriteria)
           if (criteria.id) {
+            criteria["updatedBy"]= updateVpScoringDto.updatedBy
             await this.vpScoringCriteriaService.updateVpScoringCriterion(
               criteria.id,
               criteria,
@@ -199,6 +203,7 @@ export class VpScoringService {
             );
           } else {
             criteria.vpScoringId = id;
+            criteria.createdBy= updateVpScoringDto.updatedBy
             await this.vpScoringCriteriaService.createVpScoringCriterion(
               criteria,
               tenantId,
@@ -206,8 +211,10 @@ export class VpScoringService {
           }
       }
       if (updateVpScoring.length && updateVpScoring.length > 0) {
-        for (const score of updateVpScoring)
+        for (const score of updateVpScoring){
           if (score.id) {
+            score["updatedBy"]= updateVpScoringDto.updatedBy
+
             await this.userVpScoringService.updateUserVpScoring(
               score.id,
               score,
@@ -215,11 +222,14 @@ export class VpScoringService {
             );
           } else {
             score.vpScoringId = id;
+            score.createdBy= updateVpScoringDto.createdBy
+
             await this.userVpScoringService.createUserVpScoring(
               score,
               tenantId,
             );
           }
+        }
       }
       return await this.findOneVpScoring(id);
     } catch (error) {

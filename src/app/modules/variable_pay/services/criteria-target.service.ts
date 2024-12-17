@@ -26,24 +26,30 @@ export class CriteriaTargetService {
     tenantId: string,
   ): Promise<CriteriaTarget[]> {
     try {
+
       if (
         createCriteriaTargetDto.target &&
         createCriteriaTargetDto.target.length > 0
       ) {
         const allTargets = await Promise.all(
           createCriteriaTargetDto.target.map(async (target) => {
-            const criteriaTarget = new CreateCriteriaTargetDto();
-            criteriaTarget.departmentId = createCriteriaTargetDto.departmentId;
-            criteriaTarget.month = target.month;
-            criteriaTarget.target = target.target;
-            criteriaTarget.vpCriteriaId = createCriteriaTargetDto.vpCriteriaId;
-            criteriaTarget.createdBy = createCriteriaTargetDto.createdBy;
+            const targetExists= await this.criteriaTargetRepository.findOne({where:{month:target.month,vpCriteriaId:createCriteriaTargetDto.vpCriteriaId}})
+            if(!targetExists){
+              const criteriaTarget = new CreateCriteriaTargetDto();
+              criteriaTarget.departmentId = createCriteriaTargetDto.departmentId;
+              criteriaTarget.month = target.month;
+              criteriaTarget.target = target.target;
+              criteriaTarget.vpCriteriaId = createCriteriaTargetDto.vpCriteriaId;
+              criteriaTarget.createdBy = createCriteriaTargetDto.createdBy;
+  
+              const createdCriteriaTarget = this.criteriaTargetRepository.create({
+                ...criteriaTarget,
+                tenantId,
+              });
+              return this.criteriaTargetRepository.save(createdCriteriaTarget);
 
-            const createdCriteriaTarget = this.criteriaTargetRepository.create({
-              ...criteriaTarget,
-              tenantId,
-            });
-            return this.criteriaTargetRepository.save(createdCriteriaTarget);
+            }
+
           }),
         );
 
