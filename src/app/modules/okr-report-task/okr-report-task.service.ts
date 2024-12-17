@@ -109,7 +109,7 @@ export class OkrReportTaskService {
       }
       const check = await this.checkAndUpdateProgressByKey(savedReportTasks);
       if (check && checkPlanIsReported) {
-
+await this.userVpScoringService.calculateVP(userId,tenantId)
         await queryRunner.commitTransaction();
       }
       return savedReportTasks;
