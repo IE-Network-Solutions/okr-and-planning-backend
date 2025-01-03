@@ -5,7 +5,7 @@ import { IsOptional, IsUUID } from 'class-validator';
 export class UpdateUserVpScoringDto extends PartialType(
   CreateUserVpScoringDto,
 ) {
-    @IsOptional()
-    @IsUUID()
-    updatedBy?:string
+  @IsOptional()
+  @IsUUID()
+  updatedBy?: string;
 }

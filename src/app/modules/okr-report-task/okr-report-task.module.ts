@@ -40,7 +40,7 @@ import { VariablePayModule } from '../variable_pay/variable-pay.module';
     OkrProgressModule,
     OkrReportModule,
     PaginationModule,
-    VariablePayModule
+    VariablePayModule,
   ],
   controllers: [OkrReportTaskController],
   providers: [OkrReportTaskService],

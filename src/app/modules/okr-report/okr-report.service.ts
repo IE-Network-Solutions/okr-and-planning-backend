@@ -24,16 +24,28 @@ export class OkrReportService {
   ) {}
 
   async createReportWithTasks(
-    reportData: CreateReportDTO, // Data for the Report entity
+    reportData: CreateReportDTO,
+    tenantId: string,
+    // Data for the Report entity
   ): Promise<Report> {
+    try {
+      const activeSession =
+        await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(
+          tenantId,
+        );
+      reportData.sessionId = activeSession.id;
+    } catch (error) {
+      throw new NotFoundException('There is no active Session for this tenant');
+    }
     // Step 1: Create the Report entity
     const report = this.reportRepository.create({
       status: ReportStatusEnum.Reported,
       reportScore: reportData.reportScore,
       reportTitle: reportData.reportTitle,
-      tenantId: reportData?.tenantId,
+      tenantId: tenantId,
       userId: reportData?.userId,
       planId: reportData.planId,
+      sessionId: reportData.sessionId,
     });
 
     // Step 2: Save the Report entity

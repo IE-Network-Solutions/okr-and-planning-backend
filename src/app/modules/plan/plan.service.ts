@@ -6,6 +6,7 @@ import { Repository, TreeRepository } from 'typeorm';
 import { PaginationService } from '@root/src/core/pagination/pagination.service';
 import { PlanningPeriodUser } from '../planningPeriods/planning-periods/entities/planningPeriodUser.entity';
 import { PlanTask } from '../plan-tasks/entities/plan-task.entity';
+import { GetFromOrganizatiAndEmployeInfoService } from '../objective/services/get-data-from-org.service';
 
 @Injectable()
 export class PlanService {
@@ -17,9 +18,21 @@ export class PlanService {
     @InjectRepository(PlanningPeriodUser)
     private planningUserRepository: Repository<PlanningPeriodUser>,
     private readonly paginationService: PaginationService,
+    private readonly getFromOrganizatiAndEmployeInfoService: GetFromOrganizatiAndEmployeInfoService,
   ) {}
   async create(createPlanDto: CreatePlanDto, tenantId: string): Promise<Plan> {
     try {
+      try {
+        const activeSession =
+          await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(
+            tenantId,
+          );
+        createPlanDto.sessionId = activeSession.id;
+      } catch (error) {
+        throw new NotFoundException(
+          'There is no active Session for this tenant',
+        );
+      }
       const planningUser = await this.planningUserRepository.findOne({
         where: { id: createPlanDto.planningUserId },
       });

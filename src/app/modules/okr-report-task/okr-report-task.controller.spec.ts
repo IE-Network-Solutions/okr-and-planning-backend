@@ -56,10 +56,10 @@ describe('OkrReportTaskController', () => {
           provide: DataSource,
           useValue: mock<DataSource>(), // Mock the DataSource
         },
-            {
-                  provide: UserVpScoringService,
-                  useValue: mock<UserVpScoringService>(),
-                },
+        {
+          provide: UserVpScoringService,
+          useValue: mock<UserVpScoringService>(),
+        },
       ],
     }).compile();
 

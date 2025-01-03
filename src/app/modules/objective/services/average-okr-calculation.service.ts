@@ -59,4 +59,32 @@ export class AverageOkrCalculation {
       };
     });
   }
+  async calculateObjectiveProgressForTeamLeads(
+    objectives: Objective[],
+  ): Promise<Objective[]> {
+    return objectives.map((objective) => {
+      let totalProgress = 0;
+      let completedKeyResults = 0;
+
+      const daysLeft = Math.ceil(
+        (new Date(objective.deadline).getTime() - Date.now()) /
+          (1000 * 60 * 60 * 24),
+      );
+
+      objective.keyResults.forEach((keyResult) => {
+        totalProgress += (keyResult.progress * keyResult.weight) / 100;
+
+        if (keyResult.progress === 100) {
+          completedKeyResults++;
+        }
+      });
+
+      return {
+        ...objective,
+        daysLeft,
+        objectiveProgress: totalProgress,
+        completedKeyResults,
+      };
+    });
+  }
 }

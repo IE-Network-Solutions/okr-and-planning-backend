@@ -36,8 +36,8 @@ export class OkrReportTaskService {
     private planTaskRepository: Repository<PlanTask>,
 
     private reportService: OkrReportService, // Injecting the report service
-    private okrProgressService: OkrProgressService, 
-    private userVpScoringService:UserVpScoringService
+    private okrProgressService: OkrProgressService,
+    private userVpScoringService: UserVpScoringService,
   ) {}
   async findMilestoneById(id: string): Promise<Milestone | null> {
     try {
@@ -96,6 +96,7 @@ export class OkrReportTaskService {
       );
       const returnedReportData = await this.reportService.createReportWithTasks(
         reportData,
+        tenantId,
       );
       const reportTasks = this.mapDtoToReportTasks(
         createReportDto,
@@ -109,7 +110,7 @@ export class OkrReportTaskService {
       }
       const check = await this.checkAndUpdateProgressByKey(savedReportTasks);
       if (check && checkPlanIsReported) {
-await this.userVpScoringService.calculateVP(userId,tenantId)
+        await this.userVpScoringService.calculateVP(userId, tenantId);
         await queryRunner.commitTransaction();
       }
       return savedReportTasks;

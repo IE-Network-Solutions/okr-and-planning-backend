@@ -14,8 +14,8 @@ export const VpScoringData = (): VpScoring => {
     userVpScoring: null,
     updatedAt: new Date('2022-10-22 07:11:42'),
     createdAt: new Date('2022-10-22 07:11:42'),
-    createdBy:'e6557018-6482-47fe-bd96-91790e7988e5',
-    updatedBy:'e6557018-6482-47fe-bd96-91790e7988e5'
+    createdBy: 'e6557018-6482-47fe-bd96-91790e7988e5',
+    updatedBy: 'e6557018-6482-47fe-bd96-91790e7988e5',
   };
 };
 
@@ -47,7 +47,7 @@ export const createVpScoringData = (): CreateVpScoringDto => {
         vpScoringId: '123e4567-e89b-12d3-a456-426614174001',
       },
     ],
-    createdBy:'e6557018-6482-47fe-bd96-91790e7988e5'
+    createdBy: 'e6557018-6482-47fe-bd96-91790e7988e5',
   };
 };
 
@@ -79,7 +79,6 @@ export const updateVpScoringData = (): UpdateVpScoringDto => {
         vpScoringId: '123e4567-e89b-12d3-a456-426614174001',
       },
     ],
-    
   };
 };
 export const paginationResultVpScoringData = (): Pagination<VpScoring> => {

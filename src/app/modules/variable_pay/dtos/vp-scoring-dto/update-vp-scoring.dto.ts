@@ -16,5 +16,5 @@ import { UpdateUserVpScoringDto } from '../user-vp-scoring-dto/update-user-vp-sc
 export class UpdateVpScoringDto extends PartialType(CreateVpScoringDto) {
   @IsOptional()
   @IsUUID()
-  updatedBy?:string
+  updatedBy?: string;
 }

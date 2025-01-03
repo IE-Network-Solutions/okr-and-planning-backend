@@ -7,5 +7,5 @@ export class UpdateVpScoringCriterionDto extends PartialType(
 ) {
   @IsOptional()
   @IsUUID()
-  updateBy?:string
+  updateBy?: string;
 }

@@ -67,6 +67,13 @@ export class ObjectiveService {
       if (activeSession) {
         createObjectiveDto.sessionId = activeSession.id;
       }
+
+      if (
+        createObjectiveDto.allignedKeyResultId === '' ||
+        createObjectiveDto.allignedKeyResultId === undefined
+      ) {
+        createObjectiveDto.allignedKeyResultId = null;
+      }
       const objective = await this.objectiveRepository.create({
         ...createObjectiveDto,
         tenantId,
