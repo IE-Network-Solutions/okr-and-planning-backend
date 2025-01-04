@@ -31,5 +31,5 @@ export class CreateVpScoringDto {
   createUserVpScoringDto?: CreateUserVpScoringDto[];
   @IsOptional()
   @IsUUID()
-  createdBy?:string
+  createdBy?: string;
 }

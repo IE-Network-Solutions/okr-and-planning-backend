@@ -182,4 +182,19 @@ export class ObjectiveController {
       paginationOptions,
     );
   }
+
+  @Post('/company-okr')
+  @ExcludeAuthGuard()
+  getCompanyOkrOnVP(
+    @Headers('tenantId') tenantId: string,
+    @Headers('userId') userId: string,
+    @Query() paginationOptions?: PaginationDto,
+  ) {
+    return this.objectiveService.getCompanyOkr(
+      tenantId,
+      userId,
+      null,
+      paginationOptions,
+    );
+  }
 }

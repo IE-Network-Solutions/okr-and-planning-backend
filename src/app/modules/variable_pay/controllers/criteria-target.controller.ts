@@ -28,7 +28,7 @@ export class CriteriaTargetController {
   async createCriteriaTarget(
     @Body() createCriteriaTargetDto: CreateCriteriaTargetForMultipleDto,
     @Headers('tenantId') tenantId: string,
-  ): Promise<CriteriaTarget[]> {
+  ): Promise<any> {
     return await this.criteriaTargetService.createCriteriaTarget(
       createCriteriaTargetDto,
       tenantId,

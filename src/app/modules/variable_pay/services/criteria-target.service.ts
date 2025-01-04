@@ -24,8 +24,9 @@ export class CriteriaTargetService {
   async createCriteriaTarget(
     createCriteriaTargetDto: CreateCriteriaTargetForMultipleDto,
     tenantId: string,
-  ): Promise<CriteriaTarget[]> {
+  ): Promise<any> {
     try {
+      const duplicateTarget = [];
 
       if (
         createCriteriaTargetDto.target &&
@@ -33,27 +34,36 @@ export class CriteriaTargetService {
       ) {
         const allTargets = await Promise.all(
           createCriteriaTargetDto.target.map(async (target) => {
-            const targetExists= await this.criteriaTargetRepository.findOne({where:{month:target.month,vpCriteriaId:createCriteriaTargetDto.vpCriteriaId}})
-            if(!targetExists){
+            const targetExists = await this.criteriaTargetRepository.findOne({
+              where: {
+                month: target.month,
+                vpCriteriaId: createCriteriaTargetDto.vpCriteriaId,
+                departmentId: createCriteriaTargetDto.departmentId,
+              },
+            });
+            if (!targetExists) {
               const criteriaTarget = new CreateCriteriaTargetDto();
-              criteriaTarget.departmentId = createCriteriaTargetDto.departmentId;
+              criteriaTarget.departmentId =
+                createCriteriaTargetDto.departmentId;
               criteriaTarget.month = target.month;
               criteriaTarget.target = target.target;
-              criteriaTarget.vpCriteriaId = createCriteriaTargetDto.vpCriteriaId;
+              criteriaTarget.vpCriteriaId =
+                createCriteriaTargetDto.vpCriteriaId;
               criteriaTarget.createdBy = createCriteriaTargetDto.createdBy;
-  
-              const createdCriteriaTarget = this.criteriaTargetRepository.create({
-                ...criteriaTarget,
-                tenantId,
-              });
+
+              const createdCriteriaTarget =
+                this.criteriaTargetRepository.create({
+                  ...criteriaTarget,
+                  tenantId,
+                });
               return this.criteriaTargetRepository.save(createdCriteriaTarget);
-
+            } else {
+              duplicateTarget.push(target.month);
             }
-
           }),
         );
 
-        return allTargets;
+        return { ...allTargets, duplicateTarget };
       }
     } catch (error) {
       throw new BadRequestException(error.message);

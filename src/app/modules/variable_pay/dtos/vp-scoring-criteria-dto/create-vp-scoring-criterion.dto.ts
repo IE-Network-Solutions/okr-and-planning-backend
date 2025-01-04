@@ -16,5 +16,5 @@ export class CreateVpScoringCriterionDto {
   weight: number;
   @IsOptional()
   @IsUUID()
-  createdBy?:string
+  createdBy?: string;
 }
