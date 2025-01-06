@@ -36,6 +36,8 @@ export class KeyResult extends BaseModel {
   currentValue: number;
   @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
   lastUpdateValue: number;
+  @Column({ type: 'uuid', nullable: true })
+  sessionId: string;
   @Column({
     type: 'decimal',
     precision: 10,

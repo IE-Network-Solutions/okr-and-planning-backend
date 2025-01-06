@@ -14,6 +14,7 @@ import { IPaginationOptions, Pagination } from 'nestjs-typeorm-paginate';
 import { MilestonesService } from '../milestones/milestones.service';
 import { MetricTypesService } from '../metric-types/metric-types.service';
 import { UpdateMilestoneDto } from '../milestones/dto/update-milestone.dto';
+import { GetFromOrganizatiAndEmployeInfoService } from '../objective/services/get-data-from-org.service';
 
 @Injectable()
 export class KeyResultsService {
@@ -24,6 +25,8 @@ export class KeyResultsService {
     private readonly milestonesService: MilestonesService,
     private readonly metricTypeService: MetricTypesService,
     private readonly connection: Connection, // Inject the database connection
+  private readonly getFromOrganizatiAndEmployeInfoService: GetFromOrganizatiAndEmployeInfoService,
+    
   ) {}
   async createkeyResult(
     createkeyResultDto: CreateKeyResultDto,
@@ -31,6 +34,14 @@ export class KeyResultsService {
     queryRunner?: QueryRunner,
   ): Promise<KeyResult> {
     try {
+
+      const activeSession =
+      await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(
+        tenantId,
+      );
+    if (activeSession) {
+      createkeyResultDto.sessionId = activeSession.id;
+    }
       const keyResult = queryRunner
         ? queryRunner.manager.create(KeyResult, {
             ...createkeyResultDto,
@@ -90,16 +101,25 @@ export class KeyResultsService {
         page: paginationOptions.page,
         limit: paginationOptions.limit,
       };
+      const activeSession =
+      await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(
+        tenantId,
+      );
+      const queryBuilder = await this.keyResultRepository
+        .createQueryBuilder('keyresult')
+     
+        .where('keyresult.tenantId = :tenantId', { tenantId })
+
+        if (activeSession) {
+          queryBuilder.andWhere('keyresult.sessionId = :sessionId', {
+            sessionId: activeSession.id,
+          });
+        }
 
       const paginatedData = await this.paginationService.paginate<KeyResult>(
-        this.keyResultRepository,
-        'keyResult',
+        queryBuilder,
         options,
-        paginationOptions.orderBy,
-        paginationOptions.orderDirection,
-        { tenantId },
       );
-
       return paginatedData;
     } catch (error) {
       throw new BadRequestException(error.message);
@@ -238,10 +258,20 @@ export class KeyResultsService {
         page: paginationOptions.page,
         limit: paginationOptions.limit,
       };
+      const activeSession =
+      await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(
+        tenantId,
+      );
       const queryBuilder = await this.keyResultRepository
         .createQueryBuilder('keyresult')
         .leftJoinAndSelect('keyresult.objective', 'objective')
-        .where('objective.userId = :userId', { userId });
+        .where('objective.userId = :userId', { userId })
+
+        if (activeSession) {
+          queryBuilder.andWhere('keyresult.sessionId = :sessionId', {
+            sessionId: activeSession.id,
+          });
+        }
 
       //queryBuilder.distinctOn(['objective.id'])
       const paginatedData = await this.paginationService.paginate<KeyResult>(
