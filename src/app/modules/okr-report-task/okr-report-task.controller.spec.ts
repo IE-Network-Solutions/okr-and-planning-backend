@@ -12,6 +12,7 @@ import { OkrReportService } from '../okr-report/okr-report.service';
 import { mock } from 'jest-mock-extended';
 import { OkrProgressService } from '../okr-progress/okr-progress.service';
 import { Milestone } from '../milestones/entities/milestone.entity';
+import { UserVpScoringService } from '../variable_pay/services/user-vp-scoring.service';
 
 describe('OkrReportTaskController', () => {
   let okrReportController: OkrReportController;
@@ -54,6 +55,10 @@ describe('OkrReportTaskController', () => {
         {
           provide: DataSource,
           useValue: mock<DataSource>(), // Mock the DataSource
+        },
+        {
+          provide: UserVpScoringService,
+          useValue: mock<UserVpScoringService>(),
         },
       ],
     }).compile();

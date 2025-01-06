@@ -26,17 +26,23 @@ export class KeyResult extends BaseModel {
   deadline: Date;
   @Column({ type: 'varchar', nullable: true })
   metricTypeId: string;
-  @Column({ type: 'int', default: 0 })
+  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
   initialValue: number;
-  @Column({ type: 'int', nullable: true })
+  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
   targetValue: number;
-  @Column({ type: 'int' })
+  @Column({ type: 'decimal', precision: 10, scale: 2 })
   weight: number;
-  @Column({ type: 'int', default: 0 })
+  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
   currentValue: number;
-  @Column({ type: 'int', default: 0 })
+  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
   lastUpdateValue: number;
-  @Column({ type: 'float', default: 0, nullable: true })
+  @Column({
+    type: 'decimal',
+    precision: 10,
+    scale: 2,
+    default: 0,
+    nullable: true,
+  })
   @Min(0)
   @Max(100)
   progress: number;

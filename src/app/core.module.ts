@@ -18,6 +18,7 @@ import { AppreciationModule } from './modules/appreciationLog/appreciation.modul
 import { CarbonCopyLog } from './modules/carbonCopyLlog/entities/carbon-copy-log.entity';
 import { RecognitionTypeModule } from './modules/recognitionType/recognition-type.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
+import { VariablePayModule } from './modules/variable_pay/variable-pay.module';
 import { PlanCommentsModule } from './modules/plan-comments/plan-comments.module';
 @Global()
 @Module({
@@ -41,6 +42,7 @@ import { PlanCommentsModule } from './modules/plan-comments/plan-comments.module
     AppreciationModule,
     CarbonCopyLog,
     DashboardModule,
+    VariablePayModule,
   ],
 })
 export class CoreModule {}

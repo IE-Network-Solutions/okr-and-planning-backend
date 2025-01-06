@@ -60,6 +60,20 @@ export class ObjectiveService {
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
+      const activeSession =
+        await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(
+          tenantId,
+        );
+      if (activeSession) {
+        createObjectiveDto.sessionId = activeSession.id;
+      }
+
+      if (
+        createObjectiveDto.allignedKeyResultId === '' ||
+        createObjectiveDto.allignedKeyResultId === undefined
+      ) {
+        createObjectiveDto.allignedKeyResultId = null;
+      }
       const objective = await this.objectiveRepository.create({
         ...createObjectiveDto,
         tenantId,
@@ -94,6 +108,10 @@ export class ObjectiveService {
     paginationOptions?: PaginationDto,
   ): Promise<Pagination<Objective>> {
     try {
+      const activeSession =
+        await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(
+          tenantId,
+        );
       const options: IPaginationOptions = {
         page: paginationOptions.page,
         limit: paginationOptions.limit,
@@ -105,9 +123,15 @@ export class ObjectiveService {
         .leftJoinAndSelect('keyResults.metricType', 'metricType')
         .andWhere('objective.tenantId = :tenantId', { tenantId })
         .where('objective.userId = :userId', { userId });
+
       if (filterDto && filterDto.metricTypeId) {
         queryBuilder.andWhere('keyResults.metricTypeId = :metricTypeId', {
           metricTypeId: filterDto.metricTypeId,
+        });
+      }
+      if (activeSession) {
+        queryBuilder.andWhere('objective.sessionId = :sessionId', {
+          sessionId: activeSession.id,
         });
       }
 
@@ -197,6 +221,11 @@ export class ObjectiveService {
         page: paginationOptions.page,
         limit: paginationOptions.limit,
       };
+      const activeSession =
+        await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(
+          tenantId,
+        );
+
       const queryBuilder = await this.objectiveRepository
         .createQueryBuilder('objective')
         .leftJoinAndSelect('objective.keyResults', 'keyResults')
@@ -221,19 +250,26 @@ export class ObjectiveService {
           metricTypeId: filterDto.metricTypeId,
         });
       }
+      if (activeSession) {
+        queryBuilder.andWhere('objective.sessionId = :sessionId', {
+          sessionId: activeSession.id,
+        });
+      }
       const paginatedData = await this.paginationService.paginate<Objective>(
         queryBuilder,
         options,
       );
-      for (const objective of paginatedData.items) {
-        try {
-          const user =
-            await this.getFromOrganizatiAndEmployeInfoService.getUsers(
-              objective.userId,
-              tenantId,
-            );
-          objective['user'] = user;
-        } catch {}
+      if (paginatedData.items.length > 0) {
+        for (const objective of paginatedData.items) {
+          try {
+            const user =
+              await this.getFromOrganizatiAndEmployeInfoService.getUsers(
+                objective.userId,
+                tenantId,
+              );
+            objective['user'] = user;
+          } catch (error) {}
+        }
       }
       return paginatedData;
     } catch (error) {
@@ -310,13 +346,23 @@ export class ObjectiveService {
     users: string[],
   ): Promise<Objective[]> {
     try {
-      const objectives = await this.objectiveRepository.find({
+      const activeSession =
+        await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(
+          tenantId,
+        );
+      const queryConditions: any = {
         where: {
           userId: In(users),
           tenantId: tenantId,
         },
         relations: ['keyResults', 'keyResults.milestones'],
-      });
+      };
+
+      if (activeSession) {
+        queryConditions.where.sessionId = activeSession.id;
+      }
+      const objectives = await this.objectiveRepository.find(queryConditions);
+
       const objectiveWithProgress =
         await this.averageOkrCalculation.calculateObjectiveProgress(objectives);
       return objectiveWithProgress;

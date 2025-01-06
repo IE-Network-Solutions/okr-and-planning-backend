@@ -7,13 +7,13 @@ import { KeyResult } from '../../key-results/entities/key-result.entity';
 export class Milestone extends BaseModel {
   @Column({ type: 'uuid' })
   keyResultId: string;
-  @Column({ type: 'varchar', length: '500' })
+  @Column({ type: 'varchar', length: '500', nullable: false })
   title: string;
   @Column({ type: 'varchar', length: '255', nullable: true })
   description: string;
   @Column({ nullable: true })
   status: Status;
-  @Column({ type: 'int' })
+  @Column({ type: 'decimal', precision: 10, scale: 2 })
   weight: number;
   @Column({ type: 'uuid' })
   tenantId: string;

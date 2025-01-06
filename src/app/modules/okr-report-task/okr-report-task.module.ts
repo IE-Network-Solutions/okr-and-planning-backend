@@ -17,6 +17,7 @@ import { MilestonesModule } from '../milestones/milestones.module';
 import { MetricTypesModule } from '../metric-types/metric-types.module';
 import { OkrReportModule } from '../okr-report/okr-report.module';
 import { PaginationModule } from '@root/src/core/pagination/pagination.module';
+import { VariablePayModule } from '../variable_pay/variable-pay.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { PaginationModule } from '@root/src/core/pagination/pagination.module';
     OkrProgressModule,
     OkrReportModule,
     PaginationModule,
+    VariablePayModule,
   ],
   controllers: [OkrReportTaskController],
   providers: [OkrReportTaskService],

@@ -13,6 +13,7 @@ import { PaginationDto } from '@root/src/core/commonDto/pagination-dto';
 import { PaginationService } from '../../../../core/pagination/pagination.service';
 import { AssignUsersDTO } from './dto/assignUser.dto';
 import { PlannnigPeriodUserDto } from './dto/planningPeriodUser.dto';
+import { FilterUserDto } from './dto/filter-user.dto';
 
 @Injectable()
 export class PlanningPeriodsService {
@@ -282,26 +283,32 @@ export class PlanningPeriodsService {
     }
   }
   async findAll(
-    paginationOptions: PaginationDto,
     tenantId: string,
+    paginationOptions: PaginationDto,
+    filterUSerDto: FilterUserDto,
   ): Promise<Pagination<PlanningPeriodUser>> {
     try {
       const options: IPaginationOptions = {
         page: paginationOptions.page,
         limit: paginationOptions.limit,
       };
+
+      const queryBuilder = await this.planningUserRepository
+        .createQueryBuilder('PlanningPeriod')
+
+        .andWhere('PlanningPeriod.tenantId = :tenantId', { tenantId });
+
+      if (filterUSerDto) {
+        queryBuilder.andWhere('PlanningPeriod.userId = :userId', {
+          userId: filterUSerDto.userId,
+        });
+      }
+
       const paginatedData =
         await this.paginationService.paginate<PlanningPeriodUser>(
-          this.planningUserRepository,
-          'p',
+          queryBuilder,
           options,
-          paginationOptions.orderBy,
-          paginationOptions.orderDirection,
-          { tenantId },
         );
-      if (!paginatedData) {
-        throw new NotFoundException('No planning period entries found');
-      }
       return paginatedData;
     } catch (error) {
       if (error.name === 'EntityNotFoundError') {

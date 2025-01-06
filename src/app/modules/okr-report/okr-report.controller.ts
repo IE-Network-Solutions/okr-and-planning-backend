@@ -26,7 +26,7 @@ export class OkrReportController {
     @Headers('tenantId') tenantId: UUID, // Expecting tenantId from headers
     @Param('userId') userId: string, // Extract the planningPeriodId from the route
   ): Promise<any> {
-    return await this.reportService.createReportWithTasks(reportData);
+    return await this.reportService.createReportWithTasks(reportData, tenantId);
   }
 
   @Post('/by-planning-period/:planningPeriodId') // Expecting planningPeriodId from the URL

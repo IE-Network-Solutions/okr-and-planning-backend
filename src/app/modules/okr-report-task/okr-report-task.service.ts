@@ -13,6 +13,7 @@ import { NAME } from '../metric-types/enum/metric-type.enum';
 import { OkrProgressService } from '../okr-progress/okr-progress.service';
 import { Milestone } from '../milestones/entities/milestone.entity';
 import { Status } from '../milestones/enum/milestone.status.enum';
+import { UserVpScoringService } from '../variable_pay/services/user-vp-scoring.service';
 
 @Injectable()
 export class OkrReportTaskService {
@@ -35,8 +36,8 @@ export class OkrReportTaskService {
     private planTaskRepository: Repository<PlanTask>,
 
     private reportService: OkrReportService, // Injecting the report service
-
-    private okrProgressService: OkrProgressService, // Injecting the report service // private okrProgressService: OkrProgressService, // Injecting the report service
+    private okrProgressService: OkrProgressService,
+    private userVpScoringService: UserVpScoringService,
   ) {}
   async findMilestoneById(id: string): Promise<Milestone | null> {
     try {
@@ -95,6 +96,7 @@ export class OkrReportTaskService {
       );
       const returnedReportData = await this.reportService.createReportWithTasks(
         reportData,
+        tenantId,
       );
       const reportTasks = this.mapDtoToReportTasks(
         createReportDto,
@@ -108,6 +110,7 @@ export class OkrReportTaskService {
       }
       const check = await this.checkAndUpdateProgressByKey(savedReportTasks);
       if (check && checkPlanIsReported) {
+        await this.userVpScoringService.calculateVP(userId, tenantId);
         await queryRunner.commitTransaction();
       }
       return savedReportTasks;
@@ -327,8 +330,10 @@ export class OkrReportTaskService {
           planningPeriodId,
         }) // Use relation to access planningPeriod ID
         .andWhere('plan.isValidated = :isValidated', { isValidated: true }) // Filter by validated plans only
-        .andWhere('plan.isReported = :isReported OR plan.isReported IS NULL', { isReported: false })
-        
+        .andWhere('plan.isReported = :isReported OR plan.isReported IS NULL', {
+          isReported: false,
+        })
+
         .getMany();
 
       return unreportedTasks;

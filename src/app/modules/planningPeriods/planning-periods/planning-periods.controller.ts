@@ -23,6 +23,7 @@ import { ExcludeAuthGuard } from '@root/src/core/guards/exclud.guard';
 
 import { UUID } from 'crypto';
 import { PlannnigPeriodUserDto } from './dto/planningPeriodUser.dto';
+import { FilterUserDto } from './dto/filter-user.dto';
 
 @Controller('planning-periods')
 @ApiTags('Planning-periods')
@@ -138,11 +139,14 @@ export class PlanningPeriodsController {
     @Req() req: Request,
     @Query()
     paginationOptions: PaginationDto,
+    @Query()
+    filterUSerDto?: FilterUserDto,
   ): Promise<Pagination<PlanningPeriodUser>> {
     const tenantId = req['tenantId'];
     return await this.planningPeriodService.findAll(
-      paginationOptions,
       tenantId,
+      paginationOptions,
+      filterUSerDto,
     );
   }
 

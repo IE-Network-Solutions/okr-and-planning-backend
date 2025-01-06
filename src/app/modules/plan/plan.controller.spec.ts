@@ -8,6 +8,8 @@ import { PlanService } from './plan.service';
 import { PlanController } from './plan.controller';
 import { PlanTask } from '../plan-tasks/entities/plan-task.entity';
 import { PlanningPeriodUser } from '../planningPeriods/planning-periods/entities/planningPeriodUser.entity';
+import { GetFromOrganizatiAndEmployeInfoService } from '../objective/services/get-data-from-org.service';
+import { mock } from 'jest-mock-extended';
 
 describe('PlanController', () => {
   let planController: PlanController;
@@ -36,6 +38,10 @@ describe('PlanController', () => {
           useValue: {
             paginate: jest.fn(),
           },
+        },
+        {
+          provide: GetFromOrganizatiAndEmployeInfoService,
+          useValue: mock<GetFromOrganizatiAndEmployeInfoService>(),
         },
       ],
     }).compile();
