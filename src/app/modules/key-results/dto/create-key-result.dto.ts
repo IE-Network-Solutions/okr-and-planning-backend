@@ -23,6 +23,9 @@ export class CreateKeyResultDto {
   @IsString()
   metricTypeId?: string;
   @IsOptional()
+  @IsString()
+  sessionId?: string;
+  @IsOptional()
   @Transform(({ value }) => parseFloat(value))
   @IsNumber({ maxDecimalPlaces: 2 })
   @IsNumber()
