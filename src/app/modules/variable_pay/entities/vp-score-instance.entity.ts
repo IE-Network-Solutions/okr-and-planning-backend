@@ -14,7 +14,7 @@ export class VpScoreInstance extends BaseModel {
   @ManyToOne(() => VpScoring, { onDelete: 'CASCADE' })
   vpScoring: VpScoring;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  @Column({ type: 'decimal', precision: 16, scale: 2 })
   vpScore: number;
 
   @Column({ type: 'json' })

@@ -13,7 +13,7 @@ export class Milestone extends BaseModel {
   description: string;
   @Column({ nullable: true })
   status: Status;
-  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  @Column({ type: 'decimal', precision: 16, scale: 2 })
   weight: number;
   @Column({ type: 'uuid' })
   tenantId: string;
