@@ -26,21 +26,21 @@ export class KeyResult extends BaseModel {
   deadline: Date;
   @Column({ type: 'varchar', nullable: true })
   metricTypeId: string;
-  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+  @Column({ type: 'decimal', precision: 16, scale: 2, default: 0 })
   initialValue: number;
-  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+  @Column({ type: 'decimal', precision: 16, scale: 2, nullable: true })
   targetValue: number;
-  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  @Column({ type: 'decimal', precision: 16, scale: 2 })
   weight: number;
-  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+  @Column({ type: 'decimal', precision: 16, scale: 2, default: 0 })
   currentValue: number;
-  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+  @Column({ type: 'decimal', precision: 16, scale: 2, default: 0 })
   lastUpdateValue: number;
   @Column({ type: 'uuid', nullable: true })
   sessionId: string;
   @Column({
     type: 'decimal',
-    precision: 10,
+    precision: 16,
     scale: 2,
     default: 0,
     nullable: true,
