@@ -191,8 +191,8 @@ export class ObjectiveController {
     @Query() paginationOptions?: PaginationDto,
   ) {
     return this.okrDashboardService.getOkrOfCompany(
-      tenantId,
       userId,
+      tenantId,
       paginationOptions,
     );
   }
