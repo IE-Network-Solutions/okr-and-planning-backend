@@ -317,4 +317,41 @@ export class OKRDashboardService {
       throw new Error(error.message);
     }
   }
+  async getOkrOfCompany(
+    userId: string,
+    tenantId: string,
+    paginationOptions?: PaginationDto,
+  ): Promise<number> {
+    try {
+      const response =
+        await this.getFromOrganizatiAndEmployeInfoService.getUsers(
+          userId,
+          tenantId,
+        );
+
+      const employeeJobInfo = response.employeeJobInformation[0];
+      const averageOKrrule =
+        await this.averageOkrRuleService.findOneAverageOkrRuleByTenant(
+          tenantId,
+        );
+
+      const {
+        totalOkr,
+        completedOkr,
+        daysLeft,
+        keyResultCount,
+        teamOkr,
+        companyOkr,
+      } = await this.calculateUserOKR(
+        userId,
+        tenantId,
+        employeeJobInfo,
+        averageOKrrule,
+        paginationOptions,
+      );
+      return companyOkr;
+    } catch (error) {
+      throw new Error(error.message);
+    }
+  }
 }
