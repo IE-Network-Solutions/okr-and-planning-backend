@@ -43,17 +43,17 @@ export class PlanTasksService {
 
     try {
       let sessionId:string|null=null;
-      // try {
-      //   const activeSession =
-      //     await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(
-      //       tenantId,
-      //     );
-      //    sessionId = activeSession.id;
-      // } catch (error) {
-      //   throw new NotFoundException(
-      //     'There is no active Session for this tenant',
-      //   );
-      // }
+      try {
+        const activeSession =
+          await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(
+            tenantId,
+          );
+         sessionId = activeSession.id;
+      } catch (error) {
+        throw new NotFoundException(
+          'There is no active Session for this tenant',
+        );
+      }
       const result: any = [];
       if (!createPlanTasksDto || createPlanTasksDto.length === 0) {
         throw new BadRequestException('No tasks provided');
