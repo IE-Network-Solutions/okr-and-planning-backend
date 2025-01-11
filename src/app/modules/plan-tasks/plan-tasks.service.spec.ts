@@ -9,6 +9,7 @@ import { PlanningPeriodUser } from '../planningPeriods/planning-periods/entities
 import { MilestonesService } from '../milestones/milestones.service';
 import { KeyResultsService } from '../key-results/key-results.service';
 import { Plan } from '../plan/entities/plan.entity';
+import { GetFromOrganizatiAndEmployeInfoService } from '../objective/services/get-data-from-org.service';
 
 describe('PlanTasksService', () => {
   let planTasksService: PlanTasksService;
@@ -44,6 +45,10 @@ describe('PlanTasksService', () => {
         {
           provide: DataSource,
           useValue: mock<DataSource>(), // Mock the DataSource
+        },
+        {
+          provide: GetFromOrganizatiAndEmployeInfoService,
+          useValue: mock<GetFromOrganizatiAndEmployeInfoService>(),
         },
       ],
     }).compile();
