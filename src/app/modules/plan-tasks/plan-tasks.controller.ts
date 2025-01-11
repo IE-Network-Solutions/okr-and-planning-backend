@@ -61,9 +61,9 @@ export class PlanTasksController {
   async update(
     @Body() updatePlanTaskDto: UpdatePlanTasksDto,
     @Req() req: Request,
-  ): Promise<Plan> {
+  ): Promise<any> {
     const tenantId = req['tenantId'];
-    return this.planTasksService.update(updatePlanTaskDto.tasks, tenantId);
+    return this.planTasksService.updateTasks(updatePlanTaskDto.tasks, tenantId);
   }
 
   @Delete(':id')
