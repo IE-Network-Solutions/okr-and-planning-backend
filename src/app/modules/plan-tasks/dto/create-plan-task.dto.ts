@@ -63,6 +63,9 @@ export class CreatePlanTaskDto {
   @IsOptional()
   weight: number;
 
+  @IsOptional()
+  @IsString()
+  sessionId?: string;
   // Recursive sub-tasks array
   @ValidateNested({ each: true }) // Validates each sub-task recursively
   @Type(() => CreatePlanTaskDto) // Specifies that the type of sub-task is also CreatePlanTaskDto

@@ -15,10 +15,10 @@ import { HttpModule } from '@nestjs/axios';
     PaginationModule,
     MilestonesModule,
     MetricTypesModule,
-     HttpModule.register({}),
+    HttpModule.register({}),
   ],
   controllers: [KeyResultsController],
-  providers: [KeyResultsService,GetFromOrganizatiAndEmployeInfoService],
+  providers: [KeyResultsService, GetFromOrganizatiAndEmployeInfoService],
   exports: [KeyResultsService],
 })
 export class KeyResultsModule {}

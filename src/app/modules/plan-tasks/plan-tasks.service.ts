@@ -13,6 +13,7 @@ import { PaginationService } from '@root/src/core/pagination/pagination.service'
 import { PlanningPeriodUser } from '../planningPeriods/planning-periods/entities/planningPeriodUser.entity';
 import { CreatePlanTaskDto } from './dto/create-plan-task.dto';
 import { UpdatePlanTaskDto } from './dto/update-plan-task.dto';
+import { GetFromOrganizatiAndEmployeInfoService } from '../objective/services/get-data-from-org.service';
 
 @Injectable()
 export class PlanTasksService {
@@ -25,6 +26,8 @@ export class PlanTasksService {
     private planningUserRepository: Repository<PlanningPeriodUser>,
     private readonly paginationService: PaginationService,
     private readonly keyResultService: KeyResultsService,
+    private readonly getFromOrganizatiAndEmployeInfoService: GetFromOrganizatiAndEmployeInfoService,
+    
     private readonly milestoneService: MilestonesService,
     @InjectDataSource() private readonly dataSource: DataSource,
   ) {}
@@ -32,13 +35,25 @@ export class PlanTasksService {
     createPlanTasksDto: CreatePlanTaskDto[],
     tenantId: string,
     level = 0,
-  ): Promise<Plan> {
+  ): Promise<any> {
     const queryRunner = this.dataSource.createQueryRunner();
     // Establish the transaction
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
     try {
+      let sessionId:string|null=null;
+      try {
+        const activeSession =
+          await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(
+            tenantId,
+          );
+         sessionId = activeSession.id;
+      } catch (error) {
+        throw new NotFoundException(
+          'There is no active Session for this tenant',
+        );
+      }
       const result: any = [];
       if (!createPlanTasksDto || createPlanTasksDto.length === 0) {
         throw new BadRequestException('No tasks provided');
@@ -59,10 +74,12 @@ export class PlanTasksService {
 
       let plan: Plan | null = null;
       if (createPlanTasksDto[0].planId) {
+        // Attempt to find an existing plan
         plan = await this.planRepository.findOne({
           where: { id: createPlanTasksDto[0].planId },
         });
       } else {
+        // Handle the case where planId is not provided
         const newPlan = this.planRepository.create({
           tenantId,
           createdBy: createPlanTasksDto[0].userId,
@@ -71,10 +88,16 @@ export class PlanTasksService {
           isValidated: false,
           planningUser,
           parentPlan,
+          sessionId,
           description: planningUser.planningPeriod.name,
           userId: createPlanTasksDto[0].userId,
         });
+      
         plan = await this.planRepository.save(newPlan);
+      }
+
+      if(!plan){
+        throw("Plan id does not exist");
       }
       for (const createPlanTaskDto of createPlanTasksDto) {
         const keyResult = createPlanTaskDto.keyResultId
@@ -108,7 +131,7 @@ export class PlanTasksService {
           plan,
           keyResult,
           milestone: getMilestone || null,
-          achieveMK: createPlanTaskDto.achieveMK,
+          achieveMK: createPlanTaskDto.achieveMK ?? false,
           level,
           weight: createPlanTaskDto.weight,
         });
@@ -295,72 +318,205 @@ export class PlanTasksService {
     }
   }
 
-  // eslint-disable-next-line prettier/prettier
-  async update(
-    updatePlanTasksDto: UpdatePlanTaskDto[],
-    tenantId: string,
-  ): Promise<Plan> {
+  // // eslint-disable-next-line prettier/prettier
+  // async update(
+  //   updatePlanTasksDto: UpdatePlanTaskDto[],
+  //   tenantId: string,
+  // ): Promise<Plan> {
+
+  //   try {
+  //     const updatedPlans: string[] = [];
+
+  //     for (const updatePlanTaskDto of updatePlanTasksDto) {
+  //       if (!updatePlanTaskDto.id) {
+  //         await this.create([updatePlanTaskDto], tenantId);
+  //       }
+  //       const task = await this.taskRepository.findOneByOrFail({
+  //         id: updatePlanTaskDto.id,
+  //       });
+  //       // Handle parent task and level
+  //       const parentTasks =
+  //         task.level !== 0
+  //           ? await this.taskRepository.findAncestorsTree(task)
+  //           : null;
+  //       const parentTask = parentTasks?.parentTask || null;
+
+  //       // Update task details
+  //       task.keyResult = await this.keyResultService.findOnekeyResult(
+  //         updatePlanTaskDto.keyResultId,
+  //       );
+  //       task.level = parentTask ? parentTask.level + 1 : 0;
+  //       task.priority = updatePlanTaskDto.priority ?? task.priority;
+  //       task.targetValue = updatePlanTaskDto.targetValue ?? task.targetValue;
+  //       task.task = updatePlanTaskDto.task ?? task.task;
+  //       task.weight = updatePlanTaskDto.weight;
+  //       task.updatedBy = updatePlanTaskDto.userId;
+
+  //       // Update Milestone if provided
+  //       if (updatePlanTaskDto.milestoneId) {
+  //         task.milestone = await this.milestoneService.findOneMilestone(
+  //           updatePlanTaskDto.milestoneId,
+  //         );
+  //       }
+
+  //       const finalTask = await this.taskRepository.save(task);
+  //       updatedPlans.push(updatePlanTaskDto.planId);
+
+  //       // Handle subtasks
+  //       if (
+  //         updatePlanTaskDto.subTasks &&
+  //         updatePlanTaskDto.subTasks.length > 0
+  //       ) {
+  //         for (const subTaskDto of updatePlanTaskDto.subTasks) {
+  //           subTaskDto.parentTaskId = finalTask.id; // Set the parent task ID
+
+  //           // Recursively update or create subtasks if needed
+  //           await this.update([subTaskDto], tenantId); // Assuming subTaskDto has an ID
+  //         }
+  //       }
+  //     }
+  //     // Return the updated plans
+  //     return await this.findOne(updatedPlans[0]); // Return the updated plan or find it
+  //   } catch (error) {
+  //     if (error instanceof NotFoundException) {
+  //       throw new NotFoundException('Error updating records');
+  //     }
+  //     throw error; // Rethrow other errors
+  //   }
+  // }
+
+
+
+////////////////////////////////   ahmed changes //////////////////////////
+
+  async updateTasks(updatePlanTasksDto: UpdatePlanTaskDto[], tenantId: string):Promise<PlanTask[]> {
+
     try {
-      const updatedPlans: string[] = [];
+    // Extract the planId (assuming all tasks are associated with the same plan)
+    const planId = updatePlanTasksDto[0]?.planId;
 
-      for (const updatePlanTaskDto of updatePlanTasksDto) {
-        if (!updatePlanTaskDto.id) {
-          await this.create([updatePlanTaskDto], tenantId);
-        }
-        const task = await this.taskRepository.findOneByOrFail({
-          id: updatePlanTaskDto.id,
-        });
-        // Handle parent task and level
-        const parentTasks =
-          task.level !== 0
-            ? await this.taskRepository.findAncestorsTree(task)
-            : null;
-        const parentTask = parentTasks?.parentTask || null;
+    // Fetch all existing tasks for the given planId
+    const existingTasks = await this.taskRepository.find({ where: { planId } });
 
-        // Update task details
-        task.keyResult = await this.keyResultService.findOnekeyResult(
-          updatePlanTaskDto.keyResultId,
+    // Extract task IDs from the input DTO
+    const inputTaskIds = updatePlanTasksDto
+      .map(task => task.id)
+      .filter(id => id);
+
+    // Identify tasks to delete
+    await this.taskRepository.manager.transaction(async transactionalEntityManager => {
+      const tasksToDelete = existingTasks.filter(
+        task => !inputTaskIds.includes(task.id),
+      );
+    
+      if (tasksToDelete.length > 0) {
+        await transactionalEntityManager.softRemove(tasksToDelete);
+      }
+    });
+    
+
+    // Process update or create operations for each task in the input
+    for (const updatePlanTaskDto of updatePlanTasksDto) {
+      let task;
+
+      // If the task does not exist, create a new one
+      if (!updatePlanTaskDto.id) {
+        task = await this.createTasks([updatePlanTaskDto], tenantId);
+        continue;
+      }
+
+      // Fetch existing task or throw error
+      task = await this.taskRepository.findOneByOrFail({
+        id: updatePlanTaskDto.id,
+      });
+
+      // Handle parent task and level
+      const parentTasks =
+        task.level !== 0
+          ? await this.taskRepository.findAncestorsTree(task)
+          : null;
+      const parentTask = parentTasks?.parentTask || null;
+
+      // Update task details
+      task.keyResult = await this.keyResultService.findOnekeyResult(
+        updatePlanTaskDto.keyResultId,
+      );
+      task.level = parentTask ? parentTask.level + 1 : 0;
+      task.priority = updatePlanTaskDto.priority ?? task.priority;
+      task.targetValue = updatePlanTaskDto.targetValue ?? task.targetValue;
+      task.task = updatePlanTaskDto.task ?? task.task;
+      task.weight = updatePlanTaskDto.weight;
+      task.updatedBy = updatePlanTaskDto.userId;
+      task.achieveMK = updatePlanTaskDto.achieveMK ?? false;
+      task.planId=updatePlanTaskDto.planId;
+
+
+      // Update milestone if provided
+      if (updatePlanTaskDto.milestoneId) {
+        task.milestone = await this.milestoneService.findOneMilestone(
+          updatePlanTaskDto.milestoneId,
         );
-        task.level = parentTask ? parentTask.level + 1 : 0;
-        task.priority = updatePlanTaskDto.priority ?? task.priority;
-        task.targetValue = updatePlanTaskDto.targetValue ?? task.targetValue;
-        task.task = updatePlanTaskDto.task ?? task.task;
-        task.weight = updatePlanTaskDto.weight;
-        task.updatedBy = updatePlanTaskDto.userId;
-
-        // Update Milestone if provided
-        if (updatePlanTaskDto.milestoneId) {
-          task.milestone = await this.milestoneService.findOneMilestone(
-            updatePlanTaskDto.milestoneId,
-          );
-        }
-
-        const finalTask = await this.taskRepository.save(task);
-        updatedPlans.push(updatePlanTaskDto.planId);
-
-        // Handle subtasks
-        if (
-          updatePlanTaskDto.subTasks &&
-          updatePlanTaskDto.subTasks.length > 0
-        ) {
-          for (const subTaskDto of updatePlanTaskDto.subTasks) {
-            subTaskDto.parentTaskId = finalTask.id; // Set the parent task ID
-
-            // Recursively update or create subtasks if needed
-            await this.update([subTaskDto], tenantId); // Assuming subTaskDto has an ID
-          }
-        }
       }
-      // Return the updated plans
-      return await this.findOne(updatedPlans[0]); // Return the updated plan or find it
-    } catch (error) {
-      if (error instanceof NotFoundException) {
-        throw new NotFoundException('Error updating records');
+
+      // Save the updated task
+      const finalTask = await this.taskRepository.save(task);
+
+      // Process subtasks if present
+      if (updatePlanTaskDto.subTasks && updatePlanTaskDto.subTasks.length > 0) {
+        await this.updateSubTasks(updatePlanTaskDto.subTasks, finalTask.id, tenantId);
+      }  }
+  return await this.taskRepository.find({where:{ planId }});
+} catch (error) {
+      throw ("Error updating records") ;
+}
+  }
+  async createTasks(createTaskDtos: UpdatePlanTaskDto[], tenantId: string) {
+    const newTasks = createTaskDtos.map(dto => ({
+      ...dto,
+      level: 0,
+      tenantId,
+    }));
+    return this.taskRepository.save(newTasks);
+  }
+  // Subtasks handling
+  private async updateSubTasks(
+    subTasksDto: UpdatePlanTaskDto[],
+    parentTaskId: string,
+    tenantId: string,
+  ) {
+
+
+    // Fetch existing subtasks for the parent task
+    const existingSubTasks = await this.taskRepository.find({
+      where: { parentTaskId },
+    });
+
+    // Extract subtask IDs from the input DTO
+    const inputSubTaskIds = subTasksDto.map(subTask => subTask.id).filter(id => id);
+
+    // Identify subtasks to delete
+    const subTasksToDelete = existingSubTasks.filter(
+      subTask => !inputSubTaskIds.includes(subTask.id),
+    );
+
+    // Delete subtasks not in the input
+    if (subTasksToDelete.length > 0) {
+      await this.taskRepository.remove(subTasksToDelete);
+    }
+
+    // Process update or create operations for each subtask
+    for (const subTaskDto of subTasksDto) {
+      subTaskDto.parentTaskId = parentTaskId;
+
+      if (!subTaskDto.id) {
+        await this.create([subTaskDto], tenantId);
+      } else {
+        await this.updateTasks([subTaskDto], tenantId);
       }
-      throw error; // Rethrow other errors
     }
   }
 
+  ////////////////////////////////   ahmed changes //////////////////////////
   remove(id: number) {
     return `This action removes a #${id} planTask`;
   }
