@@ -14,6 +14,7 @@ import { PlanningPeriodUser } from '../planningPeriods/planning-periods/entities
 import { CreatePlanTaskDto } from './dto/create-plan-task.dto';
 import { UpdatePlanTaskDto } from './dto/update-plan-task.dto';
 import { GetFromOrganizatiAndEmployeInfoService } from '../objective/services/get-data-from-org.service';
+import { IPaginationOptions } from 'nestjs-typeorm-paginate';
 
 @Injectable()
 export class PlanTasksService {
@@ -271,119 +272,57 @@ export class PlanTasksService {
     });
   }
 
-  async findByUsers(id: string, arrayOfUserId: string[]): Promise<Plan[]> {
-    try {
-      if (arrayOfUserId.includes('all')) {
-        return await this.planRepository
-          .createQueryBuilder('plan')
-          .leftJoinAndSelect('plan.tasks', 'task', 'task.parentTaskId IS NULL') // Load tasks related to the plan
-          .leftJoinAndSelect('task.planTask', 'descendants') // Load descendants of the tasks
-          .leftJoinAndSelect('plan.planningUser', 'planningUser') // Load the planning period assignment
-          .leftJoinAndSelect('planningUser.planningPeriod', 'planningPeriod') // Load the planning period definition
-          .leftJoinAndSelect('task.keyResult', 'keyResult') // Load the key result belonging to the parent task
-          .leftJoinAndSelect('keyResult.metricType', 'metricType') // Load the metricType for the key result
-          .leftJoinAndSelect('task.milestone', 'milestone') // Load the key result belonging to the parent task
-          .leftJoinAndSelect('plan.comments', 'comments') // Load comments related to the plan
-          .where('planningPeriod.id = :id', {
-            id,
-          })
-          .orderBy('plan.createdAt', 'DESC') // Order by milestone for grouping
-          .addOrderBy('task.id', 'DESC') // Order by keyResult for secondary grouping
-          .getMany();
-      }
-      return await this.planRepository
-        .createQueryBuilder('plan')
-        .leftJoinAndSelect('plan.tasks', 'task', 'task.parentTaskId IS NULL') // Load tasks related to the plan
-        .leftJoinAndSelect('task.planTask', 'descendants') // Load descendants of the tasks
-        .leftJoinAndSelect('plan.planningUser', 'planningUser') // Load the planning period assignment
-        .leftJoinAndSelect('planningUser.planningPeriod', 'planningPeriod') // Load the planning period definition
-        .leftJoinAndSelect('task.keyResult', 'keyResult') // Load the key result belonging to the parent task
-        .leftJoinAndSelect('keyResult.metricType', 'metricType') // Load the metricType for the key result
-        .leftJoinAndSelect('task.milestone', 'milestone') // Load the key result belonging to the parent task
-        .leftJoinAndSelect('plan.comments', 'comments') // Load comments related to the plan
-        .where('plan.createdBy IN (:...arrayOfUserId)', { arrayOfUserId })
-        .andWhere('planningPeriod.id = :id', {
-          id,
-        })
+async findByUsers(id: string, arrayOfUserId: string[], options: IPaginationOptions) {
+  try {
+
+  
+    const page = Number(options.page)|| 1;
+    const limit = Number(options.limit) || 10;
+
+    const queryBuilder = this.planRepository
+      .createQueryBuilder('plan')
+      .leftJoinAndSelect('plan.tasks', 'task', 'task.parentTaskId IS NULL') // Load tasks related to the plan
+      .leftJoinAndSelect('task.planTask', 'descendants') // Load descendants of the tasks
+      .leftJoinAndSelect('plan.planningUser', 'planningUser') // Load the planning period assignment
+      .leftJoinAndSelect('planningUser.planningPeriod', 'planningPeriod') // Load the planning period definition
+      .leftJoinAndSelect('task.keyResult', 'keyResult') // Load the key result belonging to the parent task
+      .leftJoinAndSelect('keyResult.metricType', 'metricType') // Load the metricType for the key result
+      .leftJoinAndSelect('task.milestone', 'milestone') // Load milestones related to tasks
+      .leftJoinAndSelect('plan.comments', 'comments'); // Load comments related to the plan
+
+    if (arrayOfUserId.includes('all')) {
+      queryBuilder
+        .where('planningPeriod.id = :id', { id })
         .orderBy('plan.createdAt', 'DESC') // Order by milestone for grouping
-        .addOrderBy('task.createdAt', 'DESC') // Order by keyResult for secondary grouping
-        .getMany();
-    } catch (error) {
-      if (error.name === 'EntityNotFoundError') {
-        throw new NotFoundException(
-          'Error fetching the plan for the specified users',
-        );
-      }
-      throw error;
+        .addOrderBy('task.id', 'DESC'); // Order by keyResult for secondary grouping
+    } else {
+      queryBuilder
+        .where('plan.createdBy IN (:...arrayOfUserId)', { arrayOfUserId })
+        .andWhere('planningPeriod.id = :id', { id })
+        .orderBy('plan.createdAt', 'DESC') // Order by milestone for grouping
+        .addOrderBy('task.createdAt', 'DESC'); // Order by keyResult for secondary grouping
     }
+
+    const [result, total] = await queryBuilder
+      .skip((page - 1) * limit) // Skip rows for pagination
+      .take(limit) // Take the number of rows specified in the limit
+      .getManyAndCount(); // Execute query and return results with total count
+
+    return {
+      items: result,
+      meta: {
+        totalItems: total,
+        itemCount: result.length,
+        itemsPerPage: limit,
+        totalPages: Math.ceil(total / limit),
+        currentPage: page,
+      },
+    };
+  } catch (error) {
+    throw new Error(`Error fetching plans: ${error.message}`);
   }
+}
 
-  // // eslint-disable-next-line prettier/prettier
-  // async update(
-  //   updatePlanTasksDto: UpdatePlanTaskDto[],
-  //   tenantId: string,
-  // ): Promise<Plan> {
-
-  //   try {
-  //     const updatedPlans: string[] = [];
-
-  //     for (const updatePlanTaskDto of updatePlanTasksDto) {
-  //       if (!updatePlanTaskDto.id) {
-  //         await this.create([updatePlanTaskDto], tenantId);
-  //       }
-  //       const task = await this.taskRepository.findOneByOrFail({
-  //         id: updatePlanTaskDto.id,
-  //       });
-  //       // Handle parent task and level
-  //       const parentTasks =
-  //         task.level !== 0
-  //           ? await this.taskRepository.findAncestorsTree(task)
-  //           : null;
-  //       const parentTask = parentTasks?.parentTask || null;
-
-  //       // Update task details
-  //       task.keyResult = await this.keyResultService.findOnekeyResult(
-  //         updatePlanTaskDto.keyResultId,
-  //       );
-  //       task.level = parentTask ? parentTask.level + 1 : 0;
-  //       task.priority = updatePlanTaskDto.priority ?? task.priority;
-  //       task.targetValue = updatePlanTaskDto.targetValue ?? task.targetValue;
-  //       task.task = updatePlanTaskDto.task ?? task.task;
-  //       task.weight = updatePlanTaskDto.weight;
-  //       task.updatedBy = updatePlanTaskDto.userId;
-
-  //       // Update Milestone if provided
-  //       if (updatePlanTaskDto.milestoneId) {
-  //         task.milestone = await this.milestoneService.findOneMilestone(
-  //           updatePlanTaskDto.milestoneId,
-  //         );
-  //       }
-
-  //       const finalTask = await this.taskRepository.save(task);
-  //       updatedPlans.push(updatePlanTaskDto.planId);
-
-  //       // Handle subtasks
-  //       if (
-  //         updatePlanTaskDto.subTasks &&
-  //         updatePlanTaskDto.subTasks.length > 0
-  //       ) {
-  //         for (const subTaskDto of updatePlanTaskDto.subTasks) {
-  //           subTaskDto.parentTaskId = finalTask.id; // Set the parent task ID
-
-  //           // Recursively update or create subtasks if needed
-  //           await this.update([subTaskDto], tenantId); // Assuming subTaskDto has an ID
-  //         }
-  //       }
-  //     }
-  //     // Return the updated plans
-  //     return await this.findOne(updatedPlans[0]); // Return the updated plan or find it
-  //   } catch (error) {
-  //     if (error instanceof NotFoundException) {
-  //       throw new NotFoundException('Error updating records');
-  //     }
-  //     throw error; // Rethrow other errors
-  //   }
-  // }
 
 
 
