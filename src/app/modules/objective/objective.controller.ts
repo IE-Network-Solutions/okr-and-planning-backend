@@ -190,10 +190,9 @@ export class ObjectiveController {
     @Headers('userId') userId: string,
     @Query() paginationOptions?: PaginationDto,
   ) {
-    return this.objectiveService.getCompanyOkr(
-      tenantId,
+    return this.okrDashboardService.getOkrOfCompany(
       userId,
-      null,
+      tenantId,
       paginationOptions,
     );
   }

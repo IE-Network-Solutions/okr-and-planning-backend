@@ -65,7 +65,7 @@ export class VpScoreInstanceController {
       tenantId,
     );
   }
-  @Get('/score/:id')
+  @Get('/score/:userId')
   findOneVpScoreInstanceOfUser(
     @Param('userId') userId: string,
     @Headers('tenantId') tenantId: string,

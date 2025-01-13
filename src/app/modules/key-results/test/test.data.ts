@@ -30,7 +30,7 @@ export const keyResultData = (): KeyResult => {
     createdAt: new Date('2022-10-22 07:11:42'),
     updatedBy: 'selam',
     createdBy: 'selam',
-    sessionId:"sessionId" 
+    sessionId: 'sessionId',
   };
 };
 
