@@ -112,7 +112,7 @@ export class PlanningPeriodsController {
   async assignUserMultiplePlannigPeriods(
     @Req() req: Request,
     @Body() plannnigPeriodUserDto: PlannnigPeriodUserDto,
-  ): Promise<PlanningPeriodUser[]> {
+  ) {
     const tenantId = req['tenantId'];
     return await this.planningPeriodService.assignMultiplePlanningPeriodForMultipleUsers(
       plannnigPeriodUserDto,
@@ -153,7 +153,6 @@ export class PlanningPeriodsController {
   @Get('assignment/assignedUser/:userId')
   async findByUser(
     @Param('userId') id: string,
-    @Headers('tenantId') tenantId: UUID,
   ): Promise<PlanningPeriodUser[]> {
     return await this.planningPeriodService.findByUser(id);
   }

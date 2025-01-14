@@ -1,8 +1,9 @@
 import { BaseModel } from '@root/src/database/base.model';
-import { Column, Entity, ManyToOne } from 'typeorm';
+import { Column, Entity, ManyToOne, Unique } from 'typeorm';
 import { PlanningPeriod } from './planningPeriod.entity';
 
 @Entity()
+@Unique('UQ_PlanningPeriodUser', ['planningPeriodId', 'userId']) // Composite unique constraint
 export class PlanningPeriodUser extends BaseModel {
   @Column({ type: 'uuid' })
   userId: string;
