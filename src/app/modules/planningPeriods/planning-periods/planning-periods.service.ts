@@ -298,12 +298,11 @@ export class PlanningPeriodsService {
 
         .andWhere('PlanningPeriod.tenantId = :tenantId', { tenantId });
 
-      if (filterUSerDto) {
+      if (filterUSerDto?.userId) {
         queryBuilder.andWhere('PlanningPeriod.userId = :userId', {
           userId: filterUSerDto.userId,
         });
       }
-
       const paginatedData =
         await this.paginationService.paginate<PlanningPeriodUser>(
           queryBuilder,
