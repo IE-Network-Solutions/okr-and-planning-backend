@@ -257,49 +257,45 @@ export class PlanningPeriodsService {
       const planningPeriods = await this.planningPeriodRepository.findByIds(
         assignUserDto.planningPeriods,
       );
-  
+      // console.log(planningPeriods,"planningPeriods")
+
       if (!planningPeriods.length) {
         throw new NotFoundException(
           'No planning periods found for the provided IDs.',
         );
       }
-  
-      // Fetch existing assignments in bulk
-      const existingAssignments = await this.planningUserRepository.find({
-        where: {
-          userId: In(assignUserDto.userIds),
-          planningPeriod: In(planningPeriods.map((p) => p.id)),
-        },
-      });
-  
-      // Create a Set for quick lookup of existing assignments
-      const existingKeys = new Set(
-        existingAssignments.map(
-          (assignment) => `${assignment.userId}-${assignment.planningPeriod.id}`,
-        ),
-      );
-  
+
       const assignedUsers: PlanningPeriodUser[] = [];
       const newAssignments = [];
   
       for (const userId of assignUserDto.userIds) {
-        for (const planningPeriod of planningPeriods) {
-          const key = `${userId}-${planningPeriod.id}`;
-          if (existingKeys.has(key)) {
+        for (const planningPeriodId of planningPeriods) {
+
+         const existingAssignation= await this.planningUserRepository.find({
+              where: {
+                userId:userId,
+                planningPeriodId: planningPeriodId?.id,
+              },});
+
+          if (existingAssignation?.length>0) {
             continue; // Skip if already assigned
           }
   
+
           // Prepare the new assignment
           newAssignments.push(
             this.planningUserRepository.create({
-              userId,
-              tenantId,
-              planningPeriod,
+              planningPeriodId:planningPeriodId?.id,
+              userId:userId,
+              tenantId:tenantId,
             }),
           );
         }
       }
+
   
+
+      // console.log(newAssignments,"newAssignments")
       // Save all new assignments in bulk
       const savedUsers = await this.planningUserRepository.save(newAssignments);
       assignedUsers.push(...savedUsers);
