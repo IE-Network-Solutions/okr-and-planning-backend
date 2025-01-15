@@ -3,7 +3,7 @@ import { Column, Entity, ManyToOne, Unique } from 'typeorm';
 import { PlanningPeriod } from './planningPeriod.entity';
 
 @Entity()
-@Unique('UQ_PlanningPeriodUser', ['planningPeriodId', 'userId']) // Composite unique constraint
+// @Unique('UQ_PlanningPeriodUser', ['planningPeriodId', 'userId', 'deletedAt'])
 export class PlanningPeriodUser extends BaseModel {
   @Column({ type: 'uuid' })
   userId: string;
