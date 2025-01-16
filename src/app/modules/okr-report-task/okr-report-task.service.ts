@@ -109,8 +109,10 @@ export class OkrReportTaskService {
         checkPlanIsReported = await this.updatePlanIsReported(planId);
       }
       const check = await this.checkAndUpdateProgressByKey(savedReportTasks);
+      console.log(check,"check")
       if (check && checkPlanIsReported) {
-        await this.userVpScoringService.calculateVP(userId, tenantId);
+  const vp=   await this.userVpScoringService.calculateVP(userId, tenantId);
+  console.log(vp,"myvp")
         await queryRunner.commitTransaction();
       }
       return savedReportTasks;
@@ -153,17 +155,20 @@ export class OkrReportTaskService {
 
           switch (metricsType?.keyResult?.metricType.name) {
             case NAME.MILESTONE:
+
               if (planTask.achieveMK && task.status === 'Done') {
-                return await this.okrProgressService.calculateKeyResultProgress(
+          return await this.okrProgressService.calculateKeyResultProgress(
                   {
                     keyResult: planTask.keyResult,
                     isOnCreate: true,
                   },
                 );
+               
               }
               break;
             case NAME.ACHIEVE:
               if (planTask.achieveMK && task.status === 'Done') {
+               
                 return await this.okrProgressService.calculateKeyResultProgress(
                   {
                     keyResult: { ...planTask.keyResult, progress: 100 }, // Spreading and adding progress
@@ -174,7 +179,11 @@ export class OkrReportTaskService {
               }
               break;
             default:
-              if (planTask.status === 'Done') {
+
+              if (task.status === 'Done') {
+                console.log(task,"keyResult.progress")
+
+
                 return await this.okrProgressService.calculateKeyResultProgress(
                   {
                     keyResult: {
@@ -200,9 +209,10 @@ export class OkrReportTaskService {
   }
 
   // Method to update the isReported value of the plan
-  private async updatePlanIsReported(planId: string): Promise<void> {
+  private async updatePlanIsReported(planId: string): Promise<Plan> {
     try {
       await this.planRepository.update(planId, { isReported: true });
+      return await this.planRepository.findOne({where:{id:planId}})
     } catch (error) {
       throw new Error(
         `Could not update plan status for the ID , it already Reported`,
