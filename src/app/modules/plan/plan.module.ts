@@ -22,5 +22,6 @@ import { HttpModule } from '@nestjs/axios';
     PaginationService,
     GetFromOrganizatiAndEmployeInfoService,
   ],
+  exports:[PlanService]
 })
 export class PlanModule {}

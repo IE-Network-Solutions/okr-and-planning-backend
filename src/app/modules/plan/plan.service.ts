@@ -175,4 +175,61 @@ export class PlanService {
       throw error;
     }
   }
+
+  async getAllPlansByPlanningPeriodAndUser(
+    planningPeriodId: string,
+    userId: string
+  ): Promise<any> {
+    try {
+      // Step 1: Fetch the Planning User
+      const planningUser = await this.planningUserRepository.findOne({
+        where: { planningPeriodId, userId },
+      });
+  
+      if (!planningUser) {
+        throw new NotFoundException(
+          `The specified planning period or user does not exist.`
+        );
+      }
+  
+      // Step 2: Fetch All Plans for the User
+      const plans = await this.planRepository.find({
+        where: { planningUserId: planningUser.id },
+        relations: ['plan', 'parentPlan', 'tasks'], // Include relationships
+      });
+  
+      if (!plans || plans.length === 0) {
+        return []; // Return an empty array if no plans exist
+      }
+  
+      // Step 3: Build Hierarchical Response
+      const buildHierarchy = (plan: Plan): any => {
+        return {
+          id: plan.id,
+          name: plan.description,
+          isValidated: plan.isValidated,
+          isReported: plan.isReported,
+          level: plan.level,
+          parentPlan: plan.parentPlan
+            ? buildHierarchy(plan.parentPlan)
+            : null, // Recursively fetch parent plans
+          tasks: plan.tasks.map((task) => ({
+            id: task.id,
+            task: task.task,
+            priority: task.priority,
+            targetValue: task.targetValue,
+            status: task.status,
+            actualValue: task.actualValue,
+            parentTask: task.parentTask ? task.parentTask.id : null,
+          })),
+        };
+      };
+  
+      // Step 4: Transform Plans into Hierarchical Structure
+      return plans.map(buildHierarchy);
+    } catch (error) {
+      throw error;
+    }
+  }
+  
 }

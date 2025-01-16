@@ -192,14 +192,24 @@ export class PlanningPeriodsController {
     return await this.planningPeriodService.updatePlanningPeriodStatus(id);
   }
 
-  @Get('hierarchy/:planningPeriodId/user/:userId')
-  async getPlanningPeriodHierarchy(
+  @Get('upper-hierarchy/:planningPeriodId/user/:userId')
+  async getPlanningPeriodUpperHierarchy(
     @Param() params: ParamsWithUUID,
   ): Promise<PlanningPeriod> {
     const { planningPeriodId, userId } = params;
   
-    return await this.planningPeriodService.getPlanningPeriodHierarchy(planningPeriodId, userId);
+    return await this.planningPeriodService.getPlanningPerioParrentdHierarchy(planningPeriodId, userId);
   }
+
+  @Get('below-hierarchy/:planningPeriodId/user/:userId')
+  async getPlanningPeriodBelowHierarchy(
+    @Param() params: ParamsWithUUID,
+  ): Promise<PlanningPeriod> {
+    const { planningPeriodId, userId } = params;
+  
+    return await this.planningPeriodService.getPlanningPeriodChildHierarchy(planningPeriodId, userId);
+  }
+
 
 
 }
