@@ -59,11 +59,11 @@ export class CreatePlanTaskDto {
   @IsString()
   @IsOptional()
   milestoneId?: string;
-
+  
   @IsOptional()
   @Transform(({ value }) => parseFloat(value))
-  @IsNumber({ maxDecimalPlaces: 2 })
-  @IsNumber()
+ @IsNumber({ maxDecimalPlaces: 2 })
+@IsNumber()
   weight: number;
 
   @IsOptional()
