@@ -12,13 +12,13 @@ export class PlanningPeriod extends BaseModel {
   @Column({ type: 'boolean', default: false })
   isActive: boolean;
 
-  @Column({ type: 'interval' })
+  @Column({ type: 'interval',nullable:true })
   intervalLength: string;
 
   @Column({ type: 'varchar' })
   intervalType: string;
 
-  @Column({ type: 'interval', })
+  @Column({ type: 'interval', nullable:true })
   submissionDeadline: string;
 
   @Column({ type: 'varchar', nullable: true })
