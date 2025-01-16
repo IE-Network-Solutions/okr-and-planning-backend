@@ -267,39 +267,36 @@ export class PlanningPeriodsService {
 
       const assignedUsers: PlanningPeriodUser[] = [];
       const newAssignments = [];
-  
+
       for (const userId of assignUserDto.userIds) {
         for (const planningPeriodId of planningPeriods) {
+          const existingAssignation = await this.planningUserRepository.find({
+            where: {
+              userId: userId,
+              planningPeriodId: planningPeriodId?.id,
+            },
+          });
 
-         const existingAssignation= await this.planningUserRepository.find({
-              where: {
-                userId:userId,
-                planningPeriodId: planningPeriodId?.id,
-              },});
-
-          if (existingAssignation?.length>0) {
+          if (existingAssignation?.length > 0) {
             continue; // Skip if already assigned
           }
-  
 
           // Prepare the new assignment
           newAssignments.push(
             this.planningUserRepository.create({
-              planningPeriodId:planningPeriodId?.id,
-              userId:userId,
-              tenantId:tenantId,
+              planningPeriodId: planningPeriodId?.id,
+              userId: userId,
+              tenantId: tenantId,
             }),
           );
         }
       }
 
-  
-
       // console.log(newAssignments,"newAssignments")
       // Save all new assignments in bulk
       const savedUsers = await this.planningUserRepository.save(newAssignments);
       assignedUsers.push(...savedUsers);
-  
+
       return assignedUsers;
     } catch (error) {
       if (error instanceof NotFoundException) {
@@ -310,7 +307,7 @@ export class PlanningPeriodsService {
       );
     }
   }
-  
+
   async findAll(
     tenantId: string,
     paginationOptions: PaginationDto,
@@ -400,14 +397,14 @@ export class PlanningPeriodsService {
       const planningUser = await this.planningUserRepository.findOneByOrFail({
         id,
       });
-  
+
       const existingAssignment = await this.planningUserRepository.findOne({
         where: {
           userId: planningUser.userId,
           planningPeriodId: assignUserDto.planningPeriodId, // Assuming AssignUsersDTO contains planningPeriodId
         },
       });
-  
+
       if (existingAssignment) {
         throw new ConflictException(
           `The planningPeriodId ${assignUserDto.planningPeriodId} is already assigned to user ${planningUser.userId}`,
@@ -427,7 +424,6 @@ export class PlanningPeriodsService {
       );
     }
   }
-  
 
   async findOnePlanningPeriodByName(
     planningPeriodTitle: string,

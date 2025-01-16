@@ -28,7 +28,7 @@ export class PlanTasksService {
     private readonly paginationService: PaginationService,
     private readonly keyResultService: KeyResultsService,
     private readonly getFromOrganizatiAndEmployeInfoService: GetFromOrganizatiAndEmployeInfoService,
-    
+
     private readonly milestoneService: MilestonesService,
     @InjectDataSource() private readonly dataSource: DataSource,
   ) {}
@@ -43,13 +43,13 @@ export class PlanTasksService {
     await queryRunner.startTransaction();
 
     try {
-      let sessionId:string|null=null;
+      let sessionId: string | null = null;
       try {
         const activeSession =
           await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(
             tenantId,
           );
-         sessionId = activeSession.id;
+        sessionId = activeSession.id;
       } catch (error) {
         throw new NotFoundException(
           'There is no active Session for this tenant',
@@ -93,12 +93,12 @@ export class PlanTasksService {
           description: planningUser.planningPeriod.name,
           userId: createPlanTasksDto[0].userId,
         });
-      
+
         plan = await this.planRepository.save(newPlan);
       }
 
-      if(!plan){
-        throw("Plan id does not exist");
+      if (!plan) {
+        throw 'Plan id does not exist';
       }
       for (const createPlanTaskDto of createPlanTasksDto) {
         const keyResult = createPlanTaskDto.keyResultId
@@ -272,145 +272,156 @@ export class PlanTasksService {
     });
   }
 
-async findByUsers(id: string, arrayOfUserId: string[], options: IPaginationOptions) {
-  try {
-
-  
-    const page = Number(options.page)|| 1;
-    const limit = Number(options.limit) || 10;
-
-    const queryBuilder = this.planRepository
-      .createQueryBuilder('plan')
-      .leftJoinAndSelect('plan.tasks', 'task', 'task.parentTaskId IS NULL') // Load tasks related to the plan
-      .leftJoinAndSelect('task.planTask', 'descendants') // Load descendants of the tasks
-      .leftJoinAndSelect('plan.planningUser', 'planningUser') // Load the planning period assignment
-      .leftJoinAndSelect('planningUser.planningPeriod', 'planningPeriod') // Load the planning period definition
-      .leftJoinAndSelect('task.keyResult', 'keyResult') // Load the key result belonging to the parent task
-      .leftJoinAndSelect('keyResult.metricType', 'metricType') // Load the metricType for the key result
-      .leftJoinAndSelect('task.milestone', 'milestone') // Load milestones related to tasks
-      .leftJoinAndSelect('plan.comments', 'comments'); // Load comments related to the plan
-
-    if (arrayOfUserId.includes('all')) {
-      queryBuilder
-        .where('planningPeriod.id = :id', { id })
-        .orderBy('plan.createdAt', 'DESC') // Order by milestone for grouping
-        .addOrderBy('task.id', 'DESC'); // Order by keyResult for secondary grouping
-    } else {
-      queryBuilder
-        .where('plan.createdBy IN (:...arrayOfUserId)', { arrayOfUserId })
-        .andWhere('planningPeriod.id = :id', { id })
-        .orderBy('plan.createdAt', 'DESC') // Order by milestone for grouping
-        .addOrderBy('task.createdAt', 'DESC'); // Order by keyResult for secondary grouping
-    }
-
-    const [result, total] = await queryBuilder
-      .skip((page - 1) * limit) // Skip rows for pagination
-      .take(limit) // Take the number of rows specified in the limit
-      .getManyAndCount(); // Execute query and return results with total count
-
-    return {
-      items: result,
-      meta: {
-        totalItems: total,
-        itemCount: result.length,
-        itemsPerPage: limit,
-        totalPages: Math.ceil(total / limit),
-        currentPage: page,
-      },
-    };
-  } catch (error) {
-    throw new Error(`Error fetching plans: ${error.message}`);
-  }
-}
-
-
-
-
-////////////////////////////////   ahmed changes //////////////////////////
-
-  async updateTasks(updatePlanTasksDto: UpdatePlanTaskDto[], tenantId: string):Promise<PlanTask[]> {
-
+  async findByUsers(
+    id: string,
+    arrayOfUserId: string[],
+    options: IPaginationOptions,
+  ) {
     try {
-    // Extract the planId (assuming all tasks are associated with the same plan)
-    const planId = updatePlanTasksDto[0]?.planId;
+      const page = Number(options.page) || 1;
+      const limit = Number(options.limit) || 10;
 
-    // Fetch all existing tasks for the given planId
-    const existingTasks = await this.taskRepository.find({ where: { planId } });
+      const queryBuilder = this.planRepository
+        .createQueryBuilder('plan')
+        .leftJoinAndSelect('plan.tasks', 'task', 'task.parentTaskId IS NULL') // Load tasks related to the plan
+        .leftJoinAndSelect('task.planTask', 'descendants') // Load descendants of the tasks
+        .leftJoinAndSelect('plan.planningUser', 'planningUser') // Load the planning period assignment
+        .leftJoinAndSelect('planningUser.planningPeriod', 'planningPeriod') // Load the planning period definition
+        .leftJoinAndSelect('task.keyResult', 'keyResult') // Load the key result belonging to the parent task
+        .leftJoinAndSelect('keyResult.metricType', 'metricType') // Load the metricType for the key result
+        .leftJoinAndSelect('task.milestone', 'milestone') // Load milestones related to tasks
+        .leftJoinAndSelect('plan.comments', 'comments'); // Load comments related to the plan
 
-    // Extract task IDs from the input DTO
-    const inputTaskIds = updatePlanTasksDto
-      .map(task => task.id)
-      .filter(id => id);
-
-    // Identify tasks to delete
-    await this.taskRepository.manager.transaction(async transactionalEntityManager => {
-      const tasksToDelete = existingTasks.filter(
-        task => !inputTaskIds.includes(task.id),
-      );
-    
-      if (tasksToDelete.length > 0) {
-        await transactionalEntityManager.softRemove(tasksToDelete);
-      }
-    });
-    
-
-    // Process update or create operations for each task in the input
-    for (const updatePlanTaskDto of updatePlanTasksDto) {
-      let task;
-
-      // If the task does not exist, create a new one
-      if (!updatePlanTaskDto.id) {
-        task = await this.createTasks([updatePlanTaskDto], tenantId);
-        continue;
+      if (arrayOfUserId.includes('all')) {
+        queryBuilder
+          .where('planningPeriod.id = :id', { id })
+          .orderBy('plan.createdAt', 'DESC') // Order by milestone for grouping
+          .addOrderBy('task.id', 'DESC'); // Order by keyResult for secondary grouping
+      } else {
+        queryBuilder
+          .where('plan.createdBy IN (:...arrayOfUserId)', { arrayOfUserId })
+          .andWhere('planningPeriod.id = :id', { id })
+          .orderBy('plan.createdAt', 'DESC') // Order by milestone for grouping
+          .addOrderBy('task.createdAt', 'DESC'); // Order by keyResult for secondary grouping
       }
 
-      // Fetch existing task or throw error
-      task = await this.taskRepository.findOneByOrFail({
-        id: updatePlanTaskDto.id,
+      const [result, total] = await queryBuilder
+        .skip((page - 1) * limit) // Skip rows for pagination
+        .take(limit) // Take the number of rows specified in the limit
+        .getManyAndCount(); // Execute query and return results with total count
+
+      return {
+        items: result,
+        meta: {
+          totalItems: total,
+          itemCount: result.length,
+          itemsPerPage: limit,
+          totalPages: Math.ceil(total / limit),
+          currentPage: page,
+        },
+      };
+    } catch (error) {
+      throw new Error(`Error fetching plans: ${error.message}`);
+    }
+  }
+
+  ////////////////////////////////   ahmed changes //////////////////////////
+
+  async updateTasks(
+    updatePlanTasksDto: UpdatePlanTaskDto[],
+    tenantId: string,
+  ): Promise<PlanTask[]> {
+    try {
+      // Extract the planId (assuming all tasks are associated with the same plan)
+      const planId = updatePlanTasksDto[0]?.planId;
+
+      // Fetch all existing tasks for the given planId
+      const existingTasks = await this.taskRepository.find({
+        where: { planId },
       });
 
-      // Handle parent task and level
-      const parentTasks =
-        task.level !== 0
-          ? await this.taskRepository.findAncestorsTree(task)
-          : null;
-      const parentTask = parentTasks?.parentTask || null;
+      // Extract task IDs from the input DTO
+      const inputTaskIds = updatePlanTasksDto
+        .map((task) => task.id)
+        .filter((id) => id);
 
-      // Update task details
-      task.keyResult = await this.keyResultService.findOnekeyResult(
-        updatePlanTaskDto.keyResultId,
+      // Identify tasks to delete
+      await this.taskRepository.manager.transaction(
+        async (transactionalEntityManager) => {
+          const tasksToDelete = existingTasks.filter(
+            (task) => !inputTaskIds.includes(task.id),
+          );
+
+          if (tasksToDelete.length > 0) {
+            await transactionalEntityManager.softRemove(tasksToDelete);
+          }
+        },
       );
-      task.level = parentTask ? parentTask.level + 1 : 0;
-      task.priority = updatePlanTaskDto.priority ?? task.priority;
-      task.targetValue = updatePlanTaskDto.targetValue ?? task.targetValue;
-      task.task = updatePlanTaskDto.task ?? task.task;
-      task.weight = updatePlanTaskDto.weight;
-      task.updatedBy = updatePlanTaskDto.userId;
-      task.achieveMK = updatePlanTaskDto.achieveMK ?? false;
-      task.planId=updatePlanTaskDto.planId;
 
+      // Process update or create operations for each task in the input
+      for (const updatePlanTaskDto of updatePlanTasksDto) {
+        let task;
 
-      // Update milestone if provided
-      if (updatePlanTaskDto.milestoneId) {
-        task.milestone = await this.milestoneService.findOneMilestone(
-          updatePlanTaskDto.milestoneId,
+        // If the task does not exist, create a new one
+        if (!updatePlanTaskDto.id) {
+          task = await this.createTasks([updatePlanTaskDto], tenantId);
+          continue;
+        }
+
+        // Fetch existing task or throw error
+        task = await this.taskRepository.findOneByOrFail({
+          id: updatePlanTaskDto.id,
+        });
+
+        // Handle parent task and level
+        const parentTasks =
+          task.level !== 0
+            ? await this.taskRepository.findAncestorsTree(task)
+            : null;
+        const parentTask = parentTasks?.parentTask || null;
+
+        // Update task details
+        task.keyResult = await this.keyResultService.findOnekeyResult(
+          updatePlanTaskDto.keyResultId,
         );
+        task.level = parentTask ? parentTask.level + 1 : 0;
+        task.priority = updatePlanTaskDto.priority ?? task.priority;
+        task.targetValue = updatePlanTaskDto.targetValue ?? task.targetValue;
+        task.task = updatePlanTaskDto.task ?? task.task;
+        task.weight = updatePlanTaskDto.weight;
+        task.updatedBy = updatePlanTaskDto.userId;
+        task.achieveMK = updatePlanTaskDto.achieveMK ?? false;
+        task.planId = updatePlanTaskDto.planId;
+
+        // Update milestone if provided
+        if (updatePlanTaskDto.milestoneId) {
+          task.milestone = await this.milestoneService.findOneMilestone(
+            updatePlanTaskDto.milestoneId,
+          );
+        }
+
+        // Save the updated task
+        const finalTask = await this.taskRepository.save(task);
+
+        // Process subtasks if present
+        if (
+          updatePlanTaskDto.subTasks &&
+          updatePlanTaskDto.subTasks.length > 0
+        ) {
+          await this.updateSubTasks(
+            updatePlanTaskDto.subTasks,
+            finalTask.id,
+            tenantId,
+          );
+        }
       }
-
-      // Save the updated task
-      const finalTask = await this.taskRepository.save(task);
-
-      // Process subtasks if present
-      if (updatePlanTaskDto.subTasks && updatePlanTaskDto.subTasks.length > 0) {
-        await this.updateSubTasks(updatePlanTaskDto.subTasks, finalTask.id, tenantId);
-      }  }
-  return await this.taskRepository.find({where:{ planId }});
-} catch (error) {
-      throw ("Error updating records") ;
-}
+      return await this.taskRepository.find({ where: { planId } });
+    } catch (error) {
+      throw 'Error updating records';
+    }
   }
   async createTasks(createTaskDtos: UpdatePlanTaskDto[], tenantId: string) {
-    const newTasks = createTaskDtos.map(dto => ({
+    const newTasks = createTaskDtos.map((dto) => ({
       ...dto,
       level: 0,
       tenantId,
@@ -423,19 +434,19 @@ async findByUsers(id: string, arrayOfUserId: string[], options: IPaginationOptio
     parentTaskId: string,
     tenantId: string,
   ) {
-
-
     // Fetch existing subtasks for the parent task
     const existingSubTasks = await this.taskRepository.find({
       where: { parentTaskId },
     });
 
     // Extract subtask IDs from the input DTO
-    const inputSubTaskIds = subTasksDto.map(subTask => subTask.id).filter(id => id);
+    const inputSubTaskIds = subTasksDto
+      .map((subTask) => subTask.id)
+      .filter((id) => id);
 
     // Identify subtasks to delete
     const subTasksToDelete = existingSubTasks.filter(
-      subTask => !inputSubTaskIds.includes(subTask.id),
+      (subTask) => !inputSubTaskIds.includes(subTask.id),
     );
 
     // Delete subtasks not in the input
