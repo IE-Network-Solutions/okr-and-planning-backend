@@ -7,12 +7,14 @@ import {
   Param,
   Delete,
   Req,
+  Query,
 } from '@nestjs/common';
 import { PlanTasksService } from './plan-tasks.service';
 import { Plan } from '../plan/entities/plan.entity';
 import { ApiTags } from '@nestjs/swagger';
 import { UpdatePlanTasksDto } from './dto/update-plan-tasks.dto';
 import { CreatePlanTasksDto } from './dto/create-plan-tasks.dto';
+import { IPaginationOptions } from 'nestjs-typeorm-paginate';
 
 @Controller('plan-tasks')
 @ApiTags('plan-tasks')
@@ -52,18 +54,19 @@ export class PlanTasksController {
 
   @Post('/users/:planningId')
   async findByUsers(
+    @Query() options: IPaginationOptions,
     @Param('planningId') id: string,
     @Body() arrayOfUserId: string[],
-  ): Promise<Plan[]> {
-    return await this.planTasksService.findByUsers(id, arrayOfUserId);
+  ) {
+    return await this.planTasksService.findByUsers(id, arrayOfUserId,options);
   }
   @Patch()
   async update(
     @Body() updatePlanTaskDto: UpdatePlanTasksDto,
     @Req() req: Request,
-  ): Promise<Plan> {
+  ): Promise<any> {
     const tenantId = req['tenantId'];
-    return this.planTasksService.update(updatePlanTaskDto.tasks, tenantId);
+    return this.planTasksService.updateTasks(updatePlanTaskDto.tasks, tenantId);
   }
 
   @Delete(':id')

@@ -25,8 +25,7 @@ export class KeyResultsService {
     private readonly milestonesService: MilestonesService,
     private readonly metricTypeService: MetricTypesService,
     private readonly connection: Connection, // Inject the database connection
-  private readonly getFromOrganizatiAndEmployeInfoService: GetFromOrganizatiAndEmployeInfoService,
-    
+    private readonly getFromOrganizatiAndEmployeInfoService: GetFromOrganizatiAndEmployeInfoService,
   ) {}
   async createkeyResult(
     createkeyResultDto: CreateKeyResultDto,
@@ -34,14 +33,13 @@ export class KeyResultsService {
     queryRunner?: QueryRunner,
   ): Promise<KeyResult> {
     try {
-
       const activeSession =
-      await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(
-        tenantId,
-      );
-    if (activeSession) {
-      createkeyResultDto.sessionId = activeSession.id;
-    }
+        await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(
+          tenantId,
+        );
+      if (activeSession) {
+        createkeyResultDto.sessionId = activeSession.id;
+      }
       const keyResult = queryRunner
         ? queryRunner.manager.create(KeyResult, {
             ...createkeyResultDto,
@@ -102,19 +100,19 @@ export class KeyResultsService {
         limit: paginationOptions.limit,
       };
       const activeSession =
-      await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(
-        tenantId,
-      );
+        await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(
+          tenantId,
+        );
       const queryBuilder = await this.keyResultRepository
         .createQueryBuilder('keyresult')
-     
-        .where('keyresult.tenantId = :tenantId', { tenantId })
 
-        if (activeSession) {
-          queryBuilder.andWhere('keyresult.sessionId = :sessionId', {
-            sessionId: activeSession.id,
-          });
-        }
+        .where('keyresult.tenantId = :tenantId', { tenantId });
+
+      if (activeSession) {
+        queryBuilder.andWhere('keyresult.sessionId = :sessionId', {
+          sessionId: activeSession.id,
+        });
+      }
 
       const paginatedData = await this.paginationService.paginate<KeyResult>(
         queryBuilder,
@@ -259,19 +257,19 @@ export class KeyResultsService {
         limit: paginationOptions.limit,
       };
       const activeSession =
-      await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(
-        tenantId,
-      );
+        await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(
+          tenantId,
+        );
       const queryBuilder = await this.keyResultRepository
         .createQueryBuilder('keyresult')
         .leftJoinAndSelect('keyresult.objective', 'objective')
-        .where('objective.userId = :userId', { userId })
+        .where('objective.userId = :userId', { userId });
 
-        if (activeSession) {
-          queryBuilder.andWhere('keyresult.sessionId = :sessionId', {
-            sessionId: activeSession.id,
-          });
-        }
+      if (activeSession) {
+        queryBuilder.andWhere('keyresult.sessionId = :sessionId', {
+          sessionId: activeSession.id,
+        });
+      }
 
       //queryBuilder.distinctOn(['objective.id'])
       const paginatedData = await this.paginationService.paginate<KeyResult>(

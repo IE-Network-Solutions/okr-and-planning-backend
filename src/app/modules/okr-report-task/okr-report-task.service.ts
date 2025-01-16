@@ -343,7 +343,7 @@ export class OkrReportTaskService {
         .andWhere('plan.isReported = :isReported OR plan.isReported IS NULL', {
           isReported: false,
         })
-
+        .andWhere('planTask.planId IS NOT NULL') // Ensure the task has an associated plan ID
         .getMany();
 
       return unreportedTasks;

@@ -272,7 +272,7 @@ describe('keyResultsService', () => {
           provide: GetFromOrganizatiAndEmployeInfoService,
           useValue: mock<GetFromOrganizatiAndEmployeInfoService>(),
         },
-        
+
         {
           provide: Connection,
           useValue: connection,
