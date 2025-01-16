@@ -109,10 +109,11 @@ export class OkrReportTaskService {
         checkPlanIsReported = await this.updatePlanIsReported(planId);
       }
       const check = await this.checkAndUpdateProgressByKey(savedReportTasks);
-      console.log(check,"check")
       if (check && checkPlanIsReported) {
-  const vp=   await this.userVpScoringService.calculateVP(userId, tenantId);
-  console.log(vp,"myvp")
+        const vp = await this.userVpScoringService.calculateVP(
+          userId,
+          tenantId,
+        );
         await queryRunner.commitTransaction();
       }
       return savedReportTasks;
@@ -155,20 +156,17 @@ export class OkrReportTaskService {
 
           switch (metricsType?.keyResult?.metricType.name) {
             case NAME.MILESTONE:
-
               if (planTask.achieveMK && task.status === 'Done') {
-          return await this.okrProgressService.calculateKeyResultProgress(
+                return await this.okrProgressService.calculateKeyResultProgress(
                   {
                     keyResult: planTask.keyResult,
                     isOnCreate: true,
                   },
                 );
-               
               }
               break;
             case NAME.ACHIEVE:
               if (planTask.achieveMK && task.status === 'Done') {
-               
                 return await this.okrProgressService.calculateKeyResultProgress(
                   {
                     keyResult: { ...planTask.keyResult, progress: 100 }, // Spreading and adding progress
@@ -179,18 +177,26 @@ export class OkrReportTaskService {
               }
               break;
             default:
-
               if (task.status === 'Done') {
-                console.log(task,"keyResult.progress")
-
-
+                return await this.okrProgressService.calculateKeyResultProgress(
+                  {
+                    keyResult: {
+                      ...planTask.keyResult,
+                      //  actualValue: task?.actualValue,
+                      actualValue: planTask.keyResult?.targetValue,
+                    },
+                    isOnCreate: true,
+                    // actualValueToUpdate: task?.actualValue,
+                  },
+                );
+              } else {
                 return await this.okrProgressService.calculateKeyResultProgress(
                   {
                     keyResult: {
                       ...planTask.keyResult,
                       actualValue: task?.actualValue,
                     },
-                    isOnCreate: true,
+                    isOnCreate: false,
                     // actualValueToUpdate: task?.actualValue,
                   },
                 );
@@ -212,7 +218,7 @@ export class OkrReportTaskService {
   private async updatePlanIsReported(planId: string): Promise<Plan> {
     try {
       await this.planRepository.update(planId, { isReported: true });
-      return await this.planRepository.findOne({where:{id:planId}})
+      return await this.planRepository.findOne({ where: { id: planId } });
     } catch (error) {
       throw new Error(
         `Could not update plan status for the ID , it already Reported`,

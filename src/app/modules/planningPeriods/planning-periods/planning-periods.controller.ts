@@ -151,9 +151,7 @@ export class PlanningPeriodsController {
   }
 
   @Get('assignment/assignedUser/:userId')
-  async findByUser(
-    @Param('userId') id: string,
-  ): Promise<PlanningPeriodUser[]> {
+  async findByUser(@Param('userId') id: string): Promise<PlanningPeriodUser[]> {
     return await this.planningPeriodService.findByUser(id);
   }
 

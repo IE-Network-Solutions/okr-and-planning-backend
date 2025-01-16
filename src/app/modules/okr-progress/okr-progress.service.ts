@@ -44,48 +44,41 @@ export class OkrProgressService {
       });
 
       updateValue.progress = keyResultProgress;
-    
     } else if (keyResult.metricType.name === NAME.ACHIEVE) {
-     
       updateValue.progress = parseFloat(keyResult.progress.toString());
-     
     } else {
       const previousValue = await this.keyResultService.findOnekeyResult(
         keyResult.id,
       );
-      
+
       const previousCurrentValue = isOnCreate
-        ?parseFloat(previousValue.currentValue.toString())
-        : parseFloat(previousValue.currentValue.toString()) - actualValueToUpdate;
-        console.log(previousCurrentValue,"previousCurrentValue")
-         //  previousValue.lastUpdateValue;
-         console.log(keyResult,"arseFloat")
+        ? parseFloat(previousValue.currentValue.toString())
+        : parseFloat(previousValue.currentValue.toString()) -
+          actualValueToUpdate;
+      //  previousValue.lastUpdateValue;
 
-      const currentValue = previousCurrentValue + parseFloat(keyResult['actualValue'].toString());
-      console.log(currentValue,"currentValue")
+      const currentValue =
+        previousCurrentValue + parseFloat(keyResult['actualValue'].toString());
 
-      const initialDifference = currentValue - parseFloat(keyResult.initialValue.toString());
-      console.log(initialDifference,"initialDifference")
+      const initialDifference =
+        currentValue - parseFloat(keyResult.initialValue.toString());
 
-      const targetDifference = parseFloat(keyResult.targetValue.toString()); - parseFloat(keyResult.initialValue.toString());
-      console.log(targetDifference,"targetDifference")
+      const targetDifference = parseFloat(keyResult.targetValue.toString());
+      -parseFloat(keyResult.initialValue.toString());
 
       const progress = (initialDifference / targetDifference) * 100;
-      console.log(progress,"progress")
 
       updateValue.progress = progress;
-      console.log(updateValue,"updateValue")
       // updateValue['lastUpdateValue'] = keyResult.currentValue;
       updateValue.currentValue = currentValue;
       keyResult.progress = progress;
     }
-   
+
     const finalUpdate = await this.keyResultService.updatekeyResult(
       keyResult.id,
       updateValue,
       keyResult.tenantId,
     );
-  console.log(finalUpdate,"klklklk")
     return finalUpdate;
   }
 }
