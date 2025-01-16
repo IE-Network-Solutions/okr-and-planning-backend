@@ -18,7 +18,7 @@ export class PlanningPeriod extends BaseModel {
   @Column({ type: 'varchar' })
   intervalType: string;
 
-  @Column({ type: 'interval', nullable: true })
+  @Column({ type: 'interval', })
   submissionDeadline: string;
 
   @Column({ type: 'varchar', nullable: true })
