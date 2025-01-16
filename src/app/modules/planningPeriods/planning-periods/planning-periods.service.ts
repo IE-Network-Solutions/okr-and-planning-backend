@@ -203,6 +203,8 @@ export class PlanningPeriodsService {
           where: { userId },
         });
 
+        
+
         if (existingUsers.length > 0) {
           await manager.softRemove(existingUsers); // Soft remove if using soft deletes
         }

@@ -192,7 +192,6 @@ export class OkrReportTaskService {
           return null; // Return null if no conditions match or the task does not qualify
         }),
       );
-
       return results;
     } catch (error) {
       return [];
