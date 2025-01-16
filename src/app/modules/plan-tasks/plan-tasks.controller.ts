@@ -58,7 +58,7 @@ export class PlanTasksController {
     @Param('planningId') id: string,
     @Body() arrayOfUserId: string[],
   ) {
-    return await this.planTasksService.findByUsers(id, arrayOfUserId,options);
+    return await this.planTasksService.findByUsers(id, arrayOfUserId, options);
   }
   @Patch()
   async update(

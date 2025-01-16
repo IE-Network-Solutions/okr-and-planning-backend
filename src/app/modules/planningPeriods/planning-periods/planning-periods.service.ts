@@ -16,6 +16,7 @@ import { PaginationService } from '../../../../core/pagination/pagination.servic
 import { AssignUsersDTO } from './dto/assignUser.dto';
 import { PlannnigPeriodUserDto } from './dto/planningPeriodUser.dto';
 import { FilterUserDto } from './dto/filter-user.dto';
+import { IntervalHierarchy } from './enum/interval-type.enum';
 
 @Injectable()
 export class PlanningPeriodsService {
@@ -430,7 +431,6 @@ export class PlanningPeriodsService {
     }
   }
   
-
   async findOnePlanningPeriodByName(
     planningPeriodTitle: string,
     tenantId: string,
@@ -447,4 +447,46 @@ export class PlanningPeriodsService {
       throw new BadRequestException(error.message);
     }
   }
+
+  async getPlanningPeriodHierarchy(planningPeriodId: string, userId: string): Promise<any> {
+    const currentPlan = await this.planningPeriodRepository.findOne({
+      where: { id: planningPeriodId },
+    });
+  
+    if (!currentPlan) {
+      throw new Error("Planning period not found");
+    }
+  
+    const intervals = [IntervalHierarchy.daily, IntervalHierarchy.weekly, IntervalHierarchy.monthly, IntervalHierarchy.quarterly];
+  
+    const allPlans = await this.planningPeriodRepository.find();
+    const allEntitlements = await this.planningUserRepository.find({ where: { userId } });
+  
+    const findParentPlan = (currentInterval: IntervalHierarchy): any | null => {
+      const currentIndex = intervals.indexOf(currentInterval);
+      for (let i = currentIndex + 1; i < intervals.length; i++) {
+        const parentInterval = intervals[i];
+        const parentPlan = allPlans.find(plan => plan.intervalLength === parentInterval);
+        const entitlement = allEntitlements.find(ent => ent.planningPeriodId === parentPlan?.id);
+  
+        if (parentPlan && entitlement) {
+          return {
+            id: parentPlan.id,
+            name: parentPlan.name,
+            intervalLength: parentPlan.intervalLength,
+            parentPlan: findParentPlan(parentInterval), // Recursive call
+          };
+        }
+      }
+      return null;
+    };
+  
+    return {
+      id: currentPlan.id,
+      name: currentPlan.name,
+      intervalLength: currentPlan.intervalLength,
+      parentPlan: findParentPlan(currentPlan.intervalLength),
+    };
+  }  
+
 }

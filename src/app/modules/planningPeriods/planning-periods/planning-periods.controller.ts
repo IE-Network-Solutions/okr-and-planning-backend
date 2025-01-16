@@ -9,6 +9,7 @@ import {
   Query,
   Req,
   Headers,
+  NotFoundException,
 } from '@nestjs/common';
 import { PlanningPeriodsService } from './planning-periods.service';
 import { CreatePlanningPeriodsDTO } from './dto/create-planningPeriods.dto';
@@ -24,7 +25,15 @@ import { ExcludeAuthGuard } from '@root/src/core/guards/exclud.guard';
 import { UUID } from 'crypto';
 import { PlannnigPeriodUserDto } from './dto/planningPeriodUser.dto';
 import { FilterUserDto } from './dto/filter-user.dto';
+import { IsUUID } from 'class-validator';
 
+class ParamsWithUUID {
+  @IsUUID()
+  planningPeriodId: string;
+
+  @IsUUID()
+  userId: string;
+}
 @Controller('planning-periods')
 @ApiTags('Planning-periods')
 export class PlanningPeriodsController {
@@ -182,4 +191,15 @@ export class PlanningPeriodsController {
   ): Promise<PlanningPeriod> {
     return await this.planningPeriodService.updatePlanningPeriodStatus(id);
   }
+
+  @Get('hierarchy/:planningPeriodId/user/:userId')
+  async getPlanningPeriodHierarchy(
+    @Param() params: ParamsWithUUID,
+  ): Promise<PlanningPeriod> {
+    const { planningPeriodId, userId } = params;
+  
+    return await this.planningPeriodService.getPlanningPeriodHierarchy(planningPeriodId, userId);
+  }
+
+
 }
