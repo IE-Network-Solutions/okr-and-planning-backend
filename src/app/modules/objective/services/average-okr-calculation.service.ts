@@ -9,11 +9,14 @@ import { GetFromOrganizatiAndEmployeInfoService } from './get-data-from-org.serv
 @Injectable()
 export class AverageOkrCalculation {
   async calculateAverageOkr(objectives: Objective[]): Promise<OkrProgressDto> {
-    const completedOkr = objectives.filter(
-      (objective) =>
-        objective['completedKeyResults'] === objective.keyResults.length,
-    ).length;
+    // const completedOkr = objectives.filter(
+    //   (objective) =>
+    //     objective['completedKeyResults'] === objective.keyResults.length,
+    // ).length;
 
+    const completedOkr = objectives.reduce((sum, objective) => {
+      return sum + objective['completedKeyResults'];
+    }, 0);
     const sumOfTeamObjectiveProgress = objectives.reduce((sum, objective) => {
       return sum + objective['objectiveProgress'];
     }, 0);
