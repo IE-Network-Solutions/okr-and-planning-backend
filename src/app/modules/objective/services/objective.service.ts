@@ -362,7 +362,6 @@ export class ObjectiveService {
         queryConditions.where.sessionId = activeSession.id;
       }
       const objectives = await this.objectiveRepository.find(queryConditions);
-
       const objectiveWithProgress =
         await this.averageOkrCalculation.calculateObjectiveProgress(objectives);
       return objectiveWithProgress;
