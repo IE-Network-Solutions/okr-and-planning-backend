@@ -113,8 +113,8 @@ export class ObjectiveService {
           tenantId,
         );
       const options: IPaginationOptions = {
-        page: paginationOptions.page,
-        limit: paginationOptions.limit,
+        page: paginationOptions?.page,
+        limit: paginationOptions?.limit,
       };
       const queryBuilder = this.objectiveRepository
         .createQueryBuilder('objective')
@@ -362,7 +362,6 @@ export class ObjectiveService {
         queryConditions.where.sessionId = activeSession.id;
       }
       const objectives = await this.objectiveRepository.find(queryConditions);
-
       const objectiveWithProgress =
         await this.averageOkrCalculation.calculateObjectiveProgress(objectives);
       return objectiveWithProgress;

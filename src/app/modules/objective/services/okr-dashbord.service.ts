@@ -69,7 +69,7 @@ export class OKRDashboardService {
             await this.supervisorOkr(
               response.reportingTo.id,
               tenantId,
-              //   paginationOptions,
+              paginationOptions,
             )
           ).userOkr
         : 0;
