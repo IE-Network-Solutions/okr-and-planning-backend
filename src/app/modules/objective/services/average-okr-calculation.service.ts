@@ -45,7 +45,6 @@ export class AverageOkrCalculation {
 
       objective.keyResults.forEach((keyResult) => {
         totalProgress += (keyResult.progress * keyResult.weight) / 100;
-console.log(totalProgress,"tottalprogress")
         if (parseFloat(keyResult.progress.toString()) === 100) {
           completedKeyResults = completedKeyResults + 1;
         }
@@ -55,7 +54,7 @@ console.log(totalProgress,"tottalprogress")
         ...objective,
         daysLeft,
         objectiveProgress: totalProgress,
-        completedKeyResults:completedKeyResults,
+        completedKeyResults: completedKeyResults,
       };
     });
   }
