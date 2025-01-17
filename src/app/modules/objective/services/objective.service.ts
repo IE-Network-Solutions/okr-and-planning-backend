@@ -113,8 +113,8 @@ export class ObjectiveService {
           tenantId,
         );
       const options: IPaginationOptions = {
-        page: paginationOptions.page,
-        limit: paginationOptions.limit,
+        page: paginationOptions?.page,
+        limit: paginationOptions?.limit,
       };
       const queryBuilder = this.objectiveRepository
         .createQueryBuilder('objective')

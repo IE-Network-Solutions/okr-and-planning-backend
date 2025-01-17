@@ -47,7 +47,7 @@ export class AverageOkrCalculation {
         totalProgress += (keyResult.progress * keyResult.weight) / 100;
 
         if (keyResult.progress === 100) {
-          completedKeyResults++;
+          completedKeyResults = completedKeyResults + 1;
         }
       });
 
