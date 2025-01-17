@@ -28,6 +28,7 @@ export class PlanningPeriodsService {
     private planningUserRepository: Repository<PlanningPeriodUser>,
     private readonly paginationService: PaginationService,
     private readonly planService: PlanService,
+
     @InjectDataSource() private readonly dataSource: DataSource,
   ) {}
   async createPlanningPeriods(
@@ -450,7 +451,8 @@ export class PlanningPeriodsService {
     }
   }
 
-  async getPlanningPerioParrentdHierarchy(planningPeriodId: string, userId: string): Promise<any> {
+  async getPlanningPeriodParentHierarchy(planningPeriodId: string, userId: string): Promise<any> {
+    // Step 1: Fetch the Current Planning Period
     const currentPlan = await this.planningPeriodRepository.findOne({
       where: { id: planningPeriodId },
     });
@@ -459,19 +461,36 @@ export class PlanningPeriodsService {
       throw new Error("Planning period not found");
     }
   
-    const intervals = [IntervalHierarchy.daily, IntervalHierarchy.weekly, IntervalHierarchy.monthly, IntervalHierarchy.quarterly];
+    // Define the hierarchy levels
+    const intervals = [
+      IntervalHierarchy.daily,
+      IntervalHierarchy.weekly,
+      IntervalHierarchy.monthly,
+      IntervalHierarchy.quarterly,
+    ];
   
+    // Fetch all plans and user entitlements
     const allPlans = await this.planningPeriodRepository.find();
-    const allEntitlements = await this.planningUserRepository.find({ where: { userId } });
+    const allEntitlements = await this.planningUserRepository.find({
+      where: { userId },
+    });
   
-    const findParentPlan = async(currentInterval: IntervalHierarchy):Promise<any | null> => {
+    // Step 2: Recursive Function to Find Parent Plan
+    const findParentPlan = async (
+      currentInterval: IntervalHierarchy
+    ): Promise<any | null> => {
       const currentIndex = intervals.indexOf(currentInterval);
       for (let i = currentIndex + 1; i < intervals.length; i++) {
         const parentInterval = intervals[i];
-        const parentPlan = allPlans.find(plan => plan.intervalLength === parentInterval);
-        const entitlement = allEntitlements.find(ent => ent.planningPeriodId === parentPlan?.id);
+        const parentPlan = allPlans.find(
+          (plan) => plan.intervalLength === parentInterval
+        );
+        const entitlement = allEntitlements.find(
+          (ent) => ent.planningPeriodId === parentPlan?.id
+        );
   
         if (parentPlan && entitlement) {
+
           const childTasks = await this.planService.getAllPlansByPlanningPeriodAndUser(
             parentPlan.id,
             userId
@@ -481,21 +500,23 @@ export class PlanningPeriodsService {
             id: parentPlan.id,
             name: parentPlan.name,
             intervalLength: parentPlan.intervalLength,
-            tasks: childTasks, // Include tasks for this child plan
-            parentPlan:findParentPlan(parentInterval), // Recursive call
+            plans: childTasks, // Include tasks for this child plan
+            parentPlan: await findParentPlan(parentInterval), // Recursive call
           };
         }
       }
       return null;
-    };planningPeriodId
+    };
   
+    // Step 3: Fetch Hierarchy
     return {
       id: currentPlan.id,
       name: currentPlan.name,
       intervalLength: currentPlan.intervalLength,
-      parentPlan: findParentPlan(currentPlan.intervalLength),
+      parentPlan: await findParentPlan(currentPlan.intervalLength),
     };
-  }  
+  }
+  
   async getPlanningPeriodChildHierarchy(planningPeriodId: string, userId: string): Promise<any> {
     // Step 1: Fetch the Current Planning Period
     const currentPlan = await this.planningPeriodRepository.findOne({
@@ -521,7 +542,7 @@ export class PlanningPeriodsService {
     });
   
     // Step 2: Recursive Function to Find Parent Plan
-    const findChildPlan = async (
+    const findParentPlan = async (
       currentInterval: IntervalHierarchy
     ): Promise<any | null> => {
       const currentIndex = intervals.indexOf(currentInterval);
@@ -539,13 +560,12 @@ export class PlanningPeriodsService {
             childPlan.id,
             userId
           );
-  
           return {
             id: childPlan.id,
             name: childPlan.name,
             intervalLength: childPlan.intervalLength,
-            tasks: childTasks, // Include tasks for this child plan
-            parentPlan: await findChildPlan(childInterval), // Recursive call
+            plans: childTasks, // Include tasks for this child plan
+            parentPlan: await findParentPlan(childInterval), // Recursive call
           };
         }
       }
@@ -557,8 +577,9 @@ export class PlanningPeriodsService {
       id: currentPlan.id,
       name: currentPlan.name,
       intervalLength: currentPlan.intervalLength,
-      parentPlan: await findChildPlan(currentPlan.intervalLength),
+      parentPlan: await findParentPlan(currentPlan.intervalLength),
     };
   }
   
+
 }

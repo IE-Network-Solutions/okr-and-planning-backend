@@ -7,6 +7,7 @@ import { PaginationService } from '@root/src/core/pagination/pagination.service'
 import { PlanningPeriodUser } from '../planningPeriods/planning-periods/entities/planningPeriodUser.entity';
 import { PlanTask } from '../plan-tasks/entities/plan-task.entity';
 import { GetFromOrganizatiAndEmployeInfoService } from '../objective/services/get-data-from-org.service';
+import { ObjectiveService } from '../objective/services/objective.service';
 
 @Injectable()
 export class PlanService {
@@ -18,6 +19,8 @@ export class PlanService {
     @InjectRepository(PlanningPeriodUser)
     private planningUserRepository: Repository<PlanningPeriodUser>,
     private readonly paginationService: PaginationService,
+    private readonly objectiveService: ObjectiveService,
+
     private readonly getFromOrganizatiAndEmployeInfoService: GetFromOrganizatiAndEmployeInfoService,
   ) {}
   async create(createPlanDto: CreatePlanDto, tenantId: string): Promise<Plan> {
@@ -176,11 +179,16 @@ export class PlanService {
     }
   }
 
+
   async getAllPlansByPlanningPeriodAndUser(
     planningPeriodId: string,
     userId: string
   ): Promise<any> {
     try {
+
+      // const getObjective=(objectiveId:string)=>{
+      //      return await this.objectiveService.findOneObjective(objectiveId)
+      // }
       // Step 1: Fetch the Planning User
       const planningUser = await this.planningUserRepository.findOne({
         where: { planningPeriodId, userId },
@@ -195,7 +203,13 @@ export class PlanService {
       // Step 2: Fetch All Plans for the User
       const plans = await this.planRepository.find({
         where: { planningUserId: planningUser.id },
-        relations: ['plan', 'parentPlan', 'tasks'], // Include relationships
+        relations: [
+          'plan', // Child plans
+          'parentPlan', // Parent plans
+          'tasks', // Tasks related to the plan
+          'tasks.keyResult', // KeyResult related to tasks
+          'tasks.keyResult.objective', // Objective related to KeyResult
+        ],
       });
   
       if (!plans || plans.length === 0) {
@@ -213,15 +227,7 @@ export class PlanService {
           parentPlan: plan.parentPlan
             ? buildHierarchy(plan.parentPlan)
             : null, // Recursively fetch parent plans
-          tasks: plan.tasks.map((task) => ({
-            id: task.id,
-            task: task.task,
-            priority: task.priority,
-            targetValue: task.targetValue,
-            status: task.status,
-            actualValue: task.actualValue,
-            parentTask: task.parentTask ? task.parentTask.id : null,
-          })),
+          tasks: plan.tasks.map((task) => task),
         };
       };
   

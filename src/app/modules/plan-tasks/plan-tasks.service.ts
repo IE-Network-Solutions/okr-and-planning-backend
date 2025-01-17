@@ -6,7 +6,7 @@ import {
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { PlanTask } from './entities/plan-task.entity';
 import { Plan } from '../plan/entities/plan.entity';
-import { DataSource, Repository, TreeRepository } from 'typeorm';
+import { DataSource, In, Repository, TreeRepository } from 'typeorm';
 import { KeyResultsService } from '../key-results/key-results.service';
 import { MilestonesService } from '../milestones/milestones.service';
 import { PaginationService } from '@root/src/core/pagination/pagination.service';
@@ -63,6 +63,7 @@ export class PlanTasksService {
         where: { id: createPlanTasksDto[0].planningUserId },
       });
 
+
       let parentPlan: Plan | null = null;
       if (createPlanTasksDto[0].parentPlanId) {
         parentPlan = await this.planRepository.findOne({
@@ -111,6 +112,7 @@ export class PlanTasksService {
               createPlanTaskDto.milestoneId,
             )
           : null;
+          console.log(createPlanTaskDto.parentTaskId,"createPlanTaskDto.parentTaskId")
 
         let parentTask: PlanTask | null = null;
         if (createPlanTaskDto.parentTaskId) {
@@ -121,6 +123,7 @@ export class PlanTasksService {
             throw new NotFoundException('Parent Task could not be found');
           }
         }
+       console.log(parentTask,"createPlanTaskDto.parentTaskId")
 
         const task = this.taskRepository.create({
           tenantId,
@@ -272,6 +275,36 @@ export class PlanTasksService {
     });
   }
 
+  async findByUserIds(
+    id: string,
+    arrayOfUserId: string[],
+    options: IPaginationOptions,
+  ) {
+    try {
+      const page = Number(options.page) || 1;
+      const limit = Number(options.limit) || 10;
+
+      console.log(arrayOfUserId, "arrayOfUserId");
+
+      if (arrayOfUserId.includes('all')) {
+        return this.planRepository.find({
+          relations: ['parentPlan', 'tasks'], // Fetch both parentPlan and tasks
+        });
+      } else {
+        return this.planRepository.find({
+          relations: ['parentPlan', 'tasks'], // Fetch both parentPlan and tasks
+          where: {
+            userId: In(arrayOfUserId), // Filter by array of user IDs
+          },
+        });
+      }
+    } catch (error) {
+      throw new Error(`Error fetching plans: ${error.message}`);
+    }
+  }
+
+  ////////////////////////////////   ahmed changes //////////////////////////
+
   async findByUsers(
     id: string,
     arrayOfUserId: string[],
@@ -281,17 +314,29 @@ export class PlanTasksService {
       const page = Number(options.page) || 1;
       const limit = Number(options.limit) || 10;
 
+      // const queryBuilder = this.planRepository
+      //   .createQueryBuilder('plan')
+      //   .leftJoinAndSelect('plan.tasks', 'task', 'task.parentTaskId IS NULL') // Load tasks related to the plan
+      //   .leftJoinAndSelect('task.planTask', 'descendants') // Load descendants of the tasks
+      //   .leftJoinAndSelect('plan.planningUser', 'planningUser') // Load the planning period assignment
+      //   .leftJoinAndSelect('planningUser.planningPeriod', 'planningPeriod') // Load the planning period definition
+      //   .leftJoinAndSelect('task.keyResult', 'keyResult') // Load the key result belonging to the parent task
+      //   .leftJoinAndSelect('keyResult.metricType', 'metricType') // Load the metricType for the key result
+      //   .leftJoinAndSelect('task.milestone', 'milestone') // Load milestones related to tasks
+      //   .leftJoinAndSelect('plan.comments', 'comments'); // Load comments related to the plan
       const queryBuilder = this.planRepository
-        .createQueryBuilder('plan')
-        .leftJoinAndSelect('plan.tasks', 'task', 'task.parentTaskId IS NULL') // Load tasks related to the plan
-        .leftJoinAndSelect('task.planTask', 'descendants') // Load descendants of the tasks
-        .leftJoinAndSelect('plan.planningUser', 'planningUser') // Load the planning period assignment
-        .leftJoinAndSelect('planningUser.planningPeriod', 'planningPeriod') // Load the planning period definition
-        .leftJoinAndSelect('task.keyResult', 'keyResult') // Load the key result belonging to the parent task
-        .leftJoinAndSelect('keyResult.metricType', 'metricType') // Load the metricType for the key result
-        .leftJoinAndSelect('task.milestone', 'milestone') // Load milestones related to tasks
-        .leftJoinAndSelect('plan.comments', 'comments'); // Load comments related to the plan
-
+      .createQueryBuilder('plan')
+      .leftJoinAndSelect('plan.tasks', 'task') // Load all tasks related to the plan
+      .leftJoinAndSelect('task.planTask', 'descendants') // Load descendants of the tasks
+      .leftJoinAndSelect('task.parentTask', 'parentTask') // Explicitly load the parent task relationship
+      .leftJoinAndSelect('plan.planningUser', 'planningUser') // Load the planning period assignment
+      .leftJoinAndSelect('planningUser.planningPeriod', 'planningPeriod') // Load the planning period definition
+      .leftJoinAndSelect('task.keyResult', 'keyResult') // Load the key result belonging to the parent task
+      .leftJoinAndSelect('keyResult.objective', 'objective') // Load the objective related to the key result
+      .leftJoinAndSelect('keyResult.metricType', 'metricType') // Load the metricType for the key result
+      .leftJoinAndSelect('task.milestone', 'milestone') // Load milestones related to tasks
+      .leftJoinAndSelect('plan.comments', 'comments'); // Load comments related to the plan
+    
       if (arrayOfUserId.includes('all')) {
         queryBuilder
           .where('planningPeriod.id = :id', { id })
@@ -467,7 +512,7 @@ export class PlanTasksService {
   }
 
   ////////////////////////////////   ahmed changes //////////////////////////
-  remove(id: number) {
+  remove(id: string) {
     return `This action removes a #${id} planTask`;
   }
 }
