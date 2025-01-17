@@ -60,6 +60,7 @@ export class PlanTask extends BaseModel {
 
   @Column({ type: 'int' })
   level: number;
+  
   //////////////// ahmed changes  ////////////////////////
   @Column({ type: 'uuid' })
   planId: string;

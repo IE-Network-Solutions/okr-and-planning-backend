@@ -33,7 +33,7 @@ export class UserVpScoringService {
     private readonly configService: ConfigService,
     private readonly getUsersService: GetFromOrganizatiAndEmployeInfoService,
   ) {
-    this.orgUrl = this.configService.get<string>('externalUrls.orgStructureUrl');
+    this.orgUrl = this.configService.get<string>('orgUrl.orgUrl');
   }
   async createUserVpScoring(
     createUserVpScoringDto: CreateUserVpScoringDto,
