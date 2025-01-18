@@ -347,7 +347,7 @@ export class OkrReportTaskService {
           planningPeriodId,
         }) // Use relation to access planningPeriod ID
         .andWhere('plan.isValidated = :isValidated', { isValidated: true }) // Filter by validated plans only
-        .andWhere('plan.isReported = :isReported OR plan.isReported IS NULL', {
+        .andWhere('plan.isReported = :isReported', {
           isReported: false,
         })
         .andWhere('planTask.planId IS NOT NULL') // Ensure the task has an associated plan ID
