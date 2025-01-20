@@ -23,7 +23,7 @@ export class PlanningPeriod extends BaseModel {
   @Column({ type: 'varchar' })
   intervalType: string; // Ensure the type matches your application's requirements
 
-  @Column({ type: 'timestamp' })
+  @Column({ type: 'timestamp' ,nullable:true})
   submissionDeadline: Date; // Changed from 'interval' to 'timestamp'
 
   @Column({ type: 'varchar', nullable: true })
