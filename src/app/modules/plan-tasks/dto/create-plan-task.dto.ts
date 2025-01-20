@@ -4,6 +4,7 @@ import {
   IsEnum,
   IsInt,
   IsNotEmpty,
+  IsNumber,
   IsOptional,
   IsString,
   ValidateNested,
@@ -59,8 +60,10 @@ export class CreatePlanTaskDto {
   @IsOptional()
   milestoneId?: string;
 
-  @IsInt()
   @IsOptional()
+  @Transform(({ value }) => parseFloat(value))
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @IsNumber()
   weight: number;
 
   @IsOptional()

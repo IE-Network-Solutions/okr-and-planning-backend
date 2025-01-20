@@ -39,23 +39,33 @@ export class OkrProgressService {
       let keyResultProgress = 0;
       keyResults.milestones.forEach((milestone) => {
         if (milestone.status === Status.COMPLETED) {
-          keyResultProgress += milestone.weight;
+          keyResultProgress += parseFloat(milestone.weight.toString());
         }
       });
 
       updateValue.progress = keyResultProgress;
     } else if (keyResult.metricType.name === NAME.ACHIEVE) {
-      updateValue.progress = keyResult.progress;
+      updateValue.progress = parseFloat(keyResult.progress.toString());
     } else {
       const previousValue = await this.keyResultService.findOnekeyResult(
         keyResult.id,
       );
+
       const previousCurrentValue = isOnCreate
-        ? previousValue.currentValue
-        : previousValue.currentValue - actualValueToUpdate; //  previousValue.lastUpdateValue;
-      const currentValue = previousCurrentValue + keyResult['actualValue'];
-      const initialDifference = currentValue - keyResult.initialValue;
-      const targetDifference = keyResult.targetValue - keyResult.initialValue;
+        ? parseFloat(previousValue.currentValue.toString())
+        : parseFloat(previousValue.currentValue.toString()) -
+          actualValueToUpdate;
+      //  previousValue.lastUpdateValue;
+
+      const currentValue =
+        previousCurrentValue + parseFloat(keyResult['actualValue'].toString());
+
+      const initialDifference =
+        currentValue - parseFloat(keyResult.initialValue.toString());
+
+      const targetDifference = parseFloat(keyResult.targetValue.toString());
+      -parseFloat(keyResult.initialValue.toString());
+
       const progress = (initialDifference / targetDifference) * 100;
 
       updateValue.progress = progress;

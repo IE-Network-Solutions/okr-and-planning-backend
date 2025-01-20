@@ -9,11 +9,14 @@ import { GetFromOrganizatiAndEmployeInfoService } from './get-data-from-org.serv
 @Injectable()
 export class AverageOkrCalculation {
   async calculateAverageOkr(objectives: Objective[]): Promise<OkrProgressDto> {
-    const completedOkr = objectives.filter(
-      (objective) =>
-        objective['completedKeyResults'] === objective.keyResults.length,
-    ).length;
+    // const completedOkr = objectives.filter(
+    //   (objective) =>
+    //     objective['completedKeyResults'] === objective.keyResults.length,
+    // ).length;
 
+    const completedOkr = objectives.reduce((sum, objective) => {
+      return sum + objective['completedKeyResults'];
+    }, 0);
     const sumOfTeamObjectiveProgress = objectives.reduce((sum, objective) => {
       return sum + objective['objectiveProgress'];
     }, 0);
@@ -45,9 +48,8 @@ export class AverageOkrCalculation {
 
       objective.keyResults.forEach((keyResult) => {
         totalProgress += (keyResult.progress * keyResult.weight) / 100;
-
-        if (keyResult.progress === 100) {
-          completedKeyResults++;
+        if (parseFloat(keyResult.progress.toString()) === 100) {
+          completedKeyResults = completedKeyResults + 1;
         }
       });
 
@@ -55,7 +57,7 @@ export class AverageOkrCalculation {
         ...objective,
         daysLeft,
         objectiveProgress: totalProgress,
-        completedKeyResults,
+        completedKeyResults: completedKeyResults,
       };
     });
   }

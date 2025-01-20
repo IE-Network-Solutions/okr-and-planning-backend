@@ -1,5 +1,6 @@
 import { BaseModel } from '@root/src/database/base.model';
 import { Column, Entity } from 'typeorm';
+import { IntervalHierarchy } from '../enum/interval-type.enum';
 
 @Entity()
 export class PlanningPeriod extends BaseModel {
@@ -12,15 +13,19 @@ export class PlanningPeriod extends BaseModel {
   @Column({ type: 'boolean', default: false })
   isActive: boolean;
 
-  @Column({ type: 'interval' })
-  intervalLength: string;
+  @Column({
+    type: 'enum',
+    enum: IntervalHierarchy,
+    nullable: true,
+  })
+  intervalLength: IntervalHierarchy;
 
   @Column({ type: 'varchar' })
-  intervalType: string;
+  intervalType: string; // Ensure the type matches your application's requirements
 
-  @Column({ type: 'interval' })
-  submissionDeadline: string;
+  @Column({ type: 'timestamp' })
+  submissionDeadline: Date; // Changed from 'interval' to 'timestamp'
 
   @Column({ type: 'varchar', nullable: true })
-  actionOnFailure: string;
+  actionOnFailure: string; // Fixed the typo
 }
