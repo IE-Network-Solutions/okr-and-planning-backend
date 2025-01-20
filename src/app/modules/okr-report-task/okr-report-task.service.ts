@@ -380,15 +380,13 @@ export class OkrReportTaskService {
     userId: string,
     planningPeriodId: string,
     tenantId: string,
-    isValidate?:string,
+    forPlan:boolean,
   ): Promise<any> {
     try {
       // Fetch all plan tasks where reports have not been created yet
+ 
 
-
-      console.log(planningPeriodId,"planningPeriodId")
-      const isReported=isValidate ?? false
-      const unreportedTasks = await this.planTaskRepository
+      const queryBuilder = this.planTaskRepository
         .createQueryBuilder('planTask')
         .leftJoinAndSelect('planTask.plan', 'plan')
         .leftJoinAndSelect('planTask.milestone', 'milestone')
@@ -405,13 +403,19 @@ export class OkrReportTaskService {
           planningPeriodId,
         }) // Use relation to access planningPeriod ID
         .andWhere('plan.isValidated = :isValidated', { isValidated: true }) // Filter by validated plans only
-        .andWhere('plan.isReported = :isReported', {
-          isReported: false,
-        })
-        .andWhere('planTask.planId IS NOT NULL') // Ensure the task has an associated plan ID
-        .getMany();
+        if (forPlan) {
+          queryBuilder.andWhere('plan.isReported = :isReported', { isReported: false });
+        } else {
+          queryBuilder
+            .andWhere('plan.isReportValidated = :isReportValidated', { isReportValidated: false })
+            .andWhere('plan.isReported = :isReported', { isReported: true });
+        }
+        queryBuilder
+        .andWhere('planTask.planId IS NOT NULL'); // Ensure the task has an associated plan ID
+          const unreportedTasks = await queryBuilder.getMany();
 
-      return unreportedTasks;
+        return unreportedTasks;
+    
     } catch (error) {
       throw new ConflictException(
         `Error fetching unreported tasks: ${error.message}`,

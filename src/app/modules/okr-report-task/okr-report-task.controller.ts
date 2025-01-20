@@ -40,13 +40,13 @@ export class OkrReportTaskController {
     @Param('planningPeriodId') planningPeriodId: string,
     @Param('userId') userId: string,
     @Headers('tenantId') tenantId: string,
-    @Query('isValidate') isValidate?:string
+    @Query('forPlan') forPlan:boolean=true
   ) {
     return this.okrReportTaskService.getUnReportedPlanTasks(
       userId,
       planningPeriodId,
       tenantId,
-      isValidate
+      forPlan
     );
   }
   

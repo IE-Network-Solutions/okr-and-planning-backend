@@ -63,14 +63,15 @@ export class OkrReportService {
     tenantId: UUID,
     userIds: string[],
     planningPeriodId: string,
-  ): Promise<any> {
+  ): Promise<Report[]> {
     // Use queryBuilder to fetch reports with complex filtering
     const reports = await this.reportRepository
       .createQueryBuilder('report') // Start from the 'report' entity
       .leftJoinAndSelect('report.reportTask', 'reportTask') // Join 'reportTask'
       .leftJoinAndSelect('report.comments', 'ReportComment') // Join 'ReportComment' (adjust alias here)
       .leftJoinAndSelect('reportTask.planTask', 'planTask') // Join 'planTask'
-      .leftJoinAndSelect('planTask.plan', 'plan') // Join 'plan'
+      // .leftJoinAndSelect('planTask.plan', 'plan') // Join 'plan'
+      .leftJoinAndSelect('report.plan', 'plan') // Join 'reportTask'
       .leftJoinAndSelect('plan.planningUser', 'planningUser') // Join 'planningUser'
       .leftJoinAndSelect('planTask.keyResult', 'keyResult') // Join 'keyResult'
       .leftJoinAndSelect('planTask.milestone', 'milestone') // Join 'milestone'
@@ -241,18 +242,17 @@ export class OkrReportService {
       const report = await this.reportRepository.findOne({
         where: { id: reportId, tenantId },
       });
+
       if (!report) {
         throw new NotFoundException('Report does not exist.');
       }
       const bool = value === 'true';
-  
-      if (report.isValidated === bool) {
-        throw new BadRequestException(
-          `The report is already ${bool ? 'validated' : 'open'}.`
-        );
-      }
-      report.isValidated = bool;
-      return await this.reportRepository.save(report);
+
+      const planData=await this.planService.updateIsPlanReportValidated(report.planId,bool)
+      console.log(planData,report,bool,"report")
+
+    
+      return await this.reportRepository.findOne({where:{id:reportId}});
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw error; // Re-throw known exceptions.

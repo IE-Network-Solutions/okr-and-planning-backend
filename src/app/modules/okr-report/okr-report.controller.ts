@@ -35,7 +35,7 @@ export class OkrReportController {
     @Body() userIds: (string | 'all')[], // Expecting userIds to be an array of strings or 'all'
     @Headers('tenantId') tenantId: UUID, // Expecting tenantId from headers
     @Param('planningPeriodId') planningPeriodId: string, // Extract the planningPeriodId from the route
-  ): Promise<any> {
+  ): Promise<Report[]> {
     if (!userIds || userIds.length === 0) {
       return []; // Return empty array if no userIds provided
     }

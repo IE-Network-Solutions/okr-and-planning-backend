@@ -252,6 +252,21 @@ export class PlanService {
     }
   }
 
+  async updateIsPlanReportValidated(id: string, value: boolean): Promise<Plan> {
+    const updateResult = await this.planRepository.update({ id }, { isReportValidated: value });
+  
+    if (updateResult.affected === 0) {
+      throw new NotFoundException(`Plan with id ${id} not found`);
+    }
+  
+    const updatedPlan = await this.planRepository.findOne({ where: { id } });
+    if (!updatedPlan) {
+      throw new NotFoundException(`Plan with id ${id} not found`);
+    }
+    
+    return updatedPlan;
+  }
+  
   async findPlansByUsersAndPlanningPeriodId(    
       planningPeriodId: string,
       arrayOfUserId: string[],
@@ -259,8 +274,6 @@ export class PlanService {
       tenantId:string
     ):Promise<any>{
       try {
-        const page = Number(options.page) || 1;
-        const limit = Number(options.limit) || 10;
 
         const allPlanningUser=await this.planningUserRepository.find({where:{planningPeriodId,tenantId}});
         const usersPlanData = await this.planRepository.find({
