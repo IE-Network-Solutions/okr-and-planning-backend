@@ -14,12 +14,9 @@ import { ReportStatusEnum } from '@root/src/core/interfaces/reportStatus.type';
 
 @Entity()
 export class Report extends BaseModel {
-  @Column({ type: 'enum', enum: ReportStatusEnum})
+  @Column({ type: 'enum', enum: ReportStatusEnum, nullable: true })
   status: ReportStatusEnum;
-  
-  @Column({ type: 'boolean', default: false })
-  isValidated: boolean;
-  
+
   @Column()
   reportScore: string;
 

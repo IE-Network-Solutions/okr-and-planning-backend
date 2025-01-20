@@ -183,9 +183,7 @@ export class OkrReportTaskService {
                     keyResult: {
                       ...planTask.keyResult,
                       //  actualValue: task?.actualValue,
-                      // actualValue: planTask.keyResult?.targetValue,
-                      actualValue: parseFloat(planTask?.targetValue.toString()),
-
+                      actualValue: planTask.keyResult?.targetValue,
                     },
                     isOnCreate: true,
                     // actualValueToUpdate: task?.actualValue,
