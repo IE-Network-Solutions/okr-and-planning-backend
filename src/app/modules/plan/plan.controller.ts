@@ -12,6 +12,7 @@ import { PlanService } from './plan.service';
 import { CreatePlanDto } from './dto/create-plan.dto';
 import { Plan } from './entities/plan.entity';
 import { ApiTags } from '@nestjs/swagger';
+import { IPaginationOptions } from 'nestjs-typeorm-paginate';
 
 @Controller('plan')
 @ApiTags('plan')
@@ -56,6 +57,17 @@ export class PlanController {
     return await this.planService.findOne(id);
   }
 
+  @Post('/users/:planningPeriodId')
+  async findByUsers(
+    @Query() options: IPaginationOptions,
+    @Param('planningPeriodId') id: string,
+    @Body() arrayOfUserId: string[],
+    @Req() req: Request,
+
+  ) {
+    const tenantId = req['tenantId'];
+    return await this.planService.findPlansByUsersAndPlanningPeriodId(id, arrayOfUserId, options,tenantId);
+  }
   // @Patch(':id')
   // async update(@Param('id') id: string, @Body() updatePlanDto: UpdatePlanDto) {
   //   return await this.planService.update(+id, updatePlanDto);

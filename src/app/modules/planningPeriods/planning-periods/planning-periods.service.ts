@@ -18,6 +18,7 @@ import { PlannnigPeriodUserDto } from './dto/planningPeriodUser.dto';
 import { FilterUserDto } from './dto/filter-user.dto';
 import { IntervalHierarchy } from './enum/interval-type.enum';
 import { PlanService } from '../../plan/plan.service';
+import { throwError } from 'rxjs';
 
 @Injectable()
 export class PlanningPeriodsService {
@@ -451,7 +452,7 @@ export class PlanningPeriodsService {
     }
   }
 
-  async getPlanningPeriodParentHierarchy(planningPeriodId: string, userId: string): Promise<any> {
+  async getPlanningPeriodParentHierarchy(planningPeriodId: string, userId: string,tenantId:string): Promise<any> {
     // Step 1: Fetch the Current Planning Period
     const currentPlan = await this.planningPeriodRepository.findOne({
       where: { id: planningPeriodId },
@@ -470,10 +471,11 @@ export class PlanningPeriodsService {
     ];
   
     // Fetch all plans and user entitlements
-    const allPlans = await this.planningPeriodRepository.find();
+    const allPlans = await this.planningPeriodRepository.find({where:{tenantId}});
     const allEntitlements = await this.planningUserRepository.find({
-      where: { userId },
+      where: { userId ,tenantId},
     });
+
   
     // Step 2: Recursive Function to Find Parent Plan
     const findParentPlan = async (
@@ -482,16 +484,19 @@ export class PlanningPeriodsService {
       const currentIndex = intervals.indexOf(currentInterval);
       for (let i = currentIndex + 1; i < intervals.length; i++) {
         const parentInterval = intervals[i];
+
+
         const parentPlan = allPlans.find(
           (plan) => plan.intervalLength === parentInterval
         );
+
         const entitlement = allEntitlements.find(
           (ent) => ent.planningPeriodId === parentPlan?.id
         );
-  
+
         if (parentPlan && entitlement) {
 
-          const childTasks = await this.planService.getAllPlansByPlanningPeriodAndUser(
+          const parentTasks = await this.planService.getAllPlansByPlanningPeriodAndUser(
             parentPlan.id,
             userId
           );
@@ -500,7 +505,7 @@ export class PlanningPeriodsService {
             id: parentPlan.id,
             name: parentPlan.name,
             intervalLength: parentPlan.intervalLength,
-            plans: childTasks, // Include tasks for this child plan
+            plans: parentTasks, // Include tasks for this child plan
             parentPlan: await findParentPlan(parentInterval), // Recursive call
           };
         }
@@ -548,6 +553,7 @@ export class PlanningPeriodsService {
       const currentIndex = intervals.indexOf(currentInterval);
       for (let i = currentIndex + 1; i < intervals.length; i++) {
         const childInterval = intervals[i];
+
         const childPlan = allPlans.find(
           (plan) => plan.intervalLength === childInterval
         );

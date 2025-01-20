@@ -194,11 +194,13 @@ export class PlanningPeriodsController {
 
   @Get('parent-hierarchy/:planningPeriodId/user/:userId')
   async getPlanningPeriodParentHierarchy(
+    @Req() req: Request,
     @Param() params: ParamsWithUUID,
   ): Promise<PlanningPeriod> {
     const { planningPeriodId, userId } = params;
-  
-    return await this.planningPeriodService.getPlanningPeriodParentHierarchy(planningPeriodId, userId);
+    const tenantId = req['tenantId'];
+
+    return await this.planningPeriodService.getPlanningPeriodParentHierarchy(planningPeriodId, userId,tenantId);
   }
 
 

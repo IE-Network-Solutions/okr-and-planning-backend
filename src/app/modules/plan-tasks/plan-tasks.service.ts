@@ -311,8 +311,6 @@ export class PlanTasksService {
     options: IPaginationOptions,
   ) {
     try {
-      const page = Number(options.page) || 1;
-      const limit = Number(options.limit) || 10;
 
       // const queryBuilder = this.planRepository
       //   .createQueryBuilder('plan')
@@ -335,36 +333,25 @@ export class PlanTasksService {
       .leftJoinAndSelect('keyResult.objective', 'objective') // Load the objective related to the key result
       .leftJoinAndSelect('keyResult.metricType', 'metricType') // Load the metricType for the key result
       .leftJoinAndSelect('task.milestone', 'milestone') // Load milestones related to tasks
-      .leftJoinAndSelect('plan.comments', 'comments'); // Load comments related to the plan
-    
-      if (arrayOfUserId.includes('all')) {
+      .leftJoinAndSelect('plan.comments', 'comments') // Load comments related to the plan
+      .andWhere('planningPeriod.id = :id', { id })
+
+      if (!arrayOfUserId.includes('all')) {
         queryBuilder
-          .where('planningPeriod.id = :id', { id })
-          .orderBy('plan.createdAt', 'DESC') // Order by milestone for grouping
-          .addOrderBy('task.id', 'DESC'); // Order by keyResult for secondary grouping
-      } else {
-        queryBuilder
-          .where('plan.createdBy IN (:...arrayOfUserId)', { arrayOfUserId })
-          .andWhere('planningPeriod.id = :id', { id })
-          .orderBy('plan.createdAt', 'DESC') // Order by milestone for grouping
-          .addOrderBy('task.createdAt', 'DESC'); // Order by keyResult for secondary grouping
+        .andWhere('plan.createdBy IN (:...arrayOfUserId)', { arrayOfUserId })
       }
+     const paginatedData = await this.paginationService.paginate<Plan>(
+              queryBuilder,
+              options,
+            );
+      
 
-      const [result, total] = await queryBuilder
-        .skip((page - 1) * limit) // Skip rows for pagination
-        .take(limit) // Take the number of rows specified in the limit
-        .getManyAndCount(); // Execute query and return results with total count
+      // const [result, total] = await queryBuilder
+      //   .skip((page - 1) * limit) // Skip rows for pagination
+      //   .take(limit) // Take the number of rows specified in the limit
+      //   .getManyAndCount(); // Execute query and return results with total count
 
-      return {
-        items: result,
-        meta: {
-          totalItems: total,
-          itemCount: result.length,
-          itemsPerPage: limit,
-          totalPages: Math.ceil(total / limit),
-          currentPage: page,
-        },
-      };
+      return paginatedData
     } catch (error) {
       throw new Error(`Error fetching plans: ${error.message}`);
     }

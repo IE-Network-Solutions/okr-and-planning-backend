@@ -49,9 +49,9 @@ export class PlanTask extends BaseModel {
   // @Column({ type: 'bigint', nullable: true })
   targetValue: bigint;
 
-  @Column({ type: 'int', nullable: true })
-  weight: number;
-
+  @Column({ type: 'decimal', precision: 16, scale: 2, default:5})
+  weight: number
+  
   @TreeParent()
   parentTask: PlanTask;
 
@@ -60,6 +60,7 @@ export class PlanTask extends BaseModel {
 
   @Column({ type: 'int' })
   level: number;
+  
   //////////////// ahmed changes  ////////////////////////
   @Column({ type: 'uuid' })
   planId: string;

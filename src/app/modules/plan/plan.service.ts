@@ -1,13 +1,14 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreatePlanDto } from './dto/create-plan.dto';
 import { Plan } from './entities/plan.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, TreeRepository } from 'typeorm';
+import { EntityManager, In, Repository, TreeRepository } from 'typeorm';
 import { PaginationService } from '@root/src/core/pagination/pagination.service';
 import { PlanningPeriodUser } from '../planningPeriods/planning-periods/entities/planningPeriodUser.entity';
 import { PlanTask } from '../plan-tasks/entities/plan-task.entity';
 import { GetFromOrganizatiAndEmployeInfoService } from '../objective/services/get-data-from-org.service';
 import { ObjectiveService } from '../objective/services/objective.service';
+import { IPaginationOptions } from 'nestjs-typeorm-paginate';
 
 @Injectable()
 export class PlanService {
@@ -179,7 +180,20 @@ export class PlanService {
     }
   }
 
+  async updateByColumn(id: string, updatedValue: { columnName: string; value: any },    transactionalEntityManager?: EntityManager,
+  ) : Promise<void> {
+    // Use transactionalEntityManager if provided, else fallback to default repository
+    const manager = transactionalEntityManager || this.planRepository.manager;
 
+    const plan = await manager.findOne(Plan, { where: { id } });
+    if (!plan) {
+      throw new NotFoundException('Plan not found');
+    }
+    // Update the column dynamically
+    plan[updatedValue.columnName] = updatedValue.value;
+
+    await manager.save(plan);
+  }
   async getAllPlansByPlanningPeriodAndUser(
     planningPeriodId: string,
     userId: string
@@ -237,5 +251,48 @@ export class PlanService {
       throw error;
     }
   }
-  
+
+  async findPlansByUsersAndPlanningPeriodId(    
+      planningPeriodId: string,
+      arrayOfUserId: string[],
+      options: IPaginationOptions,
+      tenantId:string
+    ):Promise<any>{
+      try {
+        const page = Number(options.page) || 1;
+        const limit = Number(options.limit) || 10;
+
+        const allPlanningUser=await this.planningUserRepository.find({where:{planningPeriodId,tenantId}});
+        const usersPlanData = await this.planRepository.find({
+          where: { userId: In(arrayOfUserId), tenantId },
+          relations: [
+            'tasks', // Load tasks related to the plan
+            'tasks.planTask', // Load descendants of the tasks
+            'tasks.parentTask', // Load the parent task relationship
+            'planningUser', // Load the planning period assignment
+            'planningUser.planningPeriod', // Load the planning period definition
+            'tasks.keyResult', // Load the key result belonging to the parent task
+            'tasks.keyResult.objective', // Load the objective related to the key result
+            'tasks.keyResult.metricType', // Load the metricType for the key result
+            'tasks.milestone', // Load milestones related to tasks
+            'comments', // Load comments related to the plan
+          ],
+        });
+        
+
+       if(usersPlanData && usersPlanData?.length>0){
+        const filteredData=usersPlanData?.filter((planData:any)=>{
+          const planningUserId=allPlanningUser?.find((planningUser:any)=>planningUser.userId===planData?.userId);
+          const filterByPlanningUser=planData.planningUserId===planningUserId;
+          return filterByPlanningUser
+        })
+        return filteredData;
+       }
+      }
+
+      catch(error){
+        throw Error('internal server error')
+      }
 }
+}
+  

@@ -1,7 +1,16 @@
 import { IsEnum, IsInt, IsOptional, IsString, IsUUID } from 'class-validator';
-import { ReportTaskDTO } from '../../okr-report-task/dto/create-okr-report-task.dto';
 import { ReportStatusEnum } from '@root/src/core/interfaces/reportStatus.type';
-
+import { CreateFailureReasonDto } from '../../failure-reason/dto/create-failure-reason.dto';
+export class ReportTaskDTO {
+  [key: string]: {
+    status: ReportStatusEnum;
+    failureReasonId?: string;
+    isAchieved?: boolean;
+    actualValue?: number | null;
+    reason?: string;
+    failureReason?: CreateFailureReasonDto;
+  };
+}
 export class CreateReportDTO {
   @IsString()
   reportTitle: string;

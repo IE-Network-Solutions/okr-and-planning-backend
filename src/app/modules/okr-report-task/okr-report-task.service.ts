@@ -1,8 +1,8 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import { ConflictException, forwardRef, Inject, Injectable } from '@nestjs/common';
 import { ReportTask } from './entities/okr-report-task.entity';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
-import { ReportTaskDTO } from './dto/create-okr-report-task.dto';
-import { DataSource, Repository } from 'typeorm';
+import { ReportTaskInput } from './dto/create-okr-report-task.dto';
+import { DataSource, EntityManager, Repository } from 'typeorm';
 import { UUID } from 'crypto';
 import { PlanTask } from '../plan-tasks/entities/plan-task.entity';
 import { PlanningPeriodUser } from '../planningPeriods/planning-periods/entities/planningPeriodUser.entity';
@@ -35,7 +35,9 @@ export class OkrReportTaskService {
     @InjectRepository(PlanTask)
     private planTaskRepository: Repository<PlanTask>,
 
-    private reportService: OkrReportService, // Injecting the report service
+    @Inject(forwardRef(() => OkrReportService)) // Use forwardRef here
+    private reportService: OkrReportService,
+
     private okrProgressService: OkrProgressService,
     private userVpScoringService: UserVpScoringService,
   ) {}
@@ -64,7 +66,7 @@ export class OkrReportTaskService {
     }
   }
   async create(
-    createReportDto: ReportTaskDTO,
+    createReportDto: ReportTaskInput,
     tenantId: string,
     planningPeriodId: string,
     userId: string,
@@ -104,11 +106,9 @@ export class OkrReportTaskService {
         tenantId,
       );
       const savedReportTasks = await this.reportTaskRepo.save(reportTasks);
-      let checkPlanIsReported: any; // You can replace 'any' with a more specific type if known
-      if (savedReportTasks) {
-        checkPlanIsReported = await this.updatePlanIsReported(planId);
-      }
+      let checkPlanIsReported = await this.updatePlanIsReported(planId);
       const check = await this.checkAndUpdateProgressByKey(savedReportTasks);
+
       if (check && checkPlanIsReported) {
         await this.userVpScoringService.calculateVP(userId, tenantId);
         await queryRunner.commitTransaction();
@@ -199,15 +199,46 @@ export class OkrReportTaskService {
   }
 
   // Method to update the isReported value of the plan
-  private async updatePlanIsReported(planId: string): Promise<void> {
+  private async updatePlanIsReported(planId: string): Promise<any> {
     try {
-      await this.planRepository.update(planId, { isReported: true });
+      const createPlan= await this.planRepository.update(planId, { isReported: true });
+      return createPlan;
     } catch (error) {
       throw new Error(
         `Could not update plan status for the ID , it already Reported`,
       );
     }
   }
+
+
+  async updateReportTasks(reportId: string, reportTask: ReportTaskInput): Promise<void> {
+    try {
+      const currentTasks = await this.reportTaskRepo.find({ where: { reportId } });
+      const newTasks = Object.entries(reportTask).map(([taskId, value]) => ({
+        planTaskId: taskId,
+        updatePayload: {
+          status: value.status as ReportStatusEnum,
+          failureReasonId: value?.failureReasonId ?? null,
+          isAchieved: value.status === 'Done',
+          actualValue: value?.actualValue?.toString() ?? '0', // Convert to string
+          customReason: value?.customReason ?? null,
+        },
+      }));
+
+      console.log(newTasks,"newTasks")
+
+      for (const { planTaskId, updatePayload } of newTasks) {
+        const existingTask = currentTasks.find((task) => task.planTaskId === planTaskId);
+        if (existingTask) {
+          await this.reportTaskRepo.update({ planTaskId }, updatePayload);
+        }
+      }
+    } catch (error) {
+      throw new Error(`Could not update the report task. Reason: ${error.message}`);
+    }
+  }
+  
+  
 
   private createReportData(
     reportScore: number,
@@ -224,16 +255,7 @@ export class OkrReportTaskService {
     };
   }
   private mapDtoToReportTasks(
-    dto: Record<
-      string,
-      {
-        status: string;
-        actualValue?: number;
-        isAchieved?: boolean;
-        reason?: string;
-        failureReasonId?: string;
-      }
-    >,
+    dto: ReportTaskInput,
     reportData: any,
     tenantId: string,
   ): Record<string, any>[] {
@@ -245,7 +267,7 @@ export class OkrReportTaskService {
         status: value.status as ReportStatusEnum,
         isAchieved: value?.status === 'Done' ? true : false,
         tenantId: tenantId || null,
-        customReason: value?.reason || null,
+        customReason: value?.customReason || null,
         failureReasonId: value?.failureReasonId || null,
       };
     });
@@ -285,7 +307,7 @@ export class OkrReportTaskService {
           planningUserId: planningPeriodUserId,
         },
       });
-      return plan ? plan.id : null; // Return the id or null if not found
+      return plan ? plan.id : null; // Retur  n the id or null if not found
     } catch (error) {
       throw new Error(`Error fetching plan ID: ${error.message}`);
     }
@@ -308,10 +330,14 @@ export class OkrReportTaskService {
     userId: string,
     planningPeriodId: string,
     tenantId: string,
+    isValidate?:string,
   ): Promise<any> {
     try {
       // Fetch all plan tasks where reports have not been created yet
 
+
+      console.log(planningPeriodId,"planningPeriodId")
+      const isReported=isValidate ?? false
       const unreportedTasks = await this.planTaskRepository
         .createQueryBuilder('planTask')
         .leftJoinAndSelect('planTask.plan', 'plan')
@@ -329,7 +355,7 @@ export class OkrReportTaskService {
           planningPeriodId,
         }) // Use relation to access planningPeriod ID
         .andWhere('plan.isValidated = :isValidated', { isValidated: true }) // Filter by validated plans only
-        .andWhere('plan.isReported = :isReported OR plan.isReported IS NULL', {
+        .andWhere('plan.isReported = :isReported', {
           isReported: false,
         })
         .andWhere('planTask.planId IS NOT NULL') // Ensure the task has an associated plan ID
@@ -390,5 +416,31 @@ export class OkrReportTaskService {
     } catch (error) {
       throw new ConflictException(error.message);
     }
+  }
+  async deleteReportTasksByReportId(    
+    reportId: string,
+    transactionalEntityManager?: EntityManager,
+  ) {
+    try {
+      // Use transactionalEntityManager if provided, else fallback to default repository
+      const manager = transactionalEntityManager || this.reportTaskRepo.manager;
+      // Find all report tasks associated with the given reportId
+      const reportTasks = await manager.find(ReportTask, {
+        where: { reportId },
+      });
+      // If no tasks are found, throw an exception
+      if (!reportTasks.length) {
+        throw new ConflictException('No report tasks found for the given reportId.');
+      }
+      // Perform a soft delete on the fetched tasks
+      const deletedTasks = await manager.softRemove(reportTasks);
+      return deletedTasks;
+    } catch (error) {
+      throw new ConflictException(error.message);
+    }
+  }
+
+  async getReportTasks(planTaskId:string):Promise<ReportTask[]>{
+    return this.reportTaskRepo.find({where:{planTaskId}})
   }
 }
