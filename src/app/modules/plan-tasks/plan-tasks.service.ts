@@ -311,17 +311,6 @@ export class PlanTasksService {
     options: IPaginationOptions,
   ) {
     try {
-
-      // const queryBuilder = this.planRepository
-      //   .createQueryBuilder('plan')
-      //   .leftJoinAndSelect('plan.tasks', 'task', 'task.parentTaskId IS NULL') // Load tasks related to the plan
-      //   .leftJoinAndSelect('task.planTask', 'descendants') // Load descendants of the tasks
-      //   .leftJoinAndSelect('plan.planningUser', 'planningUser') // Load the planning period assignment
-      //   .leftJoinAndSelect('planningUser.planningPeriod', 'planningPeriod') // Load the planning period definition
-      //   .leftJoinAndSelect('task.keyResult', 'keyResult') // Load the key result belonging to the parent task
-      //   .leftJoinAndSelect('keyResult.metricType', 'metricType') // Load the metricType for the key result
-      //   .leftJoinAndSelect('task.milestone', 'milestone') // Load milestones related to tasks
-      //   .leftJoinAndSelect('plan.comments', 'comments'); // Load comments related to the plan
       const queryBuilder = this.planRepository
       .createQueryBuilder('plan')
       .leftJoinAndSelect('plan.tasks', 'task') // Load all tasks related to the plan
@@ -344,13 +333,6 @@ export class PlanTasksService {
               queryBuilder,
               options,
             );
-      
-
-      // const [result, total] = await queryBuilder
-      //   .skip((page - 1) * limit) // Skip rows for pagination
-      //   .take(limit) // Take the number of rows specified in the limit
-      //   .getManyAndCount(); // Execute query and return results with total count
-
       return paginatedData
     } catch (error) {
       throw new Error(`Error fetching plans: ${error.message}`);
@@ -501,5 +483,9 @@ export class PlanTasksService {
   ////////////////////////////////   ahmed changes //////////////////////////
   remove(id: string) {
     return `This action removes a #${id} planTask`;
+  }
+
+  async findPlanTaskById (id: string):Promise<PlanTask> {
+    return await this.taskRepository.findOneByOrFail({id});
   }
 }

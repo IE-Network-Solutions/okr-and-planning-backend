@@ -13,23 +13,24 @@ export class ReportTaskDTO {
 }
 export class CreateReportDTO {
   @IsString()
-  reportTitle: string;
+  reportTitle?: string;
 
   @IsString()
-  userId?: string;
+  userId: string;
+
   @IsOptional()
   @IsString()
   sessionId?: string;
 
   @IsString()
-  planId?: string;
+  planId: string;
 
   // @IsString(ReportStatusEnum)
   @IsString()
   status?: ReportStatusEnum;
 
   @IsString()
-  reportScore?: string;
+  reportScore: string;
 
   @IsString()
   tenantId: string;

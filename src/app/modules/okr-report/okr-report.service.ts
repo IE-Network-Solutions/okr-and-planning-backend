@@ -25,7 +25,6 @@ export class OkrReportService {
      private planService: PlanService,
      private readonly getFromOrganizatiAndEmployeInfoService: GetFromOrganizatiAndEmployeInfoService,
   ) {}
-
   async createReportWithTasks(
     reportData: CreateReportDTO,
     tenantId: string,
@@ -60,7 +59,6 @@ export class OkrReportService {
     // Step 5: Return the saved report and its associated tasks
     return savedReport;
   }
-
   async getAllReportsByTenantAndPeriod(
     tenantId: UUID,
     userIds: string[],
@@ -95,7 +93,6 @@ export class OkrReportService {
 
     return reports;
   }
-
   // Method to delete a report by id and tenantId
   async deleteReport(id: string, tenantId: UUID): Promise<void> {
     // Start a transaction
@@ -223,6 +220,18 @@ export class OkrReportService {
     return await this.reportRepository.findOne({where:{id},relations:['reportTask']});
   }
 
+  async update(id: string, updateData: Partial<Report>): Promise<Report> {
+    await this.reportRepository.update(id, updateData);
+    const updatedReport = await this.reportRepository.findOne({
+      where: { id },
+      relations: ['reportTask'], // Load relations as needed
+    });
+    if (!updatedReport) {
+      throw new Error(`Report with id ${id} not found`);
+    }
+    return updatedReport;
+  }
+  
   async validate(
     reportId: string,
     tenantId: string,

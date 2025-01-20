@@ -12,7 +12,7 @@ import { MilestonesService } from '../milestones/milestones.service';
 import { Milestone } from '../milestones/entities/milestone.entity';
 import { updateMilestoneData } from '../milestones/test/milestone.data';
 interface KeyResultWithActualValue extends KeyResult {
-  actualValue?: number; // Add actualValue as an optional property
+  actualValue?: any; // Add actualValue as an optional property
 }
 @Injectable()
 export class OkrProgressService {
@@ -29,7 +29,7 @@ export class OkrProgressService {
   }: {
     keyResult: KeyResultWithActualValue;
     isOnCreate: boolean;
-    actualValueToUpdate?: number;
+    actualValueToUpdate?: any;
   }): Promise<any> {
     const updateValue = new UpdateKeyResultDto();
     const keyResults = await this.keyResultService.findOnekeyResult(
