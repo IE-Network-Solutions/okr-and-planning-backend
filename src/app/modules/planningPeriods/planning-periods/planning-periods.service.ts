@@ -476,7 +476,12 @@ export class PlanningPeriodsService {
       where: { userId ,tenantId},
     });
 
-  
+    const plansIfExist = await this.planService.getAllPlansByPlanningPeriodAndUser(
+      planningPeriodId,
+      userId
+    );
+
+
     // Step 2: Recursive Function to Find Parent Plan
     const findParentPlan = async (
       currentInterval: IntervalHierarchy
@@ -517,6 +522,7 @@ export class PlanningPeriodsService {
     return {
       id: currentPlan.id,
       name: currentPlan.name,
+      planData:plansIfExist,
       intervalLength: currentPlan.intervalLength,
       parentPlan: await findParentPlan(currentPlan.intervalLength),
     };

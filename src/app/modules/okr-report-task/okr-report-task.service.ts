@@ -132,6 +132,7 @@ export class OkrReportTaskService {
     const reportTaskData=(reportTaskId:string)=>{
        return reportTask?.find((reportTask:ReportTask)=>reportTask.id===reportTaskId)
     }
+
     try {
       const results = await Promise.all(
         savedReportTasks.map(async (task) => {
@@ -153,6 +154,7 @@ export class OkrReportTaskService {
                   }
             
                   let updatedStatus: Status;
+
               
                   if (planTask.achieveMK && task.status === 'Done') {
                     updatedStatus = Status.COMPLETED;
@@ -184,7 +186,7 @@ export class OkrReportTaskService {
                     return await this.okrProgressService.calculateKeyResultProgress({
                       keyResult: { ...planTask.keyResult, progress: 100 },
                       isOnCreate,
-                      actualValueToUpdate: task?.actualValue,
+                      // actualValueToUpdate: task?.actualValue,
                     });
                   } else if (task.status === 'Not') {
                     if (!planTask.keyResult) {
@@ -194,7 +196,7 @@ export class OkrReportTaskService {
                     return await this.okrProgressService.calculateKeyResultProgress({
                       keyResult: { ...planTask.keyResult, progress: 0 },
                       isOnCreate,
-                      actualValueToUpdate: task?.actualValue,
+                      // actualValueToUpdate: task?.actualValue,
                     });
                   }
                 }
@@ -208,7 +210,7 @@ export class OkrReportTaskService {
                   {
                     keyResult: {
                       ...planTask.keyResult,
-                      actualValue:planTask.targetValue
+                      actualValue:parseFloat(planTask.targetValue.toString())
                     },
                     isOnCreate,
                     actualValueToUpdate: planTask.targetValue,
@@ -223,7 +225,7 @@ export class OkrReportTaskService {
                       actualValue: task?.actualValue,
                     },
                     isOnCreate,
-                    actualValueToUpdate: reportTaskData(task).actualValue,
+                    actualValueToUpdate: reportTaskData(task?.id).actualValue,
                   },
                 );
               }
@@ -277,7 +279,7 @@ export class OkrReportTaskService {
         }
       }
 
-      const check = await this.checkAndUpdateProgressByKey(savedReportTasks,true,currentTasks);
+      const check = await this.checkAndUpdateProgressByKey(savedReportTasks,false,currentTasks);
 
 
     } catch (error) {

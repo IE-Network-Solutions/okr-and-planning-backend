@@ -373,62 +373,52 @@ export class PlanTasksService {
       );
 
       // Process update or create operations for each task in the input
-      for (const updatePlanTaskDto of updatePlanTasksDto) {
-        let task;
+for (const updatePlanTaskDto of updatePlanTasksDto) {
+  let task;
 
-        // If the task does not exist, create a new one
-        if (!updatePlanTaskDto.id) {
-          task = await this.createTasks([updatePlanTaskDto], tenantId);
-          continue;
-        }
+  // Create a new task if ID does not exist
+  if (!updatePlanTaskDto.id) {
+    await this.createTasks([updatePlanTaskDto], tenantId);
+    continue;
+  }
 
-        // Fetch existing task or throw error
-        task = await this.taskRepository.findOneByOrFail({
-          id: updatePlanTaskDto.id,
-        });
+  // Fetch the existing task or throw an error if not found
+  task = await this.taskRepository.findOneByOrFail({ id: updatePlanTaskDto.id });
 
-        // Handle parent task and level
-        const parentTasks =
-          task.level !== 0
-            ? await this.taskRepository.findAncestorsTree(task)
-            : null;
-        const parentTask = parentTasks?.parentTask || null;
+  // Fetch parent tasks if the current task is not at the root level
+  const parentTasks =
+    task.level !== 0
+      ? await this.taskRepository.findAncestorsTree(task)
+      : null;
+  const parentTask = parentTasks?.parentTask || null;
 
-        // Update task details
-        task.keyResult = await this.keyResultService.findOnekeyResult(
-          updatePlanTaskDto.keyResultId,
-        );
-        task.level = parentTask ? parentTask.level + 1 : 0;
-        task.priority = updatePlanTaskDto.priority ?? task.priority;
-        task.targetValue = updatePlanTaskDto.targetValue ?? task.targetValue;
-        task.task = updatePlanTaskDto.task ?? task.task;
-        task.weight = updatePlanTaskDto.weight;
-        task.updatedBy = updatePlanTaskDto.userId;
-        task.achieveMK = updatePlanTaskDto.achieveMK ?? false;
-        task.planId = updatePlanTaskDto.planId;
+  // Prepare the updated task object
+  Object.assign(task, {
+    keyResult: await this.keyResultService.findOnekeyResult(updatePlanTaskDto.keyResultId),
+    level: parentTask ? parentTask.level + 1 : 0,
+    priority: updatePlanTaskDto.priority ?? task.priority,
+    targetValue: updatePlanTaskDto.targetValue ?? task.targetValue,
+    task: updatePlanTaskDto.task ?? task.task,
+    weight: updatePlanTaskDto.weight,
+    updatedBy: updatePlanTaskDto.userId,
+    achieveMK: updatePlanTaskDto.achieveMK ?? false,
+    planId: updatePlanTaskDto.planId,
+  });
 
-        // Update milestone if provided
-        if (updatePlanTaskDto.milestoneId) {
-          task.milestone = await this.milestoneService.findOneMilestone(
-            updatePlanTaskDto.milestoneId,
-          );
-        }
+  // Update milestone if provided
+  if (updatePlanTaskDto.milestoneId) {
+    task.milestone = await this.milestoneService.findOneMilestone(updatePlanTaskDto.milestoneId);
+  }
 
-        // Save the updated task
-        const finalTask = await this.taskRepository.save(task);
+  // Save the updated task
+  const finalTask = await this.taskRepository.save(task);
 
-        // Process subtasks if present
-        if (
-          updatePlanTaskDto.subTasks &&
-          updatePlanTaskDto.subTasks.length > 0
-        ) {
-          await this.updateSubTasks(
-            updatePlanTaskDto.subTasks,
-            finalTask.id,
-            tenantId,
-          );
-        }
-      }
+  // Process subtasks if present
+  if (Array.isArray(updatePlanTaskDto.subTasks) && updatePlanTaskDto.subTasks.length > 0) {
+    await this.updateSubTasks(updatePlanTaskDto.subTasks, finalTask.id, tenantId);
+  }
+}
+
       return await this.taskRepository.find({ where: { planId } });
     } catch (error) {
       throw 'Error updating records';
