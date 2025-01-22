@@ -16,7 +16,7 @@ import { PlanTask } from '../../plan-tasks/entities/plan-task.entity';
 
 @Entity()
 export class ReportTask extends BaseModel {
-  @Column()
+  @Column({ type: 'enum', enum: ReportStatusEnum,default:ReportStatusEnum.Drafted})
   status: ReportStatusEnum;
 
   @Column({ nullable: true })
