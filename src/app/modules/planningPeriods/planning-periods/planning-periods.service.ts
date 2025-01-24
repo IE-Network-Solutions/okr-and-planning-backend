@@ -478,7 +478,8 @@ export class PlanningPeriodsService {
 
     const plansIfExist = await this.planService.getAllPlansByPlanningPeriodAndUser(
       planningPeriodId,
-      userId
+      userId,
+      // false
     );
 
 

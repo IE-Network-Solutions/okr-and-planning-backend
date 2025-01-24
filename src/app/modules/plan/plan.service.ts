@@ -196,10 +196,14 @@ export class PlanService {
   }
   async getAllPlansByPlanningPeriodAndUser(
     planningPeriodId: string,
-    userId: string
+    userId: string,
+    // isValidated:boolean
   ): Promise<any> {
     try {
 
+
+      
+     
       // const getObjective=(objectiveId:string)=>{
       //      return await this.objectiveService.findOneObjective(objectiveId)
       // }
