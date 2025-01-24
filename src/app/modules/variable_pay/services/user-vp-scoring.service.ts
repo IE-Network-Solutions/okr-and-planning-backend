@@ -33,7 +33,7 @@ export class UserVpScoringService {
     private readonly configService: ConfigService,
     private readonly getUsersService: GetFromOrganizatiAndEmployeInfoService,
   ) {
-    this.orgUrl = this.configService.get<string>('orgUrl.orgUrl');
+    this.orgUrl = this.configService.get<string>('externalUrls.orgStructureUrl');
   }
   async createUserVpScoring(
     createUserVpScoringDto: CreateUserVpScoringDto,
@@ -250,7 +250,8 @@ export class UserVpScoringService {
       if (refreshVPDto.users && refreshVPDto.users) {
         const allUsersVP = await Promise.all(
           refreshVPDto.users.map(async (item) => {
-            await this.calculateVP(item, tenantId);
+        const vp =    await this.calculateVP(item, tenantId);
+        console.log(vp,"vpz")
           }),
         );
         return allUsersVP;
@@ -258,7 +259,9 @@ export class UserVpScoringService {
         const users = await this.getUsersService.getAllUsers(tenantId);
         const allUsersVP = await Promise.all(
           users.items.map(async (item) => {
-            await this.calculateVP(item.id, tenantId);
+        const vp=    await this.calculateVP(item.id, tenantId);
+        return vp
+        console.log(vp,"vp2")
           }),
         );
         return allUsersVP;

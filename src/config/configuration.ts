@@ -41,7 +41,5 @@ export const configuration = () => ({
     orgStructureUrl: process.env.ORG_AND_EMP_URL,
     fileServerUrl: process.env.FILE_SERVER_URL,
   },
-  orgUrl: {
-    orgUrl: process.env.ORG_SERVER,
-  },
+
 });

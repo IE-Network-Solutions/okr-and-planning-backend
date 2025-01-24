@@ -114,6 +114,9 @@ export class OKRDashboardService {
       const users = department.users
         .filter((user) => user.id !== userId)
         .map((user) => user.id);
+        if(users){
+
+        }
       const [teamObjectives, individualObjectives, companyObjective] =
         await Promise.all([
           this.objectiveService.findUsersObjectives(tenantId, users),

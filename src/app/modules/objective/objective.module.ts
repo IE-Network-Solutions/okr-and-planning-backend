@@ -11,6 +11,7 @@ import { AverageOkrRuleModule } from '../average-okr-rule/average-okr-rule.modul
 import { GetFromOrganizatiAndEmployeInfoService } from './services/get-data-from-org.service';
 import { AverageOkrCalculation } from './services/average-okr-calculation.service';
 import { OKRDashboardService } from './services/okr-dashbord.service';
+import { OKRCalculationService } from './services/okr-calculation.service';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { OKRDashboardService } from './services/okr-dashbord.service';
     GetFromOrganizatiAndEmployeInfoService,
     AverageOkrCalculation,
     OKRDashboardService,
+    OKRCalculationService
   ],
   exports: [ObjectiveService, GetFromOrganizatiAndEmployeInfoService],
 })
