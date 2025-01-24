@@ -13,22 +13,19 @@ import { FailureReasonModule } from '../failure-reason/failure-reason.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([
-      Report,
-    ]),
+    TypeOrmModule.forFeature([Report]),
     PlanningPeriodsModule,
     HttpModule,
-    forwardRef(() => OkrReportTaskModule), 
+    forwardRef(() => OkrReportTaskModule),
     PlanModule,
     PlanningPeriodsModule,
-    FailureReasonModule
+    FailureReasonModule,
   ],
   controllers: [OkrReportController],
   providers: [
     OkrReportService,
     OrgEmployeeInformationApiService,
     GetFromOrganizatiAndEmployeInfoService,
-    
   ],
   exports: [OkrReportService],
 })

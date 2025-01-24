@@ -208,8 +208,6 @@ export class PlanningPeriodsService {
           where: { userId },
         });
 
-        
-
         if (existingUsers.length > 0) {
           await manager.softRemove(existingUsers); // Soft remove if using soft deletes
         }
@@ -274,39 +272,36 @@ export class PlanningPeriodsService {
 
       const assignedUsers: PlanningPeriodUser[] = [];
       const newAssignments = [];
-  
+
       for (const userId of assignUserDto.userIds) {
         for (const planningPeriodId of planningPeriods) {
+          const existingAssignation = await this.planningUserRepository.find({
+            where: {
+              userId: userId,
+              planningPeriodId: planningPeriodId?.id,
+            },
+          });
 
-         const existingAssignation= await this.planningUserRepository.find({
-              where: {
-                userId:userId,
-                planningPeriodId: planningPeriodId?.id,
-              },});
-
-          if (existingAssignation?.length>0) {
+          if (existingAssignation?.length > 0) {
             continue; // Skip if already assigned
           }
-  
 
           // Prepare the new assignment
           newAssignments.push(
             this.planningUserRepository.create({
-              planningPeriodId:planningPeriodId?.id,
-              userId:userId,
-              tenantId:tenantId,
+              planningPeriodId: planningPeriodId?.id,
+              userId: userId,
+              tenantId: tenantId,
             }),
           );
         }
       }
 
-  
-
       // console.log(newAssignments,"newAssignments")
       // Save all new assignments in bulk
       const savedUsers = await this.planningUserRepository.save(newAssignments);
       assignedUsers.push(...savedUsers);
-  
+
       return assignedUsers;
     } catch (error) {
       if (error instanceof NotFoundException) {
@@ -317,7 +312,7 @@ export class PlanningPeriodsService {
       );
     }
   }
-  
+
   async findAll(
     tenantId: string,
     paginationOptions: PaginationDto,
@@ -407,14 +402,14 @@ export class PlanningPeriodsService {
       const planningUser = await this.planningUserRepository.findOneByOrFail({
         id,
       });
-  
+
       const existingAssignment = await this.planningUserRepository.findOne({
         where: {
           userId: planningUser.userId,
           planningPeriodId: assignUserDto.planningPeriodId, // Assuming AssignUsersDTO contains planningPeriodId
         },
       });
-  
+
       if (existingAssignment) {
         throw new ConflictException(
           `The planningPeriodId ${assignUserDto.planningPeriodId} is already assigned to user ${planningUser.userId}`,
@@ -434,7 +429,7 @@ export class PlanningPeriodsService {
       );
     }
   }
-  
+
   async findOnePlanningPeriodByName(
     planningPeriodTitle: string,
     tenantId: string,
@@ -452,16 +447,20 @@ export class PlanningPeriodsService {
     }
   }
 
-  async getPlanningPeriodParentHierarchy(planningPeriodId: string, userId: string,tenantId:string): Promise<any> {
+  async getPlanningPeriodParentHierarchy(
+    planningPeriodId: string,
+    userId: string,
+    tenantId: string,
+  ): Promise<any> {
     // Step 1: Fetch the Current Planning Period
     const currentPlan = await this.planningPeriodRepository.findOne({
       where: { id: planningPeriodId },
     });
-  
+
     if (!currentPlan) {
-      throw new Error("Planning period not found");
+      throw new Error('Planning period not found');
     }
-  
+
     // Define the hierarchy levels
     const intervals = [
       IntervalHierarchy.daily,
@@ -469,43 +468,44 @@ export class PlanningPeriodsService {
       IntervalHierarchy.monthly,
       IntervalHierarchy.quarterly,
     ];
-  
+
     // Fetch all plans and user entitlements
-    const allPlans = await this.planningPeriodRepository.find({where:{tenantId}});
+    const allPlans = await this.planningPeriodRepository.find({
+      where: { tenantId },
+    });
     const allEntitlements = await this.planningUserRepository.find({
-      where: { userId ,tenantId},
+      where: { userId, tenantId },
     });
 
-    const plansIfExist = await this.planService.getAllPlansByPlanningPeriodAndUser(
-      planningPeriodId,
-      userId
-    );
-
+    const plansIfExist =
+      await this.planService.getAllPlansByPlanningPeriodAndUser(
+        planningPeriodId,
+        userId,
+      );
 
     // Step 2: Recursive Function to Find Parent Plan
     const findParentPlan = async (
-      currentInterval: IntervalHierarchy
+      currentInterval: IntervalHierarchy,
     ): Promise<any | null> => {
       const currentIndex = intervals.indexOf(currentInterval);
       for (let i = currentIndex + 1; i < intervals.length; i++) {
         const parentInterval = intervals[i];
 
-
         const parentPlan = allPlans.find(
-          (plan) => plan.intervalLength === parentInterval
+          (plan) => plan.intervalLength === parentInterval,
         );
 
         const entitlement = allEntitlements.find(
-          (ent) => ent.planningPeriodId === parentPlan?.id
+          (ent) => ent.planningPeriodId === parentPlan?.id,
         );
 
         if (parentPlan && entitlement) {
+          const parentTasks =
+            await this.planService.getAllPlansByPlanningPeriodAndUser(
+              parentPlan.id,
+              userId,
+            );
 
-          const parentTasks = await this.planService.getAllPlansByPlanningPeriodAndUser(
-            parentPlan.id,
-            userId
-          );
-  
           return {
             id: parentPlan.id,
             name: parentPlan.name,
@@ -517,27 +517,31 @@ export class PlanningPeriodsService {
       }
       return null;
     };
-  
+
     // Step 3: Fetch Hierarchy
     return {
       id: currentPlan.id,
       name: currentPlan.name,
-      planData:plansIfExist,
+      planData: plansIfExist,
       intervalLength: currentPlan.intervalLength,
       parentPlan: await findParentPlan(currentPlan.intervalLength),
     };
   }
-  
-  async getPlanningPeriodChildHierarchy(planningPeriodId: string, userId: string,tenantId:string): Promise<any> {
+
+  async getPlanningPeriodChildHierarchy(
+    planningPeriodId: string,
+    userId: string,
+    tenantId: string,
+  ): Promise<any> {
     // Step 1: Fetch the Current Planning Period
     const currentPlan = await this.planningPeriodRepository.findOne({
       where: { id: planningPeriodId },
     });
-  
+
     if (!currentPlan) {
-      throw new Error("Planning period not found");
+      throw new Error('Planning period not found');
     }
-  
+
     // Define the hierarchy levels
     const intervals = [
       IntervalHierarchy.quarterly,
@@ -545,33 +549,36 @@ export class PlanningPeriodsService {
       IntervalHierarchy.weekly,
       IntervalHierarchy.daily,
     ];
-  
+
     // Fetch all plans and user entitlements
-    const allPlans = await this.planningPeriodRepository.find({where:{tenantId}});
+    const allPlans = await this.planningPeriodRepository.find({
+      where: { tenantId },
+    });
     const allEntitlements = await this.planningUserRepository.find({
       where: { userId },
     });
-  
+
     // Step 2: Recursive Function to Find Parent Plan
     const findParentPlan = async (
-      currentInterval: IntervalHierarchy
+      currentInterval: IntervalHierarchy,
     ): Promise<any | null> => {
       const currentIndex = intervals.indexOf(currentInterval);
       for (let i = currentIndex + 1; i < intervals.length; i++) {
         const childInterval = intervals[i];
 
         const childPlan = allPlans.find(
-          (plan) => plan.intervalLength === childInterval
+          (plan) => plan.intervalLength === childInterval,
         );
         const entitlement = allEntitlements.find(
-          (ent) => ent.planningPeriodId === childPlan?.id
+          (ent) => ent.planningPeriodId === childPlan?.id,
         );
-  
+
         if (childPlan && entitlement) {
-          const childTasks = await this.planService.getAllPlansByPlanningPeriodAndUser(
-            childPlan.id,
-            userId
-          );
+          const childTasks =
+            await this.planService.getAllPlansByPlanningPeriodAndUser(
+              childPlan.id,
+              userId,
+            );
           return {
             id: childPlan.id,
             name: childPlan.name,
@@ -583,7 +590,7 @@ export class PlanningPeriodsService {
       }
       return null;
     };
-  
+
     // Step 3: Fetch Hierarchy
     return {
       id: currentPlan.id,
@@ -592,17 +599,22 @@ export class PlanningPeriodsService {
       parentPlan: await findParentPlan(currentPlan.intervalLength),
     };
   }
-  
-  async getPreviousPlanHierarchy(planningPeriodId: string, userId: string,planId:string,tenantId:string) :Promise<any> {
+
+  async getPreviousPlanHierarchy(
+    planningPeriodId: string,
+    userId: string,
+    planId: string,
+    tenantId: string,
+  ): Promise<any> {
     // Step 1: Fetch the Current Planning Period
     const currentPlan = await this.planningPeriodRepository.findOne({
       where: { id: planningPeriodId },
     });
-  
+
     if (!currentPlan) {
-      throw new Error("Planning period not found");
+      throw new Error('Planning period not found');
     }
-  
+
     // Define the hierarchy levels
     const intervals = [
       IntervalHierarchy.quarterly,
@@ -610,33 +622,36 @@ export class PlanningPeriodsService {
       IntervalHierarchy.weekly,
       IntervalHierarchy.daily,
     ];
-  
+
     // Fetch all plans and user entitlements
-    const allPlans = await this.planningPeriodRepository.find({where:{tenantId}});
+    const allPlans = await this.planningPeriodRepository.find({
+      where: { tenantId },
+    });
     const allEntitlements = await this.planningUserRepository.find({
       where: { userId },
     });
-  
+
     // Step 2: Recursive Function to Find Parent Plan
     const findParentPlan = async (
-      currentInterval: IntervalHierarchy
+      currentInterval: IntervalHierarchy,
     ): Promise<any | null> => {
       const currentIndex = intervals.indexOf(currentInterval);
       for (let i = currentIndex + 1; i < intervals.length; i++) {
         const childInterval = intervals[i];
 
         const childPlan = allPlans.find(
-          (plan) => plan.intervalLength === childInterval
+          (plan) => plan.intervalLength === childInterval,
         );
         const entitlement = allEntitlements.find(
-          (ent) => ent.planningPeriodId === childPlan?.id
+          (ent) => ent.planningPeriodId === childPlan?.id,
         );
-  
+
         if (childPlan && entitlement) {
-          const childTasks = await this.planService.getAllPlansByPlanningPeriodAndUser(
-            childPlan.id,
-            userId
-          );
+          const childTasks =
+            await this.planService.getAllPlansByPlanningPeriodAndUser(
+              childPlan.id,
+              userId,
+            );
           return {
             id: childPlan.id,
             name: childPlan.name,
@@ -648,7 +663,7 @@ export class PlanningPeriodsService {
       }
       return null;
     };
-  
+
     // Step 3: Fetch Hierarchy
     return {
       id: currentPlan.id,

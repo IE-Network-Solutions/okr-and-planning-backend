@@ -17,7 +17,7 @@ import { ObjectiveModule } from '../objective/objective.module';
     TypeOrmModule.forFeature([Plan, PlanningPeriodUser, PlanTask]),
     ConfigModule,
     HttpModule,
-    ObjectiveModule
+    ObjectiveModule,
   ],
   controllers: [PlanController],
   providers: [
@@ -25,6 +25,6 @@ import { ObjectiveModule } from '../objective/objective.module';
     PaginationService,
     GetFromOrganizatiAndEmployeInfoService,
   ],
-  exports:[PlanService]
+  exports: [PlanService],
 })
 export class PlanModule {}

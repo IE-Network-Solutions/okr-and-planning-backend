@@ -34,7 +34,7 @@ export class Plan extends BaseModel {
 
   @Column({ type: 'boolean', default: false })
   isReportValidated: boolean;
-  
+
   @Column({ type: 'boolean', default: false })
   isReported: boolean;
 

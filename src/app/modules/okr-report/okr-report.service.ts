@@ -1,4 +1,11 @@
-import { BadRequestException, forwardRef, Inject, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  forwardRef,
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Report } from './entities/okr-report.entity';
 import { EntityManager, In, Repository } from 'typeorm';
@@ -21,9 +28,9 @@ export class OkrReportService {
     private planningPeriodService: PlanningPeriodsService,
 
     @Inject(forwardRef(() => OkrReportTaskService))
-     private okrReportTaskService: OkrReportTaskService,
-     private planService: PlanService,
-     private readonly getFromOrganizatiAndEmployeInfoService: GetFromOrganizatiAndEmployeInfoService,
+    private okrReportTaskService: OkrReportTaskService,
+    private planService: PlanService,
+    private readonly getFromOrganizatiAndEmployeInfoService: GetFromOrganizatiAndEmployeInfoService,
   ) {}
   async createReportWithTasks(
     reportData: CreateReportDTO,
@@ -47,7 +54,7 @@ export class OkrReportService {
       tenantId: tenantId,
       userId: reportData?.userId,
       planId: reportData.planId,
-      createdBy:reportData?.userId,
+      createdBy: reportData?.userId,
       sessionId: reportData.sessionId,
     });
 
@@ -97,28 +104,36 @@ export class OkrReportService {
   // Method to delete a report by id and tenantId
   async deleteReport(id: string, tenantId: UUID): Promise<void> {
     // Start a transaction
-    await this.reportRepository.manager.transaction(async (transactionalEntityManager: EntityManager) => {
-      
-      // Find the report
-      const report = await transactionalEntityManager.findOne(Report, {
-        where: { id, tenantId },
-      });
-  
-      if (!report) {
-        throw new NotFoundException(`Report with ID not found`);
-      }
-  
-      // Soft remove the report
-      await transactionalEntityManager.softRemove(report);
-  
-      // Update the plan associated with the report
-      const updatedValue = {
-        columnName: 'isReported',
-        value: false,
-      };
-      await this.planService.updateByColumn(report.planId, updatedValue, transactionalEntityManager);
-      await this.okrReportTaskService.deleteReportTasksByReportId(report.id, transactionalEntityManager);
-    });
+    await this.reportRepository.manager.transaction(
+      async (transactionalEntityManager: EntityManager) => {
+        // Find the report
+        const report = await transactionalEntityManager.findOne(Report, {
+          where: { id, tenantId },
+        });
+
+        if (!report) {
+          throw new NotFoundException(`Report with ID not found`);
+        }
+
+        // Soft remove the report
+        await transactionalEntityManager.softRemove(report);
+
+        // Update the plan associated with the report
+        const updatedValue = {
+          columnName: 'isReported',
+          value: false,
+        };
+        await this.planService.updateByColumn(
+          report.planId,
+          updatedValue,
+          transactionalEntityManager,
+        );
+        await this.okrReportTaskService.deleteReportTasksByReportId(
+          report.id,
+          transactionalEntityManager,
+        );
+      },
+    );
   }
   async rockStart(rockStarDto: RockStarDto, tenantId: string) {
     const startOfCurrentWeek = startOfWeek(new Date(), { weekStartsOn: 1 });
@@ -217,8 +232,11 @@ export class OkrReportService {
     //   return reports.filter((item) => parseFloat(item.report_reportScore.split('%')[0]) === maxScore);
   }
 
-  async getById(id:string):Promise<Report>{
-    return await this.reportRepository.findOne({where:{id},relations:['reportTask']});
+  async getById(id: string): Promise<Report> {
+    return await this.reportRepository.findOne({
+      where: { id },
+      relations: ['reportTask'],
+    });
   }
 
   async update(id: string, updateData: Partial<Report>): Promise<Report> {
@@ -232,7 +250,7 @@ export class OkrReportService {
     }
     return updatedReport;
   }
-  
+
   async validate(
     reportId: string,
     tenantId: string,
@@ -248,18 +266,19 @@ export class OkrReportService {
       }
       const bool = value === 'true';
 
-      const planData=await this.planService.updateIsPlanReportValidated(report.planId,bool)
-      console.log(planData,report,bool,"report")
+      const planData = await this.planService.updateIsPlanReportValidated(
+        report.planId,
+        bool,
+      );
 
-    
-      return await this.reportRepository.findOne({where:{id:reportId}});
+      return await this.reportRepository.findOne({ where: { id: reportId } });
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw error; // Re-throw known exceptions.
       }
-      throw new InternalServerErrorException('An error occurred while validating the plan.');
+      throw new InternalServerErrorException(
+        'An error occurred while validating the plan.',
+      );
     }
   }
-  
-  
 }

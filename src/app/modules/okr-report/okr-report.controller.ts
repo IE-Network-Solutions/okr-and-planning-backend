@@ -57,7 +57,7 @@ export class OkrReportController {
     const tenantId = req['tenantId'];
     return await this.reportService.rockStart(rockStarDto, tenantId);
   }
-  
+
   @Get('/performance/user')
   async userPerformance(
     @Req() req: Request,
@@ -75,7 +75,6 @@ export class OkrReportController {
     return await this.reportService.getById(reportId);
   }
 
-
   @Post('validate/:reportId')
   async validate(
     @Req() req: Request,
@@ -85,5 +84,4 @@ export class OkrReportController {
     const tenantId = req['tenantId'];
     return await this.reportService.validate(reportId, tenantId, value);
   }
-
 }

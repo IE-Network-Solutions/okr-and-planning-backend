@@ -63,10 +63,14 @@ export class PlanController {
     @Param('planningPeriodId') id: string,
     @Body() arrayOfUserId: string[],
     @Req() req: Request,
-
   ) {
     const tenantId = req['tenantId'];
-    return await this.planService.findPlansByUsersAndPlanningPeriodId(id, arrayOfUserId, options,tenantId);
+    return await this.planService.findPlansByUsersAndPlanningPeriodId(
+      id,
+      arrayOfUserId,
+      options,
+      tenantId,
+    );
   }
   // @Patch(':id')
   // async update(@Param('id') id: string, @Body() updatePlanDto: UpdatePlanDto) {

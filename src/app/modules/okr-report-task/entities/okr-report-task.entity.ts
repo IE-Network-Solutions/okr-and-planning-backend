@@ -16,9 +16,12 @@ import { PlanTask } from '../../plan-tasks/entities/plan-task.entity';
 @Entity()
 export class ReportTask extends BaseModel {
   @Column({
-    type: 'enum',enum: ReportStatusEnum,default:ReportStatusEnum.Drafted })
-    status: ReportStatusEnum;
-  
+    type: 'enum',
+    enum: ReportStatusEnum,
+    default: ReportStatusEnum.Drafted,
+  })
+  status: ReportStatusEnum;
+
   @Column({ nullable: true })
   actualValue: string;
 
@@ -38,7 +41,7 @@ export class ReportTask extends BaseModel {
   @JoinColumn({ name: 'reportId' }) // Ensure column matches your DB schema
   report: Report;
 
-  @Column({ type:'uuid', nullable: false })
+  @Column({ type: 'uuid', nullable: false })
   reportId: string;
 
   @ManyToOne(() => PlanTask, (plan) => plan.planTask, {
@@ -48,7 +51,6 @@ export class ReportTask extends BaseModel {
   })
   planTask: PlanTask;
 
-  
   @Column({ nullable: false })
   planTaskId: string;
 

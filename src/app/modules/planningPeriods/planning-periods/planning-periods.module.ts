@@ -8,9 +8,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { PlanModule } from '../../plan/plan.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([PlanningPeriod, PlanningPeriodUser]),
-  PlanModule
-   ],
+  imports: [
+    TypeOrmModule.forFeature([PlanningPeriod, PlanningPeriodUser]),
+    PlanModule,
+  ],
   controllers: [PlanningPeriodsController],
   providers: [PlanningPeriodsService, PaginationService],
   exports: [PlanningPeriodsService],

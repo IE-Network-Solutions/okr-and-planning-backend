@@ -34,7 +34,7 @@ export class CreatePlanTaskDto {
 
   @IsString()
   @IsOptional()
-  planId: string ;
+  planId: string;
 
   @IsString()
   @IsOptional()

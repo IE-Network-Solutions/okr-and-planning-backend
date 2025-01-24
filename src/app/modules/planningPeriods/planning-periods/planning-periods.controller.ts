@@ -42,11 +42,8 @@ class ParamsWithUUIDBYPLAN {
   userId: string;
 
   @IsUUID()
-
   @IsUUID()
   planId?: string;
-
-
 }
 @Controller('planning-periods')
 @ApiTags('Planning-periods')
@@ -174,9 +171,7 @@ export class PlanningPeriodsController {
   }
 
   @Get('assignment/assignedUser/:userId')
-  async findByUser(
-    @Param('userId') id: string,
-  ): Promise<PlanningPeriodUser[]> {
+  async findByUser(@Param('userId') id: string): Promise<PlanningPeriodUser[]> {
     return await this.planningPeriodService.findByUser(id);
   }
 
@@ -214,9 +209,12 @@ export class PlanningPeriodsController {
     const { planningPeriodId, userId } = params;
     const tenantId = req['tenantId'];
 
-    return await this.planningPeriodService.getPlanningPeriodParentHierarchy(planningPeriodId, userId,tenantId);
+    return await this.planningPeriodService.getPlanningPeriodParentHierarchy(
+      planningPeriodId,
+      userId,
+      tenantId,
+    );
   }
-
 
   @Get('child-hierarchy/:planningPeriodId/user/:userId')
   async getPlanningChildPeriodHierarchy(
@@ -226,7 +224,10 @@ export class PlanningPeriodsController {
     const { planningPeriodId, userId } = params;
     const tenantId = req['tenantId'];
 
-    return await this.planningPeriodService.getPlanningPeriodChildHierarchy(planningPeriodId, userId,tenantId);
+    return await this.planningPeriodService.getPlanningPeriodChildHierarchy(
+      planningPeriodId,
+      userId,
+      tenantId,
+    );
   }
-
 }

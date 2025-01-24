@@ -11,18 +11,14 @@ import { ReportStatusEnum } from '@root/src/core/interfaces/reportStatus.type';
 //     reason?: string;
 //     failureReason?: CreateFailureReasonDto;
 //   };
-  
 
-  export type ReportTaskInput = Record<
+export type ReportTaskInput = Record<
   string,
   {
     status: ReportStatusEnum; // Required field
     failureReasonId?: string; // Optional field
-    isAchieved?: boolean;     // Optional field
+    isAchieved?: boolean; // Optional field
     actualValue?: number; // Optional field
-    customReason?: string;    // Optional field
+    customReason?: string; // Optional field
   }
 >;
-
-
-
