@@ -11,12 +11,15 @@ import { ReportStatusEnum } from '@root/src/core/interfaces/reportStatus.type';
 import { ReportComment } from '../../report-comments/entities/report-comment.entity';
 import { Report } from '../../okr-report/entities/okr-report.entity';
 import { FailureReason } from '../../failure-reason/entities/failure-reason.entity';
-import { Plan } from '../../plan/entities/plan.entity';
 import { PlanTask } from '../../plan-tasks/entities/plan-task.entity';
 
 @Entity()
 export class ReportTask extends BaseModel {
-  @Column({ type: 'enum', enum: ReportStatusEnum,default:ReportStatusEnum.Drafted})
+  @Column({
+    type: 'enum',
+    enum: ReportStatusEnum,
+    default: ReportStatusEnum.Drafted,
+  })
   status: ReportStatusEnum;
   
   @Column({ nullable: true })
@@ -25,7 +28,7 @@ export class ReportTask extends BaseModel {
   @Column({ default: false })
   isAchieved: boolean;
 
-  @Column({ nullable: true })
+  @Column({ nullable: false })
   tenantId: string; // This stores the foreign key for Tenant
 
   @Column({ nullable: true })
@@ -38,7 +41,7 @@ export class ReportTask extends BaseModel {
   @JoinColumn({ name: 'reportId' }) // Ensure column matches your DB schema
   report: Report;
 
-  @Column({ nullable: true })
+  @Column({ type: 'uuid', nullable: false })
   reportId: string;
 
   @ManyToOne(() => PlanTask, (plan) => plan.planTask, {
@@ -48,7 +51,7 @@ export class ReportTask extends BaseModel {
   })
   planTask: PlanTask;
 
-  @Column({ nullable: true })
+  @Column({ nullable: false })
   planTaskId: string;
 
   @ManyToOne(() => FailureReason, (failureReason) => failureReason.reportTask, {

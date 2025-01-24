@@ -60,6 +60,14 @@ export class PlanTasksController {
   ) {
     return await this.planTasksService.findByUsers(id, arrayOfUserId, options);
   }
+  // @Post('/users-plan/:planningId')
+  // async findByUserIds(
+  //   @Query() options: IPaginationOptions,
+  //   @Param('planningId') id: string,
+  //   @Body() arrayOfUserId: string[],
+  // ) {
+  //   return await this.planTasksService.findByUserIds(id, arrayOfUserId, options);
+  // }
   @Patch()
   async update(
     @Body() updatePlanTaskDto: UpdatePlanTasksDto,
@@ -71,6 +79,6 @@ export class PlanTasksController {
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.planTasksService.remove(+id);
+    return this.planTasksService.remove(id);
   }
 }

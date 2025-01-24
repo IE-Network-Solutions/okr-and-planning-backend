@@ -1,8 +1,9 @@
 import { BaseModel } from '@root/src/database/base.model';
-import { Column, Entity } from 'typeorm';
+import { Column, Entity, Unique } from 'typeorm';
 import { IntervalHierarchy } from '../enum/interval-type.enum';
 
 @Entity()
+@Unique(['tenantId', 'name']) // Define composite unique constraint
 export class PlanningPeriod extends BaseModel {
   @Column({ length: 500, type: 'varchar' })
   name: string;

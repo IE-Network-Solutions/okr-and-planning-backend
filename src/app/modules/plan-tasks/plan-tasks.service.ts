@@ -6,7 +6,7 @@ import {
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { PlanTask } from './entities/plan-task.entity';
 import { Plan } from '../plan/entities/plan.entity';
-import { DataSource, Repository, TreeRepository } from 'typeorm';
+import { DataSource, In, Repository, TreeRepository } from 'typeorm';
 import { KeyResultsService } from '../key-results/key-results.service';
 import { MilestonesService } from '../milestones/milestones.service';
 import { PaginationService } from '@root/src/core/pagination/pagination.service';
@@ -14,7 +14,7 @@ import { PlanningPeriodUser } from '../planningPeriods/planning-periods/entities
 import { CreatePlanTaskDto } from './dto/create-plan-task.dto';
 import { UpdatePlanTaskDto } from './dto/update-plan-task.dto';
 import { GetFromOrganizatiAndEmployeInfoService } from '../objective/services/get-data-from-org.service';
-import { IPaginationOptions } from 'nestjs-typeorm-paginate';
+import { IPaginationOptions, Pagination } from 'nestjs-typeorm-paginate';
 
 @Injectable()
 export class PlanTasksService {
@@ -272,54 +272,70 @@ export class PlanTasksService {
     });
   }
 
+  async findByUserIds(
+    arrayOfUserId: string[],
+    paginationOptions: IPaginationOptions,
+  ): Promise<Pagination<Plan>> {
+    try {
+      const options: IPaginationOptions = {
+        page: paginationOptions.page,
+        limit: paginationOptions.limit,
+      };
+
+      const queryBuilder = this.planRepository
+        .createQueryBuilder('plan') // Use a query builder
+        .leftJoinAndSelect('plan.parentPlan', 'parentPlan') // Fetch parentPlan
+        .leftJoinAndSelect('plan.tasks', 'tasks'); // Fetch tasks
+
+      if (!arrayOfUserId.includes('all')) {
+        queryBuilder.where('plan.userId IN (:...userIds)', {
+          userIds: arrayOfUserId,
+        });
+      }
+
+      const paginatedData = await this.paginationService.paginate<Plan>(
+        queryBuilder,
+        options,
+      );
+
+      return paginatedData;
+    } catch (error) {
+      throw new Error(`Error fetching plans: ${error.message}`);
+    }
+  }
+
+  ////////////////////////////////   ahmed changes //////////////////////////
+
   async findByUsers(
     id: string,
     arrayOfUserId: string[],
     options: IPaginationOptions,
   ) {
     try {
-      const page = Number(options.page) || 1;
-      const limit = Number(options.limit) || 10;
-
       const queryBuilder = this.planRepository
         .createQueryBuilder('plan')
-        .leftJoinAndSelect('plan.tasks', 'task', 'task.parentTaskId IS NULL') // Load tasks related to the plan
+        .leftJoinAndSelect('plan.tasks', 'task') // Load all tasks related to the plan
         .leftJoinAndSelect('task.planTask', 'descendants') // Load descendants of the tasks
+        .leftJoinAndSelect('task.parentTask', 'parentTask') // Explicitly load the parent task relationship
         .leftJoinAndSelect('plan.planningUser', 'planningUser') // Load the planning period assignment
         .leftJoinAndSelect('planningUser.planningPeriod', 'planningPeriod') // Load the planning period definition
         .leftJoinAndSelect('task.keyResult', 'keyResult') // Load the key result belonging to the parent task
+        .leftJoinAndSelect('keyResult.objective', 'objective') // Load the objective related to the key result
         .leftJoinAndSelect('keyResult.metricType', 'metricType') // Load the metricType for the key result
         .leftJoinAndSelect('task.milestone', 'milestone') // Load milestones related to tasks
-        .leftJoinAndSelect('plan.comments', 'comments'); // Load comments related to the plan
+        .leftJoinAndSelect('plan.comments', 'comments') // Load comments related to the plan
+        .andWhere('planningPeriod.id = :id', { id });
 
-      if (arrayOfUserId.includes('all')) {
-        queryBuilder
-          .where('planningPeriod.id = :id', { id })
-          .orderBy('plan.createdAt', 'DESC') // Order by milestone for grouping
-          .addOrderBy('task.id', 'DESC'); // Order by keyResult for secondary grouping
-      } else {
-        queryBuilder
-          .where('plan.createdBy IN (:...arrayOfUserId)', { arrayOfUserId })
-          .andWhere('planningPeriod.id = :id', { id })
-          .orderBy('plan.createdAt', 'DESC') // Order by milestone for grouping
-          .addOrderBy('task.createdAt', 'DESC'); // Order by keyResult for secondary grouping
+      if (!arrayOfUserId.includes('all')) {
+        queryBuilder.andWhere('plan.createdBy IN (:...arrayOfUserId)', {
+          arrayOfUserId,
+        });
       }
-
-      const [result, total] = await queryBuilder
-        .skip((page - 1) * limit) // Skip rows for pagination
-        .take(limit) // Take the number of rows specified in the limit
-        .getManyAndCount(); // Execute query and return results with total count
-
-      return {
-        items: result,
-        meta: {
-          totalItems: total,
-          itemCount: result.length,
-          itemsPerPage: limit,
-          totalPages: Math.ceil(total / limit),
-          currentPage: page,
-        },
-      };
+      const paginatedData = await this.paginationService.paginate<Plan>(
+        queryBuilder,
+        options,
+      );
+      return paginatedData;
     } catch (error) {
       throw new Error(`Error fetching plans: ${error.message}`);
     }
@@ -360,38 +376,40 @@ export class PlanTasksService {
 
       // Process update or create operations for each task in the input
       for (const updatePlanTaskDto of updatePlanTasksDto) {
-        let task;
+        // let task;
 
-        // If the task does not exist, create a new one
+        // Create a new task if ID does not exist
         if (!updatePlanTaskDto.id) {
-          task = await this.createTasks([updatePlanTaskDto], tenantId);
+          await this.createTasks([updatePlanTaskDto], tenantId);
           continue;
         }
 
-        // Fetch existing task or throw error
-        task = await this.taskRepository.findOneByOrFail({
+        // Fetch the existing task or throw an error if not found
+        const task = await this.taskRepository.findOneByOrFail({
           id: updatePlanTaskDto.id,
         });
 
-        // Handle parent task and level
+        // Fetch parent tasks if the current task is not at the root level
         const parentTasks =
           task.level !== 0
             ? await this.taskRepository.findAncestorsTree(task)
             : null;
         const parentTask = parentTasks?.parentTask || null;
 
-        // Update task details
-        task.keyResult = await this.keyResultService.findOnekeyResult(
-          updatePlanTaskDto.keyResultId,
-        );
-        task.level = parentTask ? parentTask.level + 1 : 0;
-        task.priority = updatePlanTaskDto.priority ?? task.priority;
-        task.targetValue = updatePlanTaskDto.targetValue ?? task.targetValue;
-        task.task = updatePlanTaskDto.task ?? task.task;
-        task.weight = updatePlanTaskDto.weight;
-        task.updatedBy = updatePlanTaskDto.userId;
-        task.achieveMK = updatePlanTaskDto.achieveMK ?? false;
-        task.planId = updatePlanTaskDto.planId;
+        // Prepare the updated task object
+        Object.assign(task, {
+          keyResult: await this.keyResultService.findOnekeyResult(
+            updatePlanTaskDto.keyResultId,
+          ),
+          level: parentTask ? parentTask.level + 1 : 0,
+          priority: updatePlanTaskDto.priority ?? task.priority,
+          targetValue: updatePlanTaskDto.targetValue ?? task.targetValue,
+          task: updatePlanTaskDto.task ?? task.task,
+          weight: updatePlanTaskDto.weight,
+          updatedBy: updatePlanTaskDto.userId,
+          achieveMK: updatePlanTaskDto.achieveMK ?? false,
+          planId: updatePlanTaskDto.planId,
+        });
 
         // Update milestone if provided
         if (updatePlanTaskDto.milestoneId) {
@@ -405,7 +423,7 @@ export class PlanTasksService {
 
         // Process subtasks if present
         if (
-          updatePlanTaskDto.subTasks &&
+          Array.isArray(updatePlanTaskDto.subTasks) &&
           updatePlanTaskDto.subTasks.length > 0
         ) {
           await this.updateSubTasks(
@@ -467,7 +485,11 @@ export class PlanTasksService {
   }
 
   ////////////////////////////////   ahmed changes //////////////////////////
-  remove(id: number) {
+  remove(id: string) {
     return `This action removes a #${id} planTask`;
+  }
+
+  async findPlanTaskById(id: string): Promise<PlanTask> {
+    return await this.taskRepository.findOneByOrFail({ id });
   }
 }

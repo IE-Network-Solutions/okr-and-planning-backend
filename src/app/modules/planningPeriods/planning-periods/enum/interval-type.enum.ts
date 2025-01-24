@@ -1,3 +1,5 @@
+//interval-type.enum.ts
+
 export enum IntervalType {
   day = 'day',
   Week = 'Week',
