@@ -11,6 +11,8 @@ import { PlanTask } from '../plan-tasks/entities/plan-task.entity';
 import { PlanningPeriodsService } from '../planningPeriods/planning-periods/planning-periods.service';
 import { mock } from 'jest-mock-extended';
 import { GetFromOrganizatiAndEmployeInfoService } from '../objective/services/get-data-from-org.service';
+import { OkrReportTaskService } from '../okr-report-task/okr-report-task.service';
+import { PlanService } from '../plan/plan.service';
 
 describe('OkrReportController', () => {
   let okrReportController: OkrReportController;
@@ -35,6 +37,10 @@ describe('OkrReportController', () => {
           useClass: Repository,
         },
         {
+          provide: OkrReportTaskService,
+          useValue: mock<OkrReportTaskService>(),
+        },
+        {
           provide: getRepositoryToken(Plan),
           useClass: Repository,
         },
@@ -49,6 +55,10 @@ describe('OkrReportController', () => {
         {
           provide: PlanningPeriodsService,
           useValue: mock<PlanningPeriodsService>(),
+        },
+        {
+          provide: PlanService,
+          useValue: mock<PlanService>(),
         },
         {
           provide: GetFromOrganizatiAndEmployeInfoService,

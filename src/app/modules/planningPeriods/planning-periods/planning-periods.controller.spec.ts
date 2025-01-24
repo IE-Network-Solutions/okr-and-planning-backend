@@ -7,6 +7,7 @@ import { PlanningPeriod } from './entities/planningPeriod.entity';
 import { PlanningPeriodsController } from './planning-periods.controller';
 import { PlanningPeriodsService } from './planning-periods.service';
 import { PlanningPeriodUser } from './entities/planningPeriodUser.entity';
+import { PlanService } from '../../plan/plan.service';
 
 describe('PlanningPeriodsController', () => {
   let planningPeriodsController: PlanningPeriodsController;
@@ -31,6 +32,10 @@ describe('PlanningPeriodsController', () => {
           useValue: mock<Repository<PlanningPeriodUser>>(), // Use mock for the repository
         },
         {
+          provide: PlanService,
+          useValue: mock<PlanService>(),
+        },
+        {
           provide: PaginationService,
           useValue: {
             paginate: jest.fn(), // Mock the paginate method
@@ -46,6 +51,7 @@ describe('PlanningPeriodsController', () => {
     planningPeriodsController = moduleRef.get<PlanningPeriodsController>(
       PlanningPeriodsController,
     );
+    
     planningPeriodsService = moduleRef.get<PlanningPeriodsService>(
       PlanningPeriodsService,
     );
