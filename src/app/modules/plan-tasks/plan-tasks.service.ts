@@ -433,7 +433,6 @@ export class PlanTasksService {
           );
         }
       }
-
       return await this.taskRepository.find({ where: { planId } });
     } catch (error) {
       throw 'Error updating records';

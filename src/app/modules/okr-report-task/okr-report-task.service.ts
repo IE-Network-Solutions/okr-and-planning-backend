@@ -118,7 +118,10 @@ export class OkrReportTaskService {
       const check = await this.checkAndUpdateProgressByKey(savedReportTasks);
 
       if (check && checkPlanIsReported) {
-        await this.userVpScoringService.calculateVP(userId, tenantId);
+        const vp = await this.userVpScoringService.calculateVP(
+          userId,
+          tenantId,
+        );
         await queryRunner.commitTransaction();
       }
       return savedReportTasks;
@@ -222,7 +225,21 @@ export class OkrReportTaskService {
             }
 
             default:
-              if (planTask.status === 'Done') {
+              if (task.status === 'Done') {
+                return await this.okrProgressService.calculateKeyResultProgress(
+                  {
+                    keyResult: {
+                      ...planTask.keyResult,
+                      //  actualValue: task?.actualValue,
+                      // actualValue: planTask.keyResult?.targetValue,
+                      actualValue: parseFloat(planTask?.targetValue.toString()),
+
+                    },
+                    isOnCreate: true,
+                    // actualValueToUpdate: task?.actualValue,
+                  },
+                );
+              } else {
                 return await this.okrProgressService.calculateKeyResultProgress(
                   {
                     keyResult: {
@@ -258,6 +275,7 @@ export class OkrReportTaskService {
     }
   }
 
+  
   // Method to update the isReported value of the plan
   private async updatePlanIsReported(planId: string): Promise<any> {
     try {

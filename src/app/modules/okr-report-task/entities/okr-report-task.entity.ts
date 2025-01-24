@@ -21,7 +21,7 @@ export class ReportTask extends BaseModel {
     default: ReportStatusEnum.Drafted,
   })
   status: ReportStatusEnum;
-
+  
   @Column({ nullable: true })
   actualValue: string;
 
