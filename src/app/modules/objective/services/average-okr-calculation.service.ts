@@ -13,7 +13,6 @@ export class AverageOkrCalculation {
     //   (objective) =>
     //     objective['completedKeyResults'] === objective.keyResults.length,
     // ).length;
-
     const completedOkr = objectives.reduce((sum, objective) => {
       return sum + objective['completedKeyResults'];
     }, 0);
@@ -28,9 +27,6 @@ export class AverageOkrCalculation {
       ? sumOfTeamObjectiveProgress / objectives.length
       : 0),
       (calculatedOkr.okrCompleted = completedOkr);
-      console.log(objectives.flatMap(
-        (item) => item.keyResults,
-      ).length,"jkjkjkjkjkjkjkjkjkkjk")
     calculatedOkr.keyResultcount = objectives.flatMap(
       (item) => item.keyResults,
     ).length;

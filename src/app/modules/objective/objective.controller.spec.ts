@@ -178,6 +178,7 @@ import { ObjectiveController } from './objective.controller';
 import { ObjectiveService } from './services/objective.service';
 import { OKRDashboardService } from './services/okr-dashbord.service';
 import { mock } from 'jest-mock-extended';
+import { OKRCalculationService } from './services/okr-calculation.service';
 
 jest.mock('./services/objective.service'); // Mock the service
 
@@ -194,6 +195,10 @@ describe('ObjectiveController', () => {
         {
           provide: OKRDashboardService,
           useValue: mock<OKRDashboardService>(),
+        },
+        {
+          provide: OKRCalculationService,
+          useValue: mock<OKRCalculationService>(),
         },
       ],
     }).compile();

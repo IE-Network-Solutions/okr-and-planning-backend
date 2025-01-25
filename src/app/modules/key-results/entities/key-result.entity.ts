@@ -50,9 +50,13 @@ export class KeyResult extends BaseModel {
   progress: number;
   @Column({ type: 'uuid' })
   tenantId: string;
-  @ManyToOne(() => Objective, (obj) => obj.keyResults)
+
+  @ManyToOne(() => Objective, (obj) => obj.keyResults, {
+    eager: true, // Automatically load the related Objective
+  })
   @JoinColumn({ name: 'objectiveId' })
   objective: Objective;
+
   @OneToMany(() => Milestone, (mile) => mile.keyResult)
   milestones: Milestone[];
 

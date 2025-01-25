@@ -33,6 +33,9 @@ export class Plan extends BaseModel {
   isValidated: boolean;
 
   @Column({ type: 'boolean', default: false })
+  isReportValidated: boolean;
+
+  @Column({ type: 'boolean', default: false })
   isReported: boolean;
 
   @TreeChildren()

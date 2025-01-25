@@ -6,6 +6,7 @@ import { DataSource, Repository } from 'typeorm';
 import { PlanningPeriodsService } from './planning-periods.service';
 import { PlanningPeriod } from './entities/planningPeriod.entity';
 import { PlanningPeriodUser } from './entities/planningPeriodUser.entity';
+import { PlanService } from '../../plan/plan.service';
 
 describe('PlanningPeriodsService', () => {
   let planningPeriodsService: PlanningPeriodsService;
@@ -26,6 +27,10 @@ describe('PlanningPeriodsService', () => {
         {
           provide: PaginationService,
           useValue: mock<PaginationService>(),
+        },
+        {
+          provide: PlanService,
+          useValue: mock<PlanService>(),
         },
         {
           provide: DataSource,

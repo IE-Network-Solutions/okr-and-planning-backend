@@ -31,8 +31,6 @@ export class ObjectiveController {
     private readonly objectiveService: ObjectiveService,
     private readonly okrDashboardService: OKRDashboardService,
     private readonly oKRCalculationService: OKRCalculationService,
-
-
   ) {}
 
   @Post()
@@ -86,20 +84,6 @@ export class ObjectiveController {
   removeObjective(@Req() req: Request, @Param('id') id: string) {
     return this.objectiveService.removeObjective(id);
   }
-
-  // @Get('/user/:userId')
-  // async calculateUSerOkr(
-  //   @Req() req: Request,
-  //   @Param('userId') userId: string,
-  //   @Query() paginationOptions?: PaginationDto,
-  // ) {
-  //   const tenantId = req['tenantId'];
-  //   return this.okrDashboardService.handleUserOkr(
-  //     userId,
-  //     tenantId,
-  //     paginationOptions,
-  //   );
-  // }
   @Get('/objective-filter')
   objectiveFilter(
     @Req() req: Request,
@@ -152,7 +136,7 @@ export class ObjectiveController {
     @Headers('userId') userId: string,
     @Query() paginationOptions?: PaginationDto,
   ) {
-    return this.okrDashboardService.getOkrOfSingleUser(
+    return this.oKRCalculationService.okrOfUser(
       userId,
       tenantId,
       paginationOptions,
@@ -194,8 +178,7 @@ export class ObjectiveController {
     @Headers('userId') userId: string,
     @Query() paginationOptions?: PaginationDto,
   ) {
-    return this.okrDashboardService.getOkrOfCompany(
-      userId,
+    return this.okrDashboardService.okrOfTheCompany(
       tenantId,
       paginationOptions,
     );

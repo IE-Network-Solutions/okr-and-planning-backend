@@ -33,7 +33,9 @@ export class UserVpScoringService {
     private readonly configService: ConfigService,
     private readonly getUsersService: GetFromOrganizatiAndEmployeInfoService,
   ) {
-    this.orgUrl = this.configService.get<string>('externalUrls.orgStructureUrl');
+    this.orgUrl = this.configService.get<string>(
+      'externalUrls.orgStructureUrl',
+    );
   }
   async createUserVpScoring(
     createUserVpScoringDto: CreateUserVpScoringDto,
@@ -168,106 +170,113 @@ export class UserVpScoringService {
   }
 
   async calculateVP(userId: string, tenantId: string): Promise<any> {
-    let result = 0;
-    const breakDownData = [];
-    const userScoring = await this.findOneUserVpScoringByUserId(
-      userId,
-      tenantId,
-    );
-
-    if (userScoring) {
-      const totalPercentage = userScoring.vpScoring.totalPercentage;
-      const vpScoringCriterions = userScoring.vpScoring.vpScoringCriterions;
-      const currentMonth = await this.getUsersService.getActiveMonth(tenantId);
-      const user = await this.getUsersService.getUsers(userId, tenantId);
-
-      const userDepartmentId = user.employeeJobInformation[0].departmentId;
-
-      for (const criteria of vpScoringCriterions) {
-        let eachScore = 0;
-        const achievedScore = await this.getResults(
+    try {
+      let result = 0;
+      const breakDownData = [];
+      const userScoring = await this.findOneUserVpScoringByUserId(
+        userId,
+        tenantId,
+      );
+      if (userScoring) {
+        const totalPercentage = userScoring.vpScoring.totalPercentage;
+        const vpScoringCriterions = userScoring.vpScoring.vpScoringCriterions;
+        const currentMonth = await this.getUsersService.getActiveMonth(
           tenantId,
-          criteria.vpCriteria.sourceEndpoint,
-          userId,
         );
-        for (const target of criteria.vpCriteria.criteriaTargets) {
-          if (target.departmentId === null) {
-            if (target.month === currentMonth.name) {
-              if (criteria.vpCriteria.isDeduction) {
-                result =
-                  result - (criteria.weight * achievedScore) / target.target;
-              } else {
-                result =
-                  result + (criteria.weight * achievedScore) / target.target;
-              }
-              eachScore = (criteria.weight * achievedScore) / target.target;
+        const user = await this.getUsersService.getUsers(userId, tenantId);
 
-              const breakDownObject = new VpScoreBreakDownDto();
-              breakDownObject.targetId = target.id;
-              breakDownObject.criteriaId = criteria.vpCriteria.id;
-              breakDownObject.weight = criteria.weight;
-              breakDownObject.score = eachScore;
-              breakDownData.push(breakDownObject);
-            }
-          } else {
-            if (target.departmentId === userDepartmentId) {
-              if (criteria.vpCriteria.isDeduction) {
-                result =
-                  result - (criteria.weight * achievedScore) / target.target;
-              } else {
-                result =
-                  result + (criteria.weight * achievedScore) / target.target;
-              }
-              eachScore = (criteria.weight * achievedScore) / target.target;
+        const userDepartmentId = user.employeeJobInformation[0].departmentId;
 
-              const breakDownObject = new VpScoreBreakDownDto();
-              breakDownObject.targetId = target.id;
-              breakDownObject.criteriaId = criteria.vpCriteria.id;
-              breakDownObject.weight = criteria.weight;
-              breakDownObject.score = eachScore;
-              breakDownData.push(breakDownObject);
+        for (const criteria of vpScoringCriterions) {
+          let eachScore = 0;
+          const achievedScore = await this.getResults(
+            tenantId,
+            criteria.vpCriteria.sourceEndpoint,
+            userId,
+          );
+          for (const target of criteria.vpCriteria.criteriaTargets) {
+            if (target.departmentId === null) {
+              if (target.month === currentMonth.name) {
+                if (criteria.vpCriteria.isDeduction) {
+                  result =
+                    result - (criteria.weight * achievedScore) / target.target;
+                } else {
+                  result =
+                    result + (criteria.weight * achievedScore) / target.target;
+                }
+                eachScore = (criteria.weight * achievedScore) / target.target;
+
+                const breakDownObject = new VpScoreBreakDownDto();
+                breakDownObject.targetId = target.id;
+                breakDownObject.criteriaId = criteria.vpCriteria.id;
+                breakDownObject.weight = criteria.weight;
+                breakDownObject.score = eachScore;
+                breakDownData.push(breakDownObject);
+              }
+            } else {
+              if (target.departmentId === userDepartmentId) {
+                if (criteria.vpCriteria.isDeduction) {
+                  result =
+                    result - (criteria.weight * achievedScore) / target.target;
+                } else {
+                  result =
+                    result + (criteria.weight * achievedScore) / target.target;
+                }
+                eachScore = (criteria.weight * achievedScore) / target.target;
+
+                const breakDownObject = new VpScoreBreakDownDto();
+                breakDownObject.targetId = target.id;
+                breakDownObject.criteriaId = criteria.vpCriteria.id;
+                breakDownObject.weight = criteria.weight;
+                breakDownObject.score = eachScore;
+                breakDownData.push(breakDownObject);
+              }
             }
           }
         }
+        const instance = new CreateVpScoreInstanceDto();
+        instance.monthId = currentMonth.id;
+        instance.userId = userId;
+        instance.vpScore = result;
+        instance.vpScoringId = userScoring.vpScoring.id;
+        instance.breakdown = breakDownData;
+        const savedInstance =
+          await this.vpScoreInstanceService.vpScoreInstanceCreateOrUpdate(
+            instance,
+            tenantId,
+          );
+        return savedInstance;
       }
-      const instance = new CreateVpScoreInstanceDto();
-      instance.monthId = currentMonth.id;
-      instance.userId = userId;
-      instance.vpScore = result;
-      instance.vpScoringId = userScoring.vpScoring.id;
-      instance.breakdown = breakDownData;
-      const savedInstance =
-        await this.vpScoreInstanceService.vpScoreInstanceCreateOrUpdate(
-          instance,
-          tenantId,
-        );
-      return savedInstance;
-    }
+    } catch (error) {}
   }
 
   async refreshVP(refreshVPDto: RefreshVPDto, tenantId: string): Promise<any> {
     try {
-      if (refreshVPDto.users && refreshVPDto.users) {
+      const allUsersVPScore = [];
+      if (refreshVPDto.users && refreshVPDto.users.length > 0) {
         const allUsersVP = await Promise.all(
           refreshVPDto.users.map(async (item) => {
-        const vp =    await this.calculateVP(item, tenantId);
-        console.log(vp,"vpz")
+            const vp = await this.calculateVP(item, tenantId);
+            allUsersVPScore.push(vp);
           }),
         );
-        return allUsersVP;
+        return allUsersVPScore;
       } else {
-        const users = await this.getUsersService.getAllUsers(tenantId);
+        const users = await this.getUsersService.getAllUsersWithTenant(
+          tenantId,
+        );
         const allUsersVP = await Promise.all(
-          users.items.map(async (item) => {
-        const vp=    await this.calculateVP(item.id, tenantId);
-        return vp
-        console.log(vp,"vp2")
+          users.map(async (item) => {
+            const vp = await this.calculateVP(item.id, tenantId);
+            if (vp) {
+              allUsersVPScore.push(vp);
+            }
           }),
         );
-        return allUsersVP;
+        return allUsersVPScore;
       }
     } catch (error) {
-      throw new BadRequestException(error.message);
+      //  throw new BadRequestException(error.message);
     }
   }
 

@@ -28,7 +28,7 @@ import { OKRCalculationService } from './services/okr-calculation.service';
     GetFromOrganizatiAndEmployeInfoService,
     AverageOkrCalculation,
     OKRDashboardService,
-    OKRCalculationService
+    OKRCalculationService,
   ],
   exports: [ObjectiveService, GetFromOrganizatiAndEmployeInfoService],
 })

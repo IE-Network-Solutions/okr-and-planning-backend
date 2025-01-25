@@ -10,7 +10,9 @@ export class GetFromOrganizatiAndEmployeInfoService {
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
   ) {
-    this.orgUrl = this.configService.get<string>('externalUrls.orgStructureUrl');
+    this.orgUrl = this.configService.get<string>(
+      'externalUrls.orgStructureUrl',
+    );
   }
   async getUsers(userId: string, tenantId: string) {
     const response = await this.httpService
@@ -77,18 +79,27 @@ export class GetFromOrganizatiAndEmployeInfoService {
     return response.data;
   }
 
-  async childDepartmentWithUsers(
-    tenantId: string,departmentId:string
-  ){
-    try {
-      const response = await this.httpService
-      .get(`${this.orgUrl}/users/child/departments/${departmentId}`, {
+  async getAllUsersWithTenant(tenantId: string) {
+    const response = await this.httpService
+      .get(`${this.orgUrl}/users/simple-info/all-user/with-tenant`, {
         headers: {
           tenantid: tenantId,
         },
       })
       .toPromise();
     return response.data;
+  }
+
+  async childDepartmentWithUsers(tenantId: string, departmentId: string) {
+    try {
+      const response = await this.httpService
+        .get(`${this.orgUrl}/users/child/departments/${departmentId}`, {
+          headers: {
+            tenantid: tenantId,
+          },
+        })
+        .toPromise();
+      return response.data;
     } catch (error) {
       throw new BadRequestException(error.message);
     }
