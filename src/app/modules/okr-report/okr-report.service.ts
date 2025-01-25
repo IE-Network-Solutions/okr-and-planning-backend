@@ -172,7 +172,7 @@ export class OkrReportService {
       (item) => parseFloat(item.report_reportScore.split('%')[0]) === maxScore,
     );
 
-    return topEmployees;
+    return [];
   }
   async userPerformance(rockStarDto: RockStarDto, tenantId: string) {
     const planningPeriod =
@@ -226,7 +226,7 @@ export class OkrReportService {
       );
       report['user'] = user;
     }
-    return reports;
+    return [];
     //   const maxScore = Math.max(...reports.map((item) => parseFloat(item.report_reportScore.split('%')[0])));
     // console.log(maxScore,"maxScore")
     //   return reports.filter((item) => parseFloat(item.report_reportScore.split('%')[0]) === maxScore);
