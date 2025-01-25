@@ -5,13 +5,16 @@ import {
   Get,
   Headers,
   Param,
+  Patch,
   Post,
+  Query,
   Req,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { UUID } from 'crypto';
 import { OkrReportTaskService } from './okr-report-task.service';
-import { ReportTaskDTO } from './dto/create-okr-report-task.dto';
+import { ReportTaskInput } from './dto/create-okr-report-task.dto';
+// import { ReportTaskDTO } from './dto/create-okr-report-task.dto';
 
 @Controller('okr-report-task')
 @ApiTags('okr-report-task')
@@ -19,7 +22,7 @@ export class OkrReportTaskController {
   constructor(private readonly okrReportTaskService: OkrReportTaskService) {}
   @Post('/create-report/:userId/:planningPeriodId')
   create(
-    @Body() createReportTaskDTO: ReportTaskDTO,
+    @Body() createReportTaskDTO: ReportTaskInput,
     @Param('userId') userId: string,
     @Param('planningPeriodId') planningPeriodId: string,
     @Headers('tenantId') tenantId: string,
@@ -37,13 +40,16 @@ export class OkrReportTaskController {
     @Param('planningPeriodId') planningPeriodId: string,
     @Param('userId') userId: string,
     @Headers('tenantId') tenantId: string,
+    @Query('forPlan') forPlan = true,
   ) {
     return this.okrReportTaskService.getUnReportedPlanTasks(
       userId,
       planningPeriodId,
       tenantId,
+      forPlan,
     );
   }
+
   // GET endpoint to fetch all reports filtered by tenantId
   @Post('/by-planning-period/:planningPeriodId') // Expecting planningPeriodId from the URL
   async getAllReportTasks(
@@ -61,6 +67,16 @@ export class OkrReportTaskController {
       userIds,
       planningPeriodId,
     );
+  }
+
+  // GET endpoint to fetch all reports filtered by tenantId
+  @Patch('/update-report-tasks/:reportId') // Expecting planningPeriodId from the URL
+  async updateReportData(
+    @Body() reportTask: ReportTaskInput, // Expecting userIds to be an array of strings
+    @Param('reportId') reportId: string, // Extract the planningPeriodId from the route
+  ): Promise<any> {
+    // Pass tenantId, userIds, and planningPeriodId to your service method
+    return this.okrReportTaskService.updateReportTasks(reportId, reportTask);
   }
   // DELETE endpoint to delete a report by id
   @Delete(':id')

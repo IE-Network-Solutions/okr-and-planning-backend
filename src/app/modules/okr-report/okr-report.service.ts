@@ -1,28 +1,37 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  forwardRef,
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Report } from './entities/okr-report.entity';
-import { In, Repository } from 'typeorm';
+import { EntityManager, In, Repository } from 'typeorm';
 import { ReportTask } from '../okr-report-task/entities/okr-report-task.entity';
 import { CreateReportDTO } from './dto/create-report.dto';
 import { UUID } from 'crypto';
 import { RockStarDto } from './dto/report-rock-star.dto';
 import { PlanningPeriodsService } from '../planningPeriods/planning-periods/planning-periods.service';
-import { PaginationDto } from '@root/src/core/commonDto/pagination-dto';
 import { startOfWeek, endOfWeek } from 'date-fns';
 import { GetFromOrganizatiAndEmployeInfoService } from '../objective/services/get-data-from-org.service';
 
 import { ReportStatusEnum } from '@root/src/core/interfaces/reportStatus.type';
+import { OkrReportTaskService } from '../okr-report-task/okr-report-task.service';
+import { PlanService } from '../plan/plan.service';
 
 @Injectable()
 export class OkrReportService {
   constructor(
     @InjectRepository(Report) private reportRepository: Repository<Report>,
-    @InjectRepository(ReportTask)
-    private reportTaskRepository: Repository<ReportTask>,
     private planningPeriodService: PlanningPeriodsService,
+
+    @Inject(forwardRef(() => OkrReportTaskService))
+    private okrReportTaskService: OkrReportTaskService,
+    private planService: PlanService,
     private readonly getFromOrganizatiAndEmployeInfoService: GetFromOrganizatiAndEmployeInfoService,
   ) {}
-
   async createReportWithTasks(
     reportData: CreateReportDTO,
     tenantId: string,
@@ -45,6 +54,7 @@ export class OkrReportService {
       tenantId: tenantId,
       userId: reportData?.userId,
       planId: reportData.planId,
+      createdBy: reportData?.userId,
       sessionId: reportData.sessionId,
     });
 
@@ -56,25 +66,26 @@ export class OkrReportService {
     // Step 5: Return the saved report and its associated tasks
     return savedReport;
   }
-
   async getAllReportsByTenantAndPeriod(
     tenantId: UUID,
     userIds: string[],
     planningPeriodId: string,
-  ): Promise<any> {
+  ): Promise<Report[]> {
     // Use queryBuilder to fetch reports with complex filtering
     const reports = await this.reportRepository
       .createQueryBuilder('report') // Start from the 'report' entity
       .leftJoinAndSelect('report.reportTask', 'reportTask') // Join 'reportTask'
       .leftJoinAndSelect('report.comments', 'ReportComment') // Join 'ReportComment' (adjust alias here)
       .leftJoinAndSelect('reportTask.planTask', 'planTask') // Join 'planTask'
-      .leftJoinAndSelect('planTask.plan', 'plan') // Join 'plan'
+      // .leftJoinAndSelect('planTask.plan', 'plan') // Join 'plan'
+      .leftJoinAndSelect('report.plan', 'plan') // Join 'reportTask'
       .leftJoinAndSelect('plan.planningUser', 'planningUser') // Join 'planningUser'
       .leftJoinAndSelect('planTask.keyResult', 'keyResult') // Join 'keyResult'
       .leftJoinAndSelect('planTask.milestone', 'milestone') // Join 'milestone'
 
       // Apply filtering conditions
       .where('report.tenantId = :tenantId', { tenantId }) // Filter by tenantId
+      // .andWhere('report.isValidated = :isValidated', { isValidated: false })
       .andWhere(
         userIds.includes('all') ? '1=1' : 'report.userId IN (:...userIds)',
         userIds.includes('all') ? {} : { userIds },
@@ -90,17 +101,39 @@ export class OkrReportService {
 
     return reports;
   }
-
   // Method to delete a report by id and tenantId
   async deleteReport(id: string, tenantId: UUID): Promise<void> {
-    const report = await this.reportRepository.findOne({
-      where: { tenantId: tenantId }, // Ensure the tenantId matches
-    });
+    // Start a transaction
+    await this.reportRepository.manager.transaction(
+      async (transactionalEntityManager: EntityManager) => {
+        // Find the report
+        const report = await transactionalEntityManager.findOne(Report, {
+          where: { id, tenantId },
+        });
 
-    if (!report) {
-      throw new NotFoundException(`Report with ID not found`);
-    }
-    await this.reportRepository.remove(report);
+        if (!report) {
+          throw new NotFoundException(`Report with ID not found`);
+        }
+
+        // Soft remove the report
+        await transactionalEntityManager.softRemove(report);
+
+        // Update the plan associated with the report
+        const updatedValue = {
+          columnName: 'isReported',
+          value: false,
+        };
+        await this.planService.updateByColumn(
+          report.planId,
+          updatedValue,
+          transactionalEntityManager,
+        );
+        await this.okrReportTaskService.deleteReportTasksByReportId(
+          report.id,
+          transactionalEntityManager,
+        );
+      },
+    );
   }
   async rockStart(rockStarDto: RockStarDto, tenantId: string) {
     const startOfCurrentWeek = startOfWeek(new Date(), { weekStartsOn: 1 });
@@ -197,5 +230,55 @@ export class OkrReportService {
     //   const maxScore = Math.max(...reports.map((item) => parseFloat(item.report_reportScore.split('%')[0])));
     // console.log(maxScore,"maxScore")
     //   return reports.filter((item) => parseFloat(item.report_reportScore.split('%')[0]) === maxScore);
+  }
+
+  async getById(id: string): Promise<Report> {
+    return await this.reportRepository.findOne({
+      where: { id },
+      relations: ['reportTask'],
+    });
+  }
+
+  async update(id: string, updateData: Partial<Report>): Promise<Report> {
+    await this.reportRepository.update(id, updateData);
+    const updatedReport = await this.reportRepository.findOne({
+      where: { id },
+      relations: ['reportTask'], // Load relations as needed
+    });
+    if (!updatedReport) {
+      throw new Error(`Report with id ${id} not found`);
+    }
+    return updatedReport;
+  }
+
+  async validate(
+    reportId: string,
+    tenantId: string,
+    value: string,
+  ): Promise<Report> {
+    try {
+      const report = await this.reportRepository.findOne({
+        where: { id: reportId, tenantId },
+      });
+
+      if (!report) {
+        throw new NotFoundException('Report does not exist.');
+      }
+      const bool = value === 'true';
+
+      const planData = await this.planService.updateIsPlanReportValidated(
+        report.planId,
+        bool,
+      );
+
+      return await this.reportRepository.findOne({ where: { id: reportId } });
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error; // Re-throw known exceptions.
+      }
+      throw new InternalServerErrorException(
+        'An error occurred while validating the plan.',
+      );
+    }
   }
 }

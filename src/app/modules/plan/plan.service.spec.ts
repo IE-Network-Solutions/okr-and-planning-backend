@@ -8,6 +8,7 @@ import { PlanTask } from '../plan-tasks/entities/plan-task.entity';
 import { Plan } from './entities/plan.entity';
 import { PlanningPeriodUser } from '../planningPeriods/planning-periods/entities/planningPeriodUser.entity';
 import { GetFromOrganizatiAndEmployeInfoService } from '../objective/services/get-data-from-org.service';
+import { ObjectiveService } from '../objective/services/objective.service';
 
 describe('PlanService', () => {
   let planService: PlanService;
@@ -27,6 +28,10 @@ describe('PlanService', () => {
         {
           provide: getRepositoryToken(PlanningPeriodUser),
           useValue: mock<Repository<PlanningPeriodUser>>(),
+        },
+        {
+          provide: ObjectiveService,
+          useValue: mock<ObjectiveService>(),
         },
         {
           provide: PaginationService,

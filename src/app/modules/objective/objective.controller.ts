@@ -22,6 +22,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { FilterObjectiveDto } from './dto/filter-objective.dto';
 import { OKRDashboardService } from './services/okr-dashbord.service';
 import { ExcludeAuthGuard } from '@root/src/core/guards/exclud.guard';
+import { OKRCalculationService } from './services/okr-calculation.service';
 
 @Controller('objective')
 @ApiTags('Objective')
@@ -29,6 +30,7 @@ export class ObjectiveController {
   constructor(
     private readonly objectiveService: ObjectiveService,
     private readonly okrDashboardService: OKRDashboardService,
+    private readonly oKRCalculationService: OKRCalculationService,
   ) {}
 
   @Post()
@@ -82,20 +84,6 @@ export class ObjectiveController {
   removeObjective(@Req() req: Request, @Param('id') id: string) {
     return this.objectiveService.removeObjective(id);
   }
-
-  @Get('/user/:userId')
-  async calculateUSerOkr(
-    @Req() req: Request,
-    @Param('userId') userId: string,
-    @Query() paginationOptions?: PaginationDto,
-  ) {
-    const tenantId = req['tenantId'];
-    return this.okrDashboardService.handleUserOkr(
-      userId,
-      tenantId,
-      paginationOptions,
-    );
-  }
   @Get('/objective-filter')
   objectiveFilter(
     @Req() req: Request,
@@ -148,7 +136,7 @@ export class ObjectiveController {
     @Headers('userId') userId: string,
     @Query() paginationOptions?: PaginationDto,
   ) {
-    return this.okrDashboardService.getOkrOfSingleUser(
+    return this.oKRCalculationService.okrOfUser(
       userId,
       tenantId,
       paginationOptions,
@@ -190,7 +178,20 @@ export class ObjectiveController {
     @Headers('userId') userId: string,
     @Query() paginationOptions?: PaginationDto,
   ) {
-    return this.okrDashboardService.getOkrOfCompany(
+    return this.okrDashboardService.okrOfTheCompany(
+      tenantId,
+      paginationOptions,
+    );
+  }
+
+  @Get('/user/:userId')
+  async calculateUSerOkr(
+    @Req() req: Request,
+    @Param('userId') userId: string,
+    @Query() paginationOptions?: PaginationDto,
+  ) {
+    const tenantId = req['tenantId'];
+    return this.oKRCalculationService.handleUserOkr(
       userId,
       tenantId,
       paginationOptions,

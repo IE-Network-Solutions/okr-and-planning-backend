@@ -13,7 +13,6 @@ export class AverageOkrCalculation {
     //   (objective) =>
     //     objective['completedKeyResults'] === objective.keyResults.length,
     // ).length;
-
     const completedOkr = objectives.reduce((sum, objective) => {
       return sum + objective['completedKeyResults'];
     }, 0);

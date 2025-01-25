@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { OkrReportTaskController } from './okr-report-task.controller';
 import { OkrReportTaskService } from './okr-report-task.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -16,8 +16,8 @@ import { PlanningPeriodsModule } from '../planningPeriods/planning-periods/plann
 import { MilestonesModule } from '../milestones/milestones.module';
 import { MetricTypesModule } from '../metric-types/metric-types.module';
 import { OkrReportModule } from '../okr-report/okr-report.module';
-import { PaginationModule } from '@root/src/core/pagination/pagination.module';
 import { VariablePayModule } from '../variable_pay/variable-pay.module';
+import { PaginationModule } from '@root/src/core/pagination/pagination.module';
 
 @Module({
   imports: [
@@ -38,9 +38,9 @@ import { VariablePayModule } from '../variable_pay/variable-pay.module';
     MilestonesModule,
     MetricTypesModule,
     OkrProgressModule,
-    OkrReportModule,
     PaginationModule,
     VariablePayModule,
+    forwardRef(() => OkrReportModule),
   ],
   controllers: [OkrReportTaskController],
   providers: [OkrReportTaskService],
