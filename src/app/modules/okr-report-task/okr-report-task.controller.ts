@@ -26,12 +26,15 @@ export class OkrReportTaskController {
     @Param('userId') userId: string,
     @Param('planningPeriodId') planningPeriodId: string,
     @Headers('tenantId') tenantId: string,
+    @Query('planningId') planningId?:string,
   ) {
+
     return this.okrReportTaskService.create(
       createReportTaskDTO,
       tenantId,
       planningPeriodId,
       userId,
+      planningId,
     );
   }
 

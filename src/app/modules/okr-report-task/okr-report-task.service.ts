@@ -77,6 +77,7 @@ export class OkrReportTaskService {
     tenantId: string,
     planningPeriodId: string,
     userId: string,
+    planningId?: string,
   ): Promise<ReportTask[]> {
     const queryRunner = this.dataSource.createQueryRunner();
 
@@ -84,6 +85,7 @@ export class OkrReportTaskService {
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
+
       const planningPeriodUserId = await this.getPlanningPeriodUserId(
         tenantId,
         userId,
@@ -100,7 +102,7 @@ export class OkrReportTaskService {
 
       const reportData = this.createReportData({
         reportScore,
-        planId,
+        planId:planningId ?? planId,
         userId,
         tenantId,
       });
@@ -114,14 +116,14 @@ export class OkrReportTaskService {
         tenantId,
       );
       const savedReportTasks = await this.reportTaskRepo.save(reportTasks);
-      const checkPlanIsReported = await this.updatePlanIsReported(planId);
+      const checkPlanIsReported = await this.updatePlanIsReported(planningId ?? planId);
       const check = await this.checkAndUpdateProgressByKey(savedReportTasks);
 
       if (check && checkPlanIsReported) {
-        const vp = await this.userVpScoringService.calculateVP(
-          userId,
-          tenantId,
-        );
+        // const vp = await this.userVpScoringService.calculateVP(
+        //   userId,
+        //   tenantId,
+        // );
         await queryRunner.commitTransaction();
       }
       return savedReportTasks;
