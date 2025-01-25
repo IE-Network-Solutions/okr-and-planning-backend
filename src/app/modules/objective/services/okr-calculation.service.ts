@@ -18,7 +18,6 @@ import { JobInformationDto } from '../dto/job-information.dto';
 import { AverageOkrRule } from '../../average-okr-rule/entities/average-okr-rule.entity';
 import { ObjectiveService } from './objective.service';
 import { paginationOptions } from '@root/src/core/commonTestData/commonTest.data';
-import { Result } from 'antd';
 
 @Injectable()
 export class OKRCalculationService {
