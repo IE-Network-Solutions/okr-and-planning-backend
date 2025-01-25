@@ -51,7 +51,6 @@ export class OkrProgressService {
         keyResult.id,
       );
 
-
       const previousCurrentValue = isOnCreate
         ? parseFloat(previousValue.currentValue.toString())
         : parseFloat(previousValue.currentValue.toString()) -
@@ -60,14 +59,20 @@ export class OkrProgressService {
 
       let currentValue =
         previousCurrentValue + parseFloat(keyResult['actualValue'].toString());
-if(parseFloat(currentValue.toString()) > parseFloat(previousValue.targetValue.toString())){
-  currentValue=parseFloat(previousValue.targetValue.toString())
-}
+      // if (
+      //   parseFloat(currentValue.toString()) >
+      //   parseFloat(previousValue.targetValue.toString())
+      // ) {
+      //   currentValue = parseFloat(previousValue.targetValue.toString());
+      // }
       const initialDifference =
         currentValue - parseFloat(keyResult.initialValue.toString());
       const targetDifference = parseFloat(keyResult.targetValue.toString());
       -parseFloat(keyResult.initialValue.toString());
-     let progress = (initialDifference / targetDifference) * 100;
+      let  progress = (initialDifference / targetDifference) * 100;
+      if(progress>100){
+        progress=100
+      }
 
       updateValue.progress = progress;
       // updateValue['lastUpdateValue'] = keyResult.currentValue;
@@ -83,4 +88,3 @@ if(parseFloat(currentValue.toString()) > parseFloat(previousValue.targetValue.to
     return finalUpdate;
   }
 }
-

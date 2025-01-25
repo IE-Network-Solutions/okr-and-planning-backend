@@ -232,26 +232,15 @@ export class OkrReportTaskService {
                       ...planTask.keyResult,
                       //  actualValue: task?.actualValue,
                       // actualValue: planTask.keyResult?.targetValue,
-                      actualValue: parseFloat(planTask?.targetValue.toString()),
-
+                      actualValue:
+                        parseFloat(task?.actualValue.toString()) ||
+                        parseFloat(planTask?.targetValue.toString()),
                     },
-                    isOnCreate: true,
+                    isOnCreate,
                     // actualValueToUpdate: task?.actualValue,
                   },
                 );
               } else {
-                return await this.okrProgressService.calculateKeyResultProgress(
-                  {
-                    keyResult: {
-                      ...planTask.keyResult,
-                      actualValue: parseFloat(planTask.targetValue.toString()),
-                    },
-                    isOnCreate,
-                    actualValueToUpdate: planTask.targetValue,
-                  },
-                );
-              }
-              if (planTask.status === 'Not') {
                 return await this.okrProgressService.calculateKeyResultProgress(
                   {
                     keyResult: {
@@ -275,7 +264,6 @@ export class OkrReportTaskService {
     }
   }
 
-  
   // Method to update the isReported value of the plan
   private async updatePlanIsReported(planId: string): Promise<any> {
     try {
