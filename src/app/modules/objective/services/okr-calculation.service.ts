@@ -62,7 +62,7 @@ export class OKRCalculationService {
         keyResultCount: 0,
         supervisorOkr: 0,
         companyOkr: 0,
-        teamOk: 0,
+        teamOkr: 0,
       };
 
       if (employeeJobInfo.departmentLeadOrNot) {
@@ -126,15 +126,18 @@ export class OKRCalculationService {
         averageOKRRule,
         paginationOptions,
       );
-      const teamOk = await this.calculateTeamOkrOfUser(
+      result.companyOkr=companyOkr
+
+      const teamOkr = await this.calculateTeamOkrOfUser(
         userId,
         employeeJobInfo.departmentId,
         tenantId,
         departments,
         paginationOptions,
       );
+      result.teamOkr=teamOkr
 
-      return { ...result, companyOkr, teamOk };
+      return result;
     } catch (error) {
       return {
         userOkr: 0,
@@ -143,7 +146,7 @@ export class OKRCalculationService {
         keyResultCount: 0,
         supervisorOkr: 0,
         companyOkr: 0,
-        teamOk: 0,
+        teamOkr: 0,
       };
     }
   }
