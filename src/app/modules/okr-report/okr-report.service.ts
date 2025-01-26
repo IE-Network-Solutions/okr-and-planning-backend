@@ -103,10 +103,8 @@ export class OkrReportService {
   }
   // Method to delete a report by id and tenantId
   async deleteReport(id: string, tenantId: UUID): Promise<void> {
-    // Start a transaction
     await this.reportRepository.manager.transaction(
       async (transactionalEntityManager: EntityManager) => {
-        // Find the report
         const report = await transactionalEntityManager.findOne(Report, {
           where: { id, tenantId },
         });
@@ -115,10 +113,8 @@ export class OkrReportService {
           throw new NotFoundException(`Report with ID not found`);
         }
 
-        // Soft remove the report
         await transactionalEntityManager.softRemove(report);
 
-        // Update the plan associated with the report
         const updatedValue = {
           columnName: 'isReported',
           value: false,
