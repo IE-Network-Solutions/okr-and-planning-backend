@@ -85,7 +85,6 @@ export class OkrReportTaskService {
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
-
       const planningPeriodUserId = await this.getPlanningPeriodUserId(
         tenantId,
         userId,
@@ -535,12 +534,6 @@ export class OkrReportTaskService {
       const reportTasks = await manager.find(ReportTask, {
         where: { reportId },
       });
-      // If no tasks are found, throw an exception
-      if (!reportTasks.length) {
-        throw new ConflictException(
-          'No report tasks found for the given reportId.',
-        );
-      }
       // Perform a soft delete on the fetched tasks
       const deletedTasks = await manager.softRemove(reportTasks);
       return deletedTasks;

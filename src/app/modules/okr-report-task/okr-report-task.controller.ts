@@ -28,7 +28,6 @@ export class OkrReportTaskController {
     @Headers('tenantId') tenantId: string,
     @Query('planningId') planningId?:string,
   ) {
-
     return this.okrReportTaskService.create(
       createReportTaskDTO,
       tenantId,
@@ -43,7 +42,7 @@ export class OkrReportTaskController {
     @Param('planningPeriodId') planningPeriodId: string,
     @Param('userId') userId: string,
     @Headers('tenantId') tenantId: string,
-    @Query('forPlan') forPlan = true,
+    @Query('forPlan') forPlan:boolean = true,
   ) {
     return this.okrReportTaskService.getUnReportedPlanTasks(
       userId,
