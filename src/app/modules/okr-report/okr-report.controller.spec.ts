@@ -1,0 +1,82 @@
+import { Test } from '@nestjs/testing';
+import { getRepositoryToken } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { OkrReportController } from './okr-report.controller';
+import { OkrReportService } from './okr-report.service';
+import { Report } from './entities/okr-report.entity';
+import { PlanningPeriodUser } from '../planningPeriods/planning-periods/entities/planningPeriodUser.entity';
+import { ReportTask } from '../okr-report-task/entities/okr-report-task.entity';
+import { Plan } from '../plan/entities/plan.entity';
+import { PlanTask } from '../plan-tasks/entities/plan-task.entity';
+import { PlanningPeriodsService } from '../planningPeriods/planning-periods/planning-periods.service';
+import { mock } from 'jest-mock-extended';
+import { GetFromOrganizatiAndEmployeInfoService } from '../objective/services/get-data-from-org.service';
+import { OkrReportTaskService } from '../okr-report-task/okr-report-task.service';
+import { PlanService } from '../plan/plan.service';
+
+describe('OkrReportController', () => {
+  let okrReportController: OkrReportController;
+  let okrReportService: OkrReportService;
+  let okrReportRepository: Repository<Report>;
+
+  beforeEach(async () => {
+    const moduleRef = await Test.createTestingModule({
+      controllers: [OkrReportController],
+      providers: [
+        OkrReportService,
+        {
+          provide: getRepositoryToken(Report),
+          useClass: Repository,
+        },
+        {
+          provide: getRepositoryToken(PlanningPeriodUser),
+          useClass: Repository,
+        },
+        {
+          provide: getRepositoryToken(ReportTask),
+          useClass: Repository,
+        },
+        {
+          provide: OkrReportTaskService,
+          useValue: mock<OkrReportTaskService>(),
+        },
+        {
+          provide: getRepositoryToken(Plan),
+          useClass: Repository,
+        },
+        {
+          provide: getRepositoryToken(PlanTask),
+          useClass: Repository,
+        },
+        {
+          provide: getRepositoryToken(ReportTask),
+          useClass: Repository,
+        },
+        {
+          provide: PlanningPeriodsService,
+          useValue: mock<PlanningPeriodsService>(),
+        },
+        {
+          provide: PlanService,
+          useValue: mock<PlanService>(),
+        },
+        {
+          provide: GetFromOrganizatiAndEmployeInfoService,
+          useValue: mock<GetFromOrganizatiAndEmployeInfoService>(),
+        },
+      ],
+    }).compile();
+
+    okrReportController =
+      moduleRef.get<OkrReportController>(OkrReportController);
+    okrReportService = moduleRef.get<OkrReportService>(OkrReportService);
+    okrReportRepository = moduleRef.get<Repository<Report>>(
+      getRepositoryToken(Report),
+    );
+    jest.clearAllMocks();
+  });
+
+  it('should be defined', () => {
+    expect(okrReportController).toBeDefined();
+  });
+});

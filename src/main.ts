@@ -8,6 +8,8 @@ import * as cookieParser from 'cookie-parser';
 import { AllExceptionsFilter } from './core/exceptions/all-exceptions.filter';
 import { LoggerService } from './core/middlewares/logger.middleware';
 import * as bodyParser from 'body-parser';
+import * as admin from 'firebase-admin';
+import serviceAccount from './config/serviceAccount';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -23,13 +25,25 @@ async function bootstrap() {
   app.useGlobalFilters(new AllExceptionsFilter(httpAdapterHost, loggerService));
 
   app.useGlobalPipes(new ValidationPipe());
-
   app.use(helmet());
   app.enableCors();
+
+  try {
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount(configService) as any),
+    });
+  } catch (error) {
+    throw error;
+  }
   setupSwagger(app);
   app.use(cookieParser());
 
   const port = configService.get<number>('app.port');
-  await app.listen(port);
+  await app.listen(port, () => {
+    loggerService.info(
+      `${process.env.APP_NAME} is live on and serving traffic on port ${port}`,
+    );
+  });
+  //await app.listen(port);
 }
 bootstrap();

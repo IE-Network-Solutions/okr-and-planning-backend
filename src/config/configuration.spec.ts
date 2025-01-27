@@ -50,4 +50,10 @@ describe('configuration', () => {
     expect(config.db.type).toEqual('postgres');
     expect(config.db.synchronize).toEqual(true);
   });
+  it('should parse API environment variable', () => {
+    process.env.ORG_SERVER =
+      'https://test-org-emp.ienetworks.co/api/v1/users/info/user-info';
+    const config = configuration();
+    expect(config.apiServer.org_server).toEqual(process.env.ORG_SERVER);
+  });
 });

@@ -1,33 +1,41 @@
-import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
+import * as admin from 'firebase-admin';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
+  constructor(private reflector: Reflector) {}
+
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
+    const handler = context.getHandler();
 
+    const isExcluded = this.reflector.get<boolean>('hasExcludedToken', handler);
+    if (isExcluded) {
+      return true;
+    }
     const token = request.headers.authorization;
+
+    const newToken = token.split(' ')[1];
+
     if (!token) {
-      return;
-      false;
+      return false;
     }
 
     try {
-      //   const decodedToken = this.jwtService.verify(token.replace('Bearer ', ''));
+      const decodedToken = await admin.auth().verifyIdToken(newToken);
+      //console.log(decodedToken,"token")
+      request.user = decodedToken;
+      request.token = token;
 
-      //   const userId = decodedToken.sub;
-      //   const user = await this.userService.findById(userId);
-      //   if (!user) {
-      //     return false;
-      //   }
-
-      //   const requiredRole = this.reflector.get<string>('role', context.getHandler());
-      //   if (requiredRole && user.role !== requiredRole) {
-      //     return false;
-      //   }
-      //   request.user = user;
       return true;
     } catch (error) {
-      return false;
+      throw new UnauthorizedException('Invalid or expired token');
     }
   }
 }
