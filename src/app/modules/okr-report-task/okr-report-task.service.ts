@@ -226,34 +226,41 @@ export class OkrReportTaskService {
             }
 
             default:
-              if (task.status === 'Done') {
+              if(isOnCreate){
                 return await this.okrProgressService.calculateKeyResultProgress(
                   {
                     keyResult: {
                       ...planTask.keyResult,
-                      actualValue: parseFloat(planTask?.actualValue.toString()),
-                      // actualValue: parseFloat(planTask?.targetValue.toString()),
+
+                      actualValue:
+                        parseFloat(task?.actualValue.toString()) ||
+                        parseFloat(planTask?.targetValue.toString()),
 
                     },
                     isOnCreate,
-                    // actualValueToUpdate: task?.actualValue,
                   },
                 );
-              } else {
+            }
+            else{
                 return await this.okrProgressService.calculateKeyResultProgress(
                   {
                     keyResult: {
                       ...planTask.keyResult,
-                      actualValue: parseFloat(planTask.actualValue.toString()),
+
+                      actualValue:
+                        parseFloat(task?.actualValue.toString()) ||
+                        parseFloat(planTask?.targetValue.toString()),
+
                     },
                     isOnCreate,
                     actualValueToUpdate: planTask.targetValue,
                   },
                 );
-              }
+          }     
+
           }
 
-          return null; // Return null if no conditions match or the task does not qualify
+          return null; 
         }),
       );
       return results;
@@ -315,9 +322,10 @@ export class OkrReportTaskService {
       }
 
       const check = await this.checkAndUpdateProgressByKey(
-        savedReportTasks,
-        false,
-        currentTasks,
+  savedReportTasks,
+       false,
+      currentTasks,
+    
       );
     } catch (error) {
       throw new Error(
