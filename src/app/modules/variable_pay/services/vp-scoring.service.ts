@@ -15,6 +15,7 @@ import { CreateUserVpScoringDto } from '../dtos/user-vp-scoring-dto/create-user-
 import { UserVpScoringService } from './user-vp-scoring.service';
 import { CreateVpScoringCriterionDto } from '../dtos/vp-scoring-criteria-dto/create-vp-scoring-criterion.dto';
 import { VpScoringCriteriaService } from './vp-scoring-criteria.service';
+import { VpScoringFilterDto } from '../dtos/vp-scoring-dto/filter-vp-scoring-dto';
 
 @Injectable()
 export class VpScoringService {
@@ -97,6 +98,7 @@ export class VpScoringService {
   }
   async findAllVpScorings(
     tenantId: string,
+    vpScoringFilterDto?:VpScoringFilterDto,
     paginationOptions?: PaginationDto,
   ): Promise<Pagination<VpScoring>> {
     try {
@@ -115,6 +117,11 @@ export class VpScoringService {
         .leftJoinAndSelect('VpScoring.userVpScoring', 'userVpScoring')
         .where('VpScoring.tenantId = :tenantId', { tenantId });
 
+if(vpScoringFilterDto && vpScoringFilterDto.monthId ){
+  
+  queryBuilder.andWhere('VpScoring.monthId = :monthId', { monthId:vpScoringFilterDto.monthId });
+
+}
       const paginatedData = await this.paginationService.paginate<VpScoring>(
         queryBuilder,
         options,

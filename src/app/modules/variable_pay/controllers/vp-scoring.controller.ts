@@ -16,6 +16,7 @@ import { CreateVpScoringDto } from '../dtos/vp-scoring-dto/create-vp-scoring.dto
 import { VpScoring } from '../entities/vp-scoring.entity';
 import { PaginationDto } from '@root/src/core/commonDto/pagination-dto';
 import { UpdateVpScoringDto } from '../dtos/vp-scoring-dto/update-vp-scoring.dto';
+import { VpScoringFilterDto } from '../dtos/vp-scoring-dto/filter-vp-scoring-dto';
 
 @Controller('vp-scoring')
 @ApiTags('vp-scoring')
@@ -36,9 +37,10 @@ export class VpScoringController {
   @Get('')
   async findAllVpScorings(
     @Headers('tenantId') tenantId: string,
+    @Body()vpScoringFilterDto?:VpScoringFilterDto,
     @Query() paginationOptions?: PaginationDto,
   ) {
-    return this.vpScoringService.findAllVpScorings(tenantId, paginationOptions);
+    return this.vpScoringService.findAllVpScorings(tenantId, vpScoringFilterDto,paginationOptions);
   }
 
   @Get(':id')
