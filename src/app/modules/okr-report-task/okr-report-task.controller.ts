@@ -42,7 +42,7 @@ export class OkrReportTaskController {
     @Param('planningPeriodId') planningPeriodId: string,
     @Param('userId') userId: string,
     @Headers('tenantId') tenantId: string,
-    @Query('forPlan') forPlan:boolean = true,
+    @Query('forPlan') forPlan: string, 
   ) {
     return this.okrReportTaskService.getUnReportedPlanTasks(
       userId,

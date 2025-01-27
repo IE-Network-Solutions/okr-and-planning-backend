@@ -124,10 +124,7 @@ export class OkrReportService {
           updatedValue,
           transactionalEntityManager,
         );
-        await this.okrReportTaskService.deleteReportTasksByReportId(
-          report.id,
-          transactionalEntityManager,
-        );
+       
       },
     );
   }

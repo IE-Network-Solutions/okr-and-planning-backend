@@ -152,7 +152,6 @@ export class PlanService {
     try {
       const plan = await this.planRepository.findOneByOrFail({ id });
       return await this.planRepository.findDescendantsTree(plan);
-      // return plan
     } catch (error) {
       if (error.name === 'EntityNotFoundError') {
         throw new NotFoundException('Error fetching the specified plan');
@@ -166,13 +165,7 @@ export class PlanService {
       if (!plan) {
         throw new NotFoundException('Error while deleting the plan');
       }
-      const tasks = await this.taskRepository.find({
-        where: { plan: { id: plan.id } },
-      });
-      for (const task of tasks) {
-        const id = task.id;
-        await this.taskRepository.softRemove({ id });
-      }
+
       return await this.planRepository.softRemove({ id });
     } catch (error) {
       if (error.name === 'EntityNotFoundError') {
@@ -189,7 +182,6 @@ export class PlanService {
     updatedValue: { columnName: string; value: any },
     transactionalEntityManager?: EntityManager,
   ): Promise<void> {
-    // Use transactionalEntityManager if provided, else fallback to default repository
     const manager = transactionalEntityManager || this.planRepository.manager;
 
     const plan = await manager.findOne(Plan, { where: { id } });
