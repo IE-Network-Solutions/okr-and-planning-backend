@@ -257,7 +257,9 @@ export class UserVpScoringService {
         const allUsersVP = await Promise.all(
           refreshVPDto.users.map(async (item) => {
             const vp = await this.calculateVP(item, tenantId);
+            if(vp){
             allUsersVPScore.push(vp);
+            }
           }),
         );
         return allUsersVPScore;
