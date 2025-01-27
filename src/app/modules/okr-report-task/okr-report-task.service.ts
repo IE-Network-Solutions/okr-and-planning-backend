@@ -77,6 +77,7 @@ export class OkrReportTaskService {
     tenantId: string,
     planningPeriodId: string,
     userId: string,
+    planningId?: string,
   ): Promise<ReportTask[]> {
     const queryRunner = this.dataSource.createQueryRunner();
 
@@ -100,7 +101,7 @@ export class OkrReportTaskService {
 
       const reportData = this.createReportData({
         reportScore,
-        planId,
+        planId:planningId ?? planId,
         userId,
         tenantId,
       });
@@ -114,14 +115,14 @@ export class OkrReportTaskService {
         tenantId,
       );
       const savedReportTasks = await this.reportTaskRepo.save(reportTasks);
-      const checkPlanIsReported = await this.updatePlanIsReported(planId);
+      const checkPlanIsReported = await this.updatePlanIsReported(planningId ?? planId);
       const check = await this.checkAndUpdateProgressByKey(savedReportTasks);
 
       if (check && checkPlanIsReported) {
-        const vp = await this.userVpScoringService.calculateVP(
-          userId,
-          tenantId,
-        );
+        // const vp = await this.userVpScoringService.calculateVP(
+        //   userId,
+        //   tenantId,
+        // );
         await queryRunner.commitTransaction();
       }
       return savedReportTasks;
@@ -521,12 +522,6 @@ export class OkrReportTaskService {
       const reportTasks = await manager.find(ReportTask, {
         where: { reportId },
       });
-      // If no tasks are found, throw an exception
-      if (!reportTasks.length) {
-        throw new ConflictException(
-          'No report tasks found for the given reportId.',
-        );
-      }
       // Perform a soft delete on the fetched tasks
       const deletedTasks = await manager.softRemove(reportTasks);
       return deletedTasks;
