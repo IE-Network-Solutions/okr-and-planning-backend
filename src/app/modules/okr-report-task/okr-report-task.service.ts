@@ -256,8 +256,7 @@ export class OkrReportTaskService {
                     actualValueToUpdate: planTask.targetValue,
                   },
                 );
-          }
-           
+          }     
 
           }
 
