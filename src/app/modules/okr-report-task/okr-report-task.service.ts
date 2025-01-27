@@ -231,9 +231,11 @@ export class OkrReportTaskService {
                   {
                     keyResult: {
                       ...planTask.keyResult,
+
                       actualValue:
                         parseFloat(task?.actualValue.toString()) ||
                         parseFloat(planTask?.targetValue.toString()),
+
                     },
                     isOnCreate,
                   },
@@ -244,16 +246,19 @@ export class OkrReportTaskService {
                   {
                     keyResult: {
                       ...planTask.keyResult,
+
                       actualValue:
                         parseFloat(task?.actualValue.toString()) ||
                         parseFloat(planTask?.targetValue.toString()),
+
                     },
                     isOnCreate,
-                    actualValueToUpdate: reportTaskData(task?.id).actualValue,
+                    actualValueToUpdate: planTask.targetValue,
                   },
                 );
           }
            
+
           }
 
           return null; 
@@ -265,6 +270,7 @@ export class OkrReportTaskService {
     }
   }
 
+  
   // Method to update the isReported value of the plan
   private async updatePlanIsReported(planId: string): Promise<any> {
     try {
@@ -420,10 +426,12 @@ export class OkrReportTaskService {
     userId: string,
     planningPeriodId: string,
     tenantId: string,
-    forPlan: boolean,
+    forPlan: string,
   ): Promise<any> {
     try {
-      // Fetch all plan tasks where reports have not been created yet
+      const isForPlan = 
+      forPlan === '1' ? true : 
+      forPlan === '2' ? false : true;  
 
       const queryBuilder = this.planTaskRepository
         .createQueryBuilder('planTask')
@@ -434,6 +442,7 @@ export class OkrReportTaskService {
         .leftJoinAndSelect('keyResult.metricType', 'metricType') // Add join with metricType
         .leftJoinAndSelect('planTask.parentTask', 'parentTask')
         .leftJoinAndSelect('plan.planningUser', 'planningUser') // Add relation to planningUser from the Plan entity
+        
 
         // Apply filtering conditions
         .where('plan.tenantId = :tenantId', { tenantId })
@@ -442,7 +451,7 @@ export class OkrReportTaskService {
           planningPeriodId,
         }) // Use relation to access planningPeriod ID
         .andWhere('plan.isValidated = :isValidated', { isValidated: true }); // Filter by validated plans only
-      if (forPlan) {
+      if (isForPlan) {
         queryBuilder.andWhere('plan.isReported = :isReported', {
           isReported: false,
         });
@@ -520,6 +529,7 @@ export class OkrReportTaskService {
       // Use transactionalEntityManager if provided, else fallback to default repository
       const manager = transactionalEntityManager || this.reportTaskRepo.manager;
       // Find all report tasks associated with the given reportId
+
       const reportTasks = await manager.find(ReportTask, {
         where: { reportId },
       });
