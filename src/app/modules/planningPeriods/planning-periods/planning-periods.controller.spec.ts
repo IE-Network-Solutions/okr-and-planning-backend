@@ -51,7 +51,7 @@ describe('PlanningPeriodsController', () => {
     planningPeriodsController = moduleRef.get<PlanningPeriodsController>(
       PlanningPeriodsController,
     );
-    
+
     planningPeriodsService = moduleRef.get<PlanningPeriodsService>(
       PlanningPeriodsService,
     );
