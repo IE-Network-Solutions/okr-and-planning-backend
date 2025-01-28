@@ -227,48 +227,42 @@ export class OkrReportTaskService {
             }
 
             default:
-              if (task.status === 'Done') {
+              if(isOnCreate){
                 return await this.okrProgressService.calculateKeyResultProgress(
                   {
                     keyResult: {
                       ...planTask.keyResult,
-                      //  actualValue: task?.actualValue,
-                      // actualValue: planTask.keyResult?.targetValue,
-                      actualValue: parseFloat(planTask?.targetValue.toString()),
+
+                      actualValue:
+                        parseFloat(task?.actualValue.toString()) ||
+                        parseFloat(planTask?.targetValue.toString()),
 
                     },
-                    isOnCreate: true,
-                    // actualValueToUpdate: task?.actualValue,
+                    isOnCreate,
                   },
                 );
-              } else {
+            }
+            else{
                 return await this.okrProgressService.calculateKeyResultProgress(
                   {
                     keyResult: {
                       ...planTask.keyResult,
-                      actualValue: parseFloat(planTask.targetValue.toString()),
+
+                      actualValue:
+                        parseFloat(task?.actualValue.toString()) ||
+                        parseFloat(planTask?.targetValue.toString()),
+
                     },
                     isOnCreate,
                     actualValueToUpdate: planTask.targetValue,
                   },
                 );
-              }
-              if (planTask.status === 'Not') {
-                return await this.okrProgressService.calculateKeyResultProgress(
-                  {
-                    keyResult: {
-                      ...planTask.keyResult,
-                      actualValue: task?.actualValue,
-                    },
-                    isOnCreate,
-                    actualValueToUpdate: reportTaskData(task?.id).actualValue,
-                  },
-                );
-              }
-              break;
+          }
+           
+
           }
 
-          return null; // Return null if no conditions match or the task does not qualify
+          return null; 
         }),
       );
       return results;
@@ -330,9 +324,10 @@ export class OkrReportTaskService {
       }
 
       const check = await this.checkAndUpdateProgressByKey(
-        savedReportTasks,
-        false,
-        currentTasks,
+  savedReportTasks,
+       false,
+      currentTasks,
+    
       );
     } catch (error) {
       throw new Error(
@@ -447,6 +442,7 @@ export class OkrReportTaskService {
         .leftJoinAndSelect('keyResult.metricType', 'metricType') // Add join with metricType
         .leftJoinAndSelect('planTask.parentTask', 'parentTask')
         .leftJoinAndSelect('plan.planningUser', 'planningUser') // Add relation to planningUser from the Plan entity
+        
 
         // Apply filtering conditions
         .where('plan.tenantId = :tenantId', { tenantId })
@@ -534,15 +530,10 @@ export class OkrReportTaskService {
       // Use transactionalEntityManager if provided, else fallback to default repository
       const manager = transactionalEntityManager || this.reportTaskRepo.manager;
       // Find all report tasks associated with the given reportId
+
       const reportTasks = await manager.find(ReportTask, {
         where: { reportId },
       });
-      // If no tasks are found, throw an exception
-      if (!reportTasks.length) {
-        throw new ConflictException(
-          'No report tasks found for the given reportId.',
-        );
-      }
       // Perform a soft delete on the fetched tasks
       const deletedTasks = await manager.softRemove(reportTasks);
       return deletedTasks;

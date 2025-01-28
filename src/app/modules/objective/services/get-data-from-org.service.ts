@@ -1,5 +1,5 @@
 import { HttpService } from '@nestjs/axios';
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()
@@ -77,5 +77,31 @@ export class GetFromOrganizatiAndEmployeInfoService {
       })
       .toPromise();
     return response.data;
+  }
+
+  async getAllUsersWithTenant(tenantId: string) {
+    const response = await this.httpService
+      .get(`${this.orgUrl}/users/simple-info/all-user/with-tenant`, {
+        headers: {
+          tenantid: tenantId,
+        },
+      })
+      .toPromise();
+    return response.data;
+  }
+
+  async childDepartmentWithUsers(tenantId: string, departmentId: string) {
+    try {
+      const response = await this.httpService
+        .get(`${this.orgUrl}/users/child/departments/${departmentId}`, {
+          headers: {
+            tenantid: tenantId,
+          },
+        })
+        .toPromise();
+      return response.data;
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
   }
 }

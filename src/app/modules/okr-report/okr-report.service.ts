@@ -105,10 +105,8 @@ export class OkrReportService {
   }
   // Method to delete a report by id and tenantId
   async deleteReport(id: string, tenantId: UUID): Promise<void> {
-    // Start a transaction
     await this.reportRepository.manager.transaction(
       async (transactionalEntityManager: EntityManager) => {
-        // Find the report
         const report = await transactionalEntityManager.findOne(Report, {
           where: { id, tenantId },
         });
@@ -117,10 +115,8 @@ export class OkrReportService {
           throw new NotFoundException(`Report with ID not found`);
         }
 
-        // Soft remove the report
         await transactionalEntityManager.softRemove(report);
 
-        // Update the plan associated with the report
         const updatedValue = {
           columnName: 'isReported',
           value: false,
@@ -130,10 +126,7 @@ export class OkrReportService {
           updatedValue,
           transactionalEntityManager,
         );
-        await this.okrReportTaskService.deleteReportTasksByReportId(
-          report.id,
-          transactionalEntityManager,
-        );
+       
       },
     );
   }
@@ -174,7 +167,7 @@ export class OkrReportService {
       (item) => parseFloat(item.report_reportScore.split('%')[0]) === maxScore,
     );
 
-    return topEmployees;
+    return [];
   }
   async userPerformance(rockStarDto: RockStarDto, tenantId: string) {
     const planningPeriod =
@@ -228,7 +221,7 @@ export class OkrReportService {
       );
       report['user'] = user;
     }
-    return reports;
+    return [];
     //   const maxScore = Math.max(...reports.map((item) => parseFloat(item.report_reportScore.split('%')[0])));
     // console.log(maxScore,"maxScore")
     //   return reports.filter((item) => parseFloat(item.report_reportScore.split('%')[0]) === maxScore);

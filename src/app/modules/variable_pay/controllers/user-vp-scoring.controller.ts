@@ -100,7 +100,7 @@ export class UserVpScoringController {
     return this.userVpScoringService.calculateVP(userId, tenantId);
   }
 
-  @Get('/refresh/vp')
+  @Post('/refresh/vp')
   refreshVP(
     @Headers('tenantId') tenantId: string,
     @Body() refreshVPDto: RefreshVPDto,
