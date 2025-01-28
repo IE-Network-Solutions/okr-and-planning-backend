@@ -15,6 +15,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { UpdatePlanTasksDto } from './dto/update-plan-tasks.dto';
 import { CreatePlanTasksDto } from './dto/create-plan-tasks.dto';
 import { IPaginationOptions } from 'nestjs-typeorm-paginate';
+import { PlanTask } from './entities/plan-task.entity';
 
 @Controller('plan-tasks')
 @ApiTags('plan-tasks')
@@ -44,6 +45,13 @@ export class PlanTasksController {
     return await this.planTasksService.findOne(id);
   }
 
+  @Get('get-reported-plan-tasks/by-plan-id/:id')
+  async findReportedPlanTasks(@Param('id') id: string): Promise<PlanTask[]> {
+    return await this.planTasksService.findReportedPlanTasks(id);
+  }
+
+  // url: `${OKR_URL}/plan-tasks/un-reported-plan-tasks/${userId}/planning-period/${planningPeriodId}`,
+
   @Get('/user/:id/:planningId')
   async findByUser(
     @Param('id') id: string,
@@ -52,6 +60,21 @@ export class PlanTasksController {
     return await this.planTasksService.findByUser(id, planningId);
   }
 
+  @Get(
+    'planned-data/un-reported-plan-tasks/:userId/planning-period/:planningPeriodId',
+  )
+  async findAllUnreportedTasks(
+    @Param('userId') userId: string,
+    @Param('planningPeriodId') planningPeriodId: string,
+    @Req() req: Request,
+  ): Promise<PlanTask[]> {
+    const tenantId = req['tenantId'];
+    return await this.planTasksService.findAllUnreportedTasks(
+      userId,
+      planningPeriodId,
+      tenantId,
+    );
+  }
   @Post('/users/:planningId')
   async findByUsers(
     @Query() options: IPaginationOptions,
