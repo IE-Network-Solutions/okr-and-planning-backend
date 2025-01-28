@@ -77,6 +77,7 @@ export class OkrReportTaskService {
     tenantId: string,
     planningPeriodId: string,
     userId: string,
+    planningId?: string,
   ): Promise<ReportTask[]> {
     const queryRunner = this.dataSource.createQueryRunner();
 
@@ -96,11 +97,12 @@ export class OkrReportTaskService {
       if (!planId) {
         throw new Error('Plan not found for the given planning period user');
       }
+      const planningDataId=planningId ?? planId;
       const reportScore = await this.calculateReportScore(createReportDto);
 
       const reportData = this.createReportData({
         reportScore,
-        planId,
+        planId:planningDataId,
         userId,
         tenantId,
       });
@@ -114,14 +116,14 @@ export class OkrReportTaskService {
         tenantId,
       );
       const savedReportTasks = await this.reportTaskRepo.save(reportTasks);
-      const checkPlanIsReported = await this.updatePlanIsReported(planId);
+      const checkPlanIsReported = await this.updatePlanIsReported(planningDataId);
       const check = await this.checkAndUpdateProgressByKey(savedReportTasks);
 
       if (check && checkPlanIsReported) {
-        const vp = await this.userVpScoringService.calculateVP(
-          userId,
-          tenantId,
-        );
+        // const vp = await this.userVpScoringService.calculateVP(
+        //   userId,
+        //   tenantId,
+        // );
         await queryRunner.commitTransaction();
       }
       return savedReportTasks;
@@ -368,6 +370,7 @@ export class OkrReportTaskService {
         isAchieved: value?.status === 'Done' ? true : false,
         tenantId: tenantId || null,
         customReason: value?.customReason || null,
+        actualValue: value?.actualValue || '0',
         failureReasonId: value?.failureReasonId || null,
       };
     });
@@ -430,10 +433,10 @@ export class OkrReportTaskService {
     userId: string,
     planningPeriodId: string,
     tenantId: string,
-    forPlan: boolean,
+    forPlan: string,
   ): Promise<any> {
     try {
-      // Fetch all plan tasks where reports have not been created yet
+      const isForPlan = forPlan === '1' ? false : true;
 
       const queryBuilder = this.planTaskRepository
         .createQueryBuilder('planTask')
@@ -452,7 +455,7 @@ export class OkrReportTaskService {
           planningPeriodId,
         }) // Use relation to access planningPeriod ID
         .andWhere('plan.isValidated = :isValidated', { isValidated: true }); // Filter by validated plans only
-      if (forPlan) {
+      if (!isForPlan) {
         queryBuilder.andWhere('plan.isReported = :isReported', {
           isReported: false,
         });
@@ -500,6 +503,7 @@ export class OkrReportTaskService {
         .andWhere('(plan.isReported IS NULL OR plan.isReported = false)') // Check if isReported is null
         .getMany();
 
+        
       return reportTasks;
     } catch (error) {
       throw new ConflictException(error.message);

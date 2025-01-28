@@ -81,6 +81,8 @@ export class OkrReportService {
       .leftJoinAndSelect('report.plan', 'plan') // Join 'reportTask'
       .leftJoinAndSelect('plan.planningUser', 'planningUser') // Join 'planningUser'
       .leftJoinAndSelect('planTask.keyResult', 'keyResult') // Join 'keyResult'
+      .leftJoinAndSelect('keyResult.metricType', 'metricType') // Join 'keyResult'
+
       .leftJoinAndSelect('planTask.milestone', 'milestone') // Join 'milestone'
 
       // Apply filtering conditions

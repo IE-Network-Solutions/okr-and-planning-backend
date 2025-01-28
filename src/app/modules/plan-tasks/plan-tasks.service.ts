@@ -209,6 +209,54 @@ export class PlanTasksService {
       throw error;
     }
   }
+  async findReportedPlanTasks(planId: string): Promise<PlanTask[]> {
+    const queryBuilder = this.taskRepository
+      .createQueryBuilder('planTask')
+      .leftJoinAndSelect('planTask.plan', 'plan')
+      .leftJoinAndSelect('planTask.milestone', 'milestone')
+      .leftJoinAndSelect('planTask.keyResult', 'keyResult')
+      .leftJoinAndSelect('keyResult.objective', 'objective') // Add join with objective
+      .leftJoinAndSelect('keyResult.metricType', 'metricType') // Add join with metricType
+      .leftJoinAndSelect('planTask.parentTask', 'parentTask')
+      .leftJoinAndSelect('plan.planningUser', 'planningUser') // Add relation to planningUser from the Plan entity
+      .leftJoinAndSelect('plan.report', 'report') // Ensure that plan.report is joined
+
+      // Apply filtering conditions
+      .where('planTask.planId = :planId', { planId }); // Filter by validated plans only
+
+    const unreportedTasks = await queryBuilder.getMany();
+    return unreportedTasks;
+  }
+
+  async findAllUnreportedTasks(
+    userId: string,
+    planningPeriodId: string,
+    tenantId: string,
+  ): Promise<PlanTask[]> {
+    const queryBuilder = this.taskRepository
+      .createQueryBuilder('planTask')
+      .leftJoinAndSelect('planTask.plan', 'plan')
+      .leftJoinAndSelect('planTask.milestone', 'milestone')
+      .leftJoinAndSelect('planTask.keyResult', 'keyResult')
+      .leftJoinAndSelect('keyResult.objective', 'objective') // Add join with objective
+      .leftJoinAndSelect('keyResult.metricType', 'metricType') // Add join with metricType
+      .leftJoinAndSelect('planTask.parentTask', 'parentTask')
+      .leftJoinAndSelect('plan.planningUser', 'planningUser') // Add relation to planningUser from the Plan entity
+
+      // Apply filtering conditions
+      .where('plan.tenantId = :tenantId', { tenantId })
+      .andWhere('plan.userId = :userId', { userId })
+      .andWhere('planningUser.planningPeriodId = :planningPeriodId', {
+        planningPeriodId,
+      }) // Use relation to access planningPeriod ID
+      .andWhere('plan.isValidated = :isValidated', { isValidated: true }) // Filter by validated plans only
+      .andWhere('plan.isReported = :isReported', { isReported: false });
+
+    queryBuilder.andWhere('planTask.planId IS NOT NULL'); // Ensure the task has an associated plan ID
+    const unreportedTasks = await queryBuilder.getMany();
+
+    return unreportedTasks;
+  }
 
   async findByUser(id: string, planningId: string): Promise<Plan[]> {
     try {
@@ -309,9 +357,13 @@ export class PlanTasksService {
   async findByUsers(
     id: string,
     arrayOfUserId: string[],
-    options: IPaginationOptions,
+    paginationOptions: IPaginationOptions,
   ) {
     try {
+      const options: IPaginationOptions = {
+        page: paginationOptions.page,
+        limit: paginationOptions.limit,
+      };
       const queryBuilder = this.planRepository
         .createQueryBuilder('plan')
         .leftJoinAndSelect('plan.tasks', 'task') // Load all tasks related to the plan
@@ -324,7 +376,8 @@ export class PlanTasksService {
         .leftJoinAndSelect('keyResult.metricType', 'metricType') // Load the metricType for the key result
         .leftJoinAndSelect('task.milestone', 'milestone') // Load milestones related to tasks
         .leftJoinAndSelect('plan.comments', 'comments') // Load comments related to the plan
-        .andWhere('planningPeriod.id = :id', { id });
+        .andWhere('planningPeriod.id = :id', { id })
+        .orderBy('plan.createdAt', 'DESC');
 
       if (!arrayOfUserId.includes('all')) {
         queryBuilder.andWhere('plan.createdBy IN (:...arrayOfUserId)', {
