@@ -63,6 +63,7 @@ export class KeyResult extends BaseModel {
   @ManyToOne(() => MetricType, (metric) => metric.keyResults, {
     eager: true,
   })
+  @JoinColumn({ name: 'metricTypeId' })
   metricType: MetricType;
 
   @OneToMany(() => Objective, (key) => key.allignedKeyResult)

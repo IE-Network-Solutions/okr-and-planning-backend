@@ -13,6 +13,7 @@ import { CreatePlanDto } from './dto/create-plan.dto';
 import { Plan } from './entities/plan.entity';
 import { ApiTags } from '@nestjs/swagger';
 import { IPaginationOptions } from 'nestjs-typeorm-paginate';
+import { query } from 'express';
 
 @Controller('plan')
 @ApiTags('plan')
@@ -47,8 +48,21 @@ export class PlanController {
     return await this.planService.open(planId, tenantId);
   }
 
+  @Get('find-all-plans/users/:userId/planning-period/:planningPeriodId')
+  async findAll(
+    @Param('userId') userId: string,
+    @Param('planningPeriodId') planningPeriodId: string,
+    @Query('forPlan') forPlan: string,
+  ): Promise<Plan[]> {
+    return await this.planService.findAllUsersPlans(
+      userId,
+      planningPeriodId,
+      forPlan,
+    );
+  }
+
   @Get()
-  async findAll() {
+  async findAllPlansByUserId() {
     return await this.planService.findAll();
   }
 

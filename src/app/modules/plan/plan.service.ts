@@ -121,6 +121,54 @@ export class PlanService {
       throw error;
     }
   }
+  async findAllUsersPlans(
+    userId: string,
+    planningPeriodId: string,
+    forPlan: string,
+  ): Promise<Plan[]> {
+    const boolValue = forPlan === '1' ? false : true;
+    try {
+      const planningUser = await this.planningUserRepository.findOne({
+        where: { userId, planningPeriodId },
+      });
+
+      if (!planningUser) {
+        throw new NotFoundException(
+          `The specified planning period or user does not exist.`,
+        );
+      }
+
+      const whereCondition: any = {
+        planningUserId: planningUser.id,
+      };
+
+      if (boolValue) {
+        whereCondition.isValidated = true;
+        whereCondition.isReported = false;
+      } else {
+        whereCondition.isReported = false;
+      }
+
+      const plans = await this.planRepository.find({
+        where: whereCondition,
+        relations: [
+          'plan', // Child plans
+          'parentPlan', // Parent plans
+          'tasks', // Tasks related to the plan
+          'tasks.keyResult', // KeyResult related to tasks
+          'tasks.keyResult.objective', // Objective related to KeyResult
+        ],
+      });
+
+      if (!plans || plans.length === 0) {
+        return []; // Return an empty array if no plans exist
+      }
+
+      return plans;
+    } catch (error) {
+      throw error;
+    }
+  }
 
   async open(planId: string, tenantId: string): Promise<Plan> {
     try {
