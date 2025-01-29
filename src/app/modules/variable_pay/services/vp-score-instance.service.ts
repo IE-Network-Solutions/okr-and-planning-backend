@@ -189,6 +189,7 @@ export class VpScoreInstanceService {
             breakDownData.name = criteria.name;
             breakDownData.weight = breakdown.weight;
             breakDownData.score = breakdown.score;
+            breakDownData.isDeduction = criteria.isDeduction;
 
             if (previousActiveMonth) {
               const previousActiveMonthInstance =
