@@ -248,7 +248,7 @@ export class VpScoreInstanceService {
   ): Promise<VpScoreTargetDashboardCriteriaDto[]> {
     try {
       const breakdownDataList: VpScoreTargetDashboardCriteriaDto[] = [];
-
+console.log(vpScoreTargetFilterDto.activeMonthIds,"vpScoreTargetFilterDto.activeMonthIds")
       const queryBuilder = this.vpScoreInstanceRepository
         .createQueryBuilder('VpScoreInstance')
         .leftJoinAndSelect('VpScoreInstance.vpScoring', 'vpScoring')
@@ -264,8 +264,10 @@ export class VpScoreInstanceService {
       }
 
       const vpScoreInstance = await queryBuilder.getMany();
+      const dataList = new VpScoreTargetDashboardCriteriaDto();
+
       for (const instance of vpScoreInstance) {
-        const dataList = new VpScoreTargetDashboardCriteriaDto();
+      
         for (const breakdown of instance.breakdown) {
           const criteria = await this.vpCriteriaService.findOneVpCriteria(
             breakdown.criteriaId,
@@ -276,8 +278,7 @@ export class VpScoreInstanceService {
           dataList.actualScore = breakdown.score;
           dataList.targetValue = target.target;
           dataList.criteriaName = criteria.name;
-
-          breakdownDataList.push(dataList);
+          breakdownDataList.push({...dataList});
         }
       }
 
