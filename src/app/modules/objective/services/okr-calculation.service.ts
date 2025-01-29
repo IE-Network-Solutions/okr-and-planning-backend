@@ -126,7 +126,7 @@ export class OKRCalculationService {
         averageOKRRule,
         paginationOptions,
       );
-      result.companyOkr=companyOkr
+      result.companyOkr = companyOkr;
 
       const teamOkr = await this.calculateTeamOkrOfUser(
         userId,
@@ -135,7 +135,7 @@ export class OKRCalculationService {
         departments,
         paginationOptions,
       );
-      result.teamOkr=teamOkr
+      result.teamOkr = teamOkr;
 
       return result;
     } catch (error) {
@@ -220,7 +220,7 @@ export class OKRCalculationService {
 
       return totalOkr.value / (numberOfContributor.value || 1);
     } catch (error) {
-    return 0
+      return 0;
     }
   }
 
@@ -280,7 +280,7 @@ export class OKRCalculationService {
 
       return teamOkr / userCount || 0;
     } catch (error) {
-    return 0
+      return 0;
     }
   }
   async calculateTeamOkr(
@@ -305,7 +305,7 @@ export class OKRCalculationService {
         return teamOkrProgress.okr;
       }
     } catch (error) {
-      return 0
+      return 0;
     }
   }
   async companyOkr(

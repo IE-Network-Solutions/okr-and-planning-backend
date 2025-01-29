@@ -189,6 +189,7 @@ export class VpScoreInstanceService {
             breakDownData.name = criteria.name;
             breakDownData.weight = breakdown.weight;
             breakDownData.score = breakdown.score;
+            breakDownData.isDeduction = criteria.isDeduction;
 
             if (previousActiveMonth) {
               const previousActiveMonthInstance =
@@ -256,9 +257,9 @@ export class VpScoreInstanceService {
           userId: vpScoreTargetFilterDto.userId,
         });
 
-      if (vpScoreTargetFilterDto.monthId?.length) {
+      if (vpScoreTargetFilterDto.activeMonthIds?.length) {
         queryBuilder.andWhere('VpScoreInstance.monthId IN (:...monthId)', {
-          monthId: vpScoreTargetFilterDto.monthId,
+          monthId: vpScoreTargetFilterDto.activeMonthIds,
         });
       }
 
@@ -275,6 +276,7 @@ export class VpScoreInstanceService {
           dataList.actualScore = breakdown.score;
           dataList.targetValue = target.target;
           dataList.criteriaName = criteria.name;
+
           breakdownDataList.push(dataList);
         }
       }

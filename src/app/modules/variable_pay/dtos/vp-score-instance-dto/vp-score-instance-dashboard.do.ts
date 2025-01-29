@@ -1,4 +1,5 @@
 import {
+  IsBoolean,
   IsDecimal,
   IsOptional,
   IsString,
@@ -31,6 +32,8 @@ export class VpScoreDashboardCriteriaDto {
   score = 0;
   @IsDecimal()
   previousScore = 0;
+  @IsBoolean()
+  isDeduction: boolean;
 }
 
 export class VpScoreTargetDashboardCriteriaDto {

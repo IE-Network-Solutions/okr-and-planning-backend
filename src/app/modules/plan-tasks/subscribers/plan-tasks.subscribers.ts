@@ -1,14 +1,16 @@
 import { Injectable } from '@nestjs/common';
-import { EntitySubscriberInterface, EventSubscriber, Repository, SoftRemoveEvent } from 'typeorm';
+import {
+  EntitySubscriberInterface,
+  EventSubscriber,
+  Repository,
+  SoftRemoveEvent,
+} from 'typeorm';
 import { PlanTask } from '../entities/plan-task.entity';
 import { ReportTask } from '../../okr-report-task/entities/okr-report-task.entity';
 
-
 @EventSubscriber()
 @Injectable()
-export class PlanTaskSubscriber
-  implements EntitySubscriberInterface<PlanTask>
-{
+export class PlanTaskSubscriber implements EntitySubscriberInterface<PlanTask> {
   listenTo() {
     return PlanTask;
   }

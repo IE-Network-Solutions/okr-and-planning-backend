@@ -13,7 +13,7 @@ export class VpScoreTargetFilterDto {
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => String)
-  monthId?: string[];
+  activeMonthIds?: string[];
   @IsUUID()
   userId: string;
 }

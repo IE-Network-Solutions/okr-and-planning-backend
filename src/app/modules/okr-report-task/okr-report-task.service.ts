@@ -228,7 +228,7 @@ export class OkrReportTaskService {
             }
 
             default:
-              if(isOnCreate){
+              if (isOnCreate) {
                 return await this.okrProgressService.calculateKeyResultProgress(
                   {
                     keyResult: {
@@ -237,13 +237,11 @@ export class OkrReportTaskService {
                       actualValue:
                         parseFloat(task?.actualValue.toString()) ||
                         parseFloat(planTask?.targetValue.toString()),
-
                     },
                     isOnCreate,
                   },
                 );
-            }
-            else{
+              } else {
                 return await this.okrProgressService.calculateKeyResultProgress(
                   {
                     keyResult: {
@@ -252,18 +250,15 @@ export class OkrReportTaskService {
                       actualValue:
                         parseFloat(task?.actualValue.toString()) ||
                         parseFloat(planTask?.targetValue.toString()),
-
                     },
                     isOnCreate,
                     actualValueToUpdate: reportTaskData(task.id)?.actualValue,
                   },
                 );
-          }
-           
-
+              }
           }
 
-          return null; 
+          return null;
         }),
       );
       return results;
@@ -272,7 +267,6 @@ export class OkrReportTaskService {
     }
   }
 
-  
   // Method to update the isReported value of the plan
   private async updatePlanIsReported(planId: string): Promise<any> {
     try {
@@ -325,10 +319,9 @@ export class OkrReportTaskService {
       }
 
       const check = await this.checkAndUpdateProgressByKey(
-  savedReportTasks,
-       false,
-      currentTasks,
-    
+        savedReportTasks,
+        false,
+        currentTasks,
       );
     } catch (error) {
       throw new Error(
@@ -444,7 +437,6 @@ export class OkrReportTaskService {
         .leftJoinAndSelect('keyResult.metricType', 'metricType') // Add join with metricType
         .leftJoinAndSelect('planTask.parentTask', 'parentTask')
         .leftJoinAndSelect('plan.planningUser', 'planningUser') // Add relation to planningUser from the Plan entity
-        
 
         // Apply filtering conditions
         .where('plan.tenantId = :tenantId', { tenantId })

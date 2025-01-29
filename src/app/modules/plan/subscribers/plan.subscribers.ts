@@ -16,7 +16,6 @@ export class PlanSubscriber implements EntitySubscriberInterface<Plan> {
   }
 
   async afterSoftRemove(event: SoftRemoveEvent<Plan>) {
-
     const reportRepository = event.connection.getRepository(Report);
     const planTaskRepository = event.connection.getRepository(PlanTask);
 
