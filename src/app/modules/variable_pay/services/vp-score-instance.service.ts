@@ -248,7 +248,6 @@ export class VpScoreInstanceService {
   ): Promise<VpScoreTargetDashboardCriteriaDto[]> {
     try {
       const breakdownDataList: VpScoreTargetDashboardCriteriaDto[] = [];
-console.log(vpScoreTargetFilterDto.activeMonthIds,"vpScoreTargetFilterDto.activeMonthIds")
       const queryBuilder = this.vpScoreInstanceRepository
         .createQueryBuilder('VpScoreInstance')
         .leftJoinAndSelect('VpScoreInstance.vpScoring', 'vpScoring')
