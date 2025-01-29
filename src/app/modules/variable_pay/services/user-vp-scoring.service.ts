@@ -237,7 +237,7 @@ export class UserVpScoringService {
         const instance = new CreateVpScoreInstanceDto();
         instance.monthId = currentMonth.id;
         instance.userId = userId;
-        instance.vpScore = result;
+        instance.vpScore = instance.vpScore = Math.max(result, 0);
         instance.vpScoringId = userScoring.vpScoring.id;
         instance.breakdown = breakDownData;
         const savedInstance =
@@ -247,7 +247,9 @@ export class UserVpScoringService {
           );
         return savedInstance;
       }
-    } catch (error) {}
+    } catch (error) {
+      throw new BadRequestException(error.message)
+    }
   }
 
   async refreshVP(refreshVPDto: RefreshVPDto, tenantId: string): Promise<any> {
