@@ -37,13 +37,8 @@ configuration values obtained from a ConfigService. */
         password: configService.get<string>('db.password'),
         database: configService.get<string>('db.name'),
         entities: [__dirname + '/../**/*.entity{.ts,.js}'],
-        //  synchronize: configService.get<boolean>('db.synchronize'),
-        subscribers: [
-          ObjectiveSubscriber,
-          PlanSubscriber,
-          ReportSubscriber,
-          PlanTaskSubscriber,
-        ],
+        synchronize: configService.get<boolean>('db.synchronize'),
+        subscribers: [ObjectiveSubscriber,PlanSubscriber,ReportSubscriber,PlanTaskSubscriber],
       }),
       inject: [ConfigService],
     }),
@@ -54,10 +49,10 @@ configuration values obtained from a ConfigService. */
       useClass: TenantGuard,
     },
 
-    // {
-    //   provide: APP_GUARD,
-    //   useClass: AuthGuard,
-    // },
+    {
+      provide: APP_GUARD,
+      useClass: AuthGuard,
+    },
   ],
 })
 export class AppModule {}
