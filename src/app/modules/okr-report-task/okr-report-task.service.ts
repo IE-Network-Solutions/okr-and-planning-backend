@@ -140,6 +140,7 @@ export class OkrReportTaskService {
     isOnCreate: 'ON_CREATE' | 'ON_UPDATE' | 'ON_DELETE' = 'ON_CREATE',
     reportTask: ReportTask[] = []
   ): Promise<any[]> {
+
     const reportTaskData = (reportTaskId: string) =>
       reportTask?.find((reportTask: ReportTask) => reportTask.id === reportTaskId);
   
@@ -156,6 +157,8 @@ export class OkrReportTaskService {
   
           switch (metricsType?.keyResult?.metricType.name) {
             case NAME.MILESTONE: {
+
+
               const milestoneUpdate = await this.findMilestoneById(
                 planTask?.milestoneId
               );
@@ -186,7 +189,7 @@ export class OkrReportTaskService {
                 updatedAt: new Date(),
               });
   
-              return this.okrProgressService.calculateKeyResultProgress({
+              return await this.okrProgressService.calculateKeyResultProgress({
                 keyResult: planTask.keyResult,
                 isOnCreate,
               });
@@ -204,8 +207,9 @@ export class OkrReportTaskService {
                 } else {
                   progress = task.status === 'Done' ? 100 : 0;
                 }
+
   
-                return this.okrProgressService.calculateKeyResultProgress({
+                return await this.okrProgressService.calculateKeyResultProgress({
                   keyResult: { ...planTask.keyResult, progress },
                   isOnCreate,
                 });
@@ -216,8 +220,11 @@ export class OkrReportTaskService {
             default: {
 
               let actualValueToUpdate = reportTaskData(task.id)?.actualValue;
+
+
               if (isOnCreate === 'ON_DELETE') {
-                return this.okrProgressService.calculateKeyResultProgress({
+                
+                return await this.okrProgressService.calculateKeyResultProgress({
                   keyResult: {
                     ...planTask.keyResult,
                     actualValue: 0,
@@ -227,12 +234,10 @@ export class OkrReportTaskService {
                 });
               } else {
                 let actualValue =
-                  parseFloat(task?.actualValue?.toString() || '0') ||
-                  parseFloat(planTask?.targetValue?.toString() || '0');
+                  parseFloat(task?.actualValue?.toString() || '0')
   
                 if (isOnCreate === 'ON_CREATE') {
-
-                  return this.okrProgressService.calculateKeyResultProgress({
+                  return await this.okrProgressService.calculateKeyResultProgress({
                     keyResult: {
                       ...planTask.keyResult,
                       actualValue,
@@ -242,14 +247,15 @@ export class OkrReportTaskService {
                 }
   
                 if (isOnCreate === 'ON_UPDATE') {
-                  return this.okrProgressService.calculateKeyResultProgress({
-                    keyResult: {
-                      ...planTask.keyResult,
-                      actualValue,
-                    },
-                    isOnCreate,
-                    actualValueToUpdate,
-                  });
+
+                return  await this.okrProgressService.calculateKeyResultProgress({
+                  keyResult: {
+                    ...planTask.keyResult,
+                    actualValue,
+                  },
+                  isOnCreate,
+                  actualValueToUpdate,
+                });
                 }
               }
             }
@@ -310,7 +316,6 @@ export class OkrReportTaskService {
         if (existingTask) {
           await this.reportTaskRepo.update({ planTaskId }, updatePayload);
       
-          // Fetch the updated task
           const updatedTask = await this.reportTaskRepo.findOne({ where: { planTaskId } });
       
           if (updatedTask) {
@@ -318,6 +323,7 @@ export class OkrReportTaskService {
           }
         }
       }
+
 
 
       const check = await this.checkAndUpdateProgressByKey(
@@ -445,8 +451,8 @@ export class OkrReportTaskService {
         .andWhere('plan.userId = :userId', { userId })
         .andWhere('planningUser.planningPeriodId = :planningPeriodId', {
           planningPeriodId,
-        }) // Use relation to access planningPeriod ID
-        .andWhere('plan.isValidated = :isValidated', { isValidated: true }); // Filter by validated plans only
+        }); // Use relation to access planningPeriod ID
+        // .andWhere('plan.isValidated = :isValidated', { isValidated: true }); // Filter by validated plans only
       if (!isForPlan) {
         queryBuilder.andWhere('plan.isReported = :isReported', {
           isReported: false,
@@ -491,7 +497,7 @@ export class OkrReportTaskService {
         .andWhere('planningUser.planningPeriodId = :planningPeriodId', {
           planningPeriodId,
         }) // Filter by planningPeriodId
-        .andWhere('plan.isValidated = :isValidated', { isValidated: true }) // Check if isValidated is true
+        // .andWhere('plan.isValidated = :isValidated', { isValidated: true }) // Check if isValidated is true
         .andWhere('(plan.isReported IS NULL OR plan.isReported = false)') // Check if isReported is null
         .getMany();
 
@@ -540,5 +546,9 @@ export class OkrReportTaskService {
 
   async getReportTasks(planTaskId: string): Promise<ReportTask[]> {
     return this.reportTaskRepo.find({ where: { planTaskId } });
+  }
+
+  async getReportTasksByReportId(reportId: string): Promise<ReportTask[]> {
+    return this.reportTaskRepo.find({ where: { reportId } });
   }
 }

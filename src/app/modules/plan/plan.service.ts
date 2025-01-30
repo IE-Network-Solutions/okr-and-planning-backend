@@ -143,7 +143,7 @@ export class PlanService {
       };
 
       if (boolValue) {
-        whereCondition.isValidated = true;
+        // whereCondition.isValidated = true;
         whereCondition.isReported = false;
       } else {
         whereCondition.isReported = false;

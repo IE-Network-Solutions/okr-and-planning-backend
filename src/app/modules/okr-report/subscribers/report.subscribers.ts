@@ -11,25 +11,31 @@ import { OkrReportTaskService } from '../../okr-report-task/okr-report-task.serv
 @EventSubscriber()
 @Injectable()
 export class ReportSubscriber implements EntitySubscriberInterface<Report> {
+  constructor(
+    private readonly okrReportTaskService: OkrReportTaskService
+  ) {}
 
-    constructor(private readonly okrReportTaskService: OkrReportTaskService) {}  // Injecting the service
-  
   listenTo() {
     return Report;
   }
 
   async afterSoftRemove(event: SoftRemoveEvent<Report>) {
-
-    const reportTaskRepository = event.connection.getRepository(ReportTask);
+    if (!event.entity || !event.entity.id) return; // Ensure entity exists before proceeding
 
     try {
-      const reportTasks = await reportTaskRepository.find({
+      const reportTasks = await event.manager.find(ReportTask, {
         where: { reportId: event.entity.id },
       });
 
       if (reportTasks.length > 0) {
-          // await this.okrReportTaskService.checkAndUpdateProgressByKey([reportTasks],'ON_DELETE')
-          await reportTaskRepository.softRemove(reportTasks);
+        const check = await this.okrReportTaskService.checkAndUpdateProgressByKey(
+          reportTasks,
+          'ON_DELETE'
+        );
+
+        if (check.length > 0) {
+          await event.manager.softRemove(reportTasks);
+        }
       }
     } catch (error) {
       return error;

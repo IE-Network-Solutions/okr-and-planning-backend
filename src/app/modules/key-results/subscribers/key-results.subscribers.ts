@@ -31,12 +31,17 @@ export class KeyResultsSubscriber
       where: { keyResultId: event.entity.id },
     });
 
-    for (const planTask of planTasks) {
-      await planTaskRepository.softRemove(planTask);
+    if (planTasks.length > 0) {
+      for (const planTask of planTasks) {
+        await planTaskRepository.softRemove(planTask);
+      }
     }
 
-    for (const milestone of milestones) {
-      await milestoneRepository.softRemove(milestone);
-    }
-  }
+      if (milestones.length > 0) {
+        for (const milestone of milestones) {
+          await milestoneRepository.softRemove(milestone);
+        }
+      }
+
+}
 }

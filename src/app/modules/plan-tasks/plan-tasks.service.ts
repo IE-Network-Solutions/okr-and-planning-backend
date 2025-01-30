@@ -233,6 +233,20 @@ export class PlanTasksService {
     planningPeriodId: string,
     tenantId: string,
   ): Promise<PlanTask[]> {
+
+    // const planningPeriodUser = await this.planningUserRepository.findOne({
+    //   where: { planningPeriodId, userId, tenantId }
+    // });
+    
+    // if (!planningPeriodUser) {
+    //   throw new Error("Planning Period User not found");
+    // }
+    
+    // // Find the latest plan associated with the planning user
+    // const latestPlan = await this.planRepository.findOne({
+    //   where: { planningUserId: planningPeriodUser.id },
+    //   order: { createdAt: "DESC" }, // Assuming `createdAt` exists for ordering
+    // });
     const queryBuilder = this.taskRepository
       .createQueryBuilder('planTask')
       .leftJoinAndSelect('planTask.plan', 'plan')
@@ -249,13 +263,18 @@ export class PlanTasksService {
       .andWhere('planningUser.planningPeriodId = :planningPeriodId', {
         planningPeriodId,
       }) // Use relation to access planningPeriod ID
-      .andWhere('plan.isValidated = :isValidated', { isValidated: true }) // Filter by validated plans only
+      // .andWhere('plan.isValidated = :isValidated', { isValidated: true }) // Filter by validated plans only
       .andWhere('plan.isReported = :isReported', { isReported: false });
 
     queryBuilder.andWhere('planTask.planId IS NOT NULL'); // Ensure the task has an associated plan ID
     const unreportedTasks = await queryBuilder.getMany();
 
     return unreportedTasks;
+ 
+
+  const latestPlanTasks = await queryBuilder.getMany();
+  return latestPlanTasks;
+
   }
 
   async findByUser(id: string, planningId: string): Promise<Plan[]> {
@@ -522,7 +541,7 @@ export class PlanTasksService {
 
     // Delete subtasks not in the input
     if (subTasksToDelete.length > 0) {
-      await this.taskRepository.remove(subTasksToDelete);
+      await this.taskRepository.softRemove(subTasksToDelete);
     }
 
     // Process update or create operations for each subtask
@@ -538,8 +557,20 @@ export class PlanTasksService {
   }
 
   ////////////////////////////////   ahmed changes //////////////////////////
-  remove(id: string) {
-    return `This action removes a #${id} planTask`;
+  async remove(id: string) {
+    const planTask = await this.taskRepository.findOne({ where: { id } });
+
+    if (!planTask?.id) {
+      throw new NotFoundException(`PlanTask with ID ${id} not found`);
+    }
+
+    try {
+      await this.taskRepository.softRemove(planTask);
+    }
+    catch (error) {
+      return error;
+    }
+
   }
 
   async findPlanTaskById(id: string): Promise<PlanTask> {

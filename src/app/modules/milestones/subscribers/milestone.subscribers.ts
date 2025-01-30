@@ -25,8 +25,10 @@ export class MilestoneSubscriber
       where: { milestoneId: event.entity.id },
     });
 
-    for (const planTask of planTasks) {
-      await planTaskRepository.softRemove(planTask);
+    if(planTasks?.length>0){
+      for (const planTask of planTasks) {
+        await planTaskRepository.softRemove(planTask);
+      }
     }
   }
 }

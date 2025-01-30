@@ -3,7 +3,6 @@ import {
   Column,
   Entity,
   JoinColumn,
-  ManyToMany,
   ManyToOne,
   OneToMany,
 } from 'typeorm';
@@ -63,7 +62,6 @@ export class KeyResult extends BaseModel {
   @ManyToOne(() => MetricType, (metric) => metric.keyResults, {
     eager: true,
   })
-  @JoinColumn({ name: 'metricTypeId' })
   metricType: MetricType;
 
   @OneToMany(() => Objective, (key) => key.allignedKeyResult)
