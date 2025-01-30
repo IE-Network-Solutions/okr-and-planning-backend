@@ -28,7 +28,7 @@ export class OkrProgressService {
     actualValueToUpdate,
   }: {
     keyResult: KeyResultWithActualValue;
-    isOnCreate: boolean;
+    isOnCreate: 'ON_CREATE' | 'ON_UPDATE' | 'ON_DELETE';
     actualValueToUpdate?: any;
   }): Promise<any> {
     const updateValue = new UpdateKeyResultDto();
@@ -51,10 +51,13 @@ export class OkrProgressService {
         keyResult.id,
       );
 
-      const previousCurrentValue = isOnCreate
+      // const updatedConstValue=actualValueToUpdate - keyResult?.actualValue
+      const previousCurrentValue = isOnCreate==='ON_CREATE'
         ? parseFloat(previousValue.currentValue.toString())
-        : parseFloat(previousValue.currentValue.toString()) -
-          actualValueToUpdate;
+        : parseFloat(previousValue.currentValue.toString()) - actualValueToUpdate
+
+      //  console.log({"actualValueToUpdate":actualValueToUpdate,"previousCurrentValue":previousCurrentValue},"YYYYYYYYYYYYYYYYYYYYYYYY")
+
       //  previousValue.lastUpdateValue;
 
       let currentValue =
@@ -67,8 +70,7 @@ export class OkrProgressService {
       // }
       const initialDifference =
         currentValue - parseFloat(keyResult.initialValue.toString());
-      const targetDifference = parseFloat(keyResult.targetValue.toString());
-      -parseFloat(keyResult.initialValue.toString());
+      const targetDifference = parseFloat(keyResult.targetValue.toString()) - parseFloat(keyResult.initialValue.toString());
       let  progress = (initialDifference / targetDifference) * 100;
       if(progress>100){
         progress=100
@@ -76,7 +78,7 @@ export class OkrProgressService {
 
       updateValue.progress = progress;
       // updateValue['lastUpdateValue'] = keyResult.currentValue;
-      updateValue.currentValue = currentValue;
+      updateValue.currentValue = Number(currentValue);
       keyResult.progress = progress;
     }
 

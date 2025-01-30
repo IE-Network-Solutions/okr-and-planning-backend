@@ -6,10 +6,14 @@ import {
 } from 'typeorm';
 import { Report } from '../entities/okr-report.entity';
 import { ReportTask } from '../../okr-report-task/entities/okr-report-task.entity';
+import { OkrReportTaskService } from '../../okr-report-task/okr-report-task.service';
 
 @EventSubscriber()
 @Injectable()
 export class ReportSubscriber implements EntitySubscriberInterface<Report> {
+
+    constructor(private readonly okrReportTaskService: OkrReportTaskService) {}  // Injecting the service
+  
   listenTo() {
     return Report;
   }
@@ -24,7 +28,8 @@ export class ReportSubscriber implements EntitySubscriberInterface<Report> {
       });
 
       if (reportTasks.length > 0) {
-        await reportTaskRepository.softRemove(reportTasks);
+          // await this.okrReportTaskService.checkAndUpdateProgressByKey([reportTasks],'ON_DELETE')
+          await reportTaskRepository.softRemove(reportTasks);
       }
     } catch (error) {
       return error;

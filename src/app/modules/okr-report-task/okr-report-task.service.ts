@@ -137,15 +137,12 @@ export class OkrReportTaskService {
 
   async checkAndUpdateProgressByKey(
     savedReportTasks: any[],
-    isOnCreate = true,
-    reportTask: ReportTask[] = [],
+    isOnCreate: 'ON_CREATE' | 'ON_UPDATE' | 'ON_DELETE' = 'ON_CREATE',
+    reportTask: ReportTask[] = []
   ): Promise<any[]> {
-    const reportTaskData = (reportTaskId: string) => {
-      return reportTask?.find(
-        (reportTask: ReportTask) => reportTask.id === reportTaskId,
-      );
-    };
-
+    const reportTaskData = (reportTaskId: string) =>
+      reportTask?.find((reportTask: ReportTask) => reportTask.id === reportTaskId);
+  
     try {
       const results = await Promise.all(
         savedReportTasks.map(async (task) => {
@@ -153,123 +150,118 @@ export class OkrReportTaskService {
             where: { id: task?.planTaskId },
           });
 
-          if (!planTask) return false;
-
+          if (!planTask) return null;
+  
           const metricsType = await this.getPlanTaskById(planTask.id);
-
+  
           switch (metricsType?.keyResult?.metricType.name) {
-            case NAME.MILESTONE:
-              {
-                const milestoneUpdate = await this.findMilestoneById(
-                  planTask?.milestoneId,
+            case NAME.MILESTONE: {
+              const milestoneUpdate = await this.findMilestoneById(
+                planTask?.milestoneId
+              );
+  
+              if (!milestoneUpdate) {
+                throw new Error(
+                  `Milestone with ID ${planTask?.milestoneId} not found`
                 );
-
-                if (!milestoneUpdate) {
-                  throw new Error(
-                    `Milestone with ID ${planTask?.milestoneId} not found`,
-                  );
-                }
-
-                let updatedStatus: Status;
-
+              }
+  
+              let updatedStatus: Status;
+  
+              if (isOnCreate !== 'ON_DELETE') {
                 if (planTask.achieveMK && task.status === 'Done') {
                   updatedStatus = Status.COMPLETED;
                 } else if (planTask.achieveMK && task.status === 'Not') {
                   updatedStatus = Status.NOTCOMPLETED;
                 } else {
-                  break;
+                  return null;
                 }
-
-                await this.updateMilestone(planTask?.milestoneId, {
-                  ...milestoneUpdate,
-                  status: updatedStatus,
-                  updatedAt: new Date(),
-                });
-
-                return await this.okrProgressService.calculateKeyResultProgress(
-                  {
-                    keyResult: planTask.keyResult,
-                    isOnCreate,
-                  },
-                );
+              } else {
+                updatedStatus = Status.NOTCOMPLETED;
               }
-              break;
+  
+              await this.updateMilestone(planTask?.milestoneId, {
+                ...milestoneUpdate,
+                status: updatedStatus,
+                updatedAt: new Date(),
+              });
+  
+              return this.okrProgressService.calculateKeyResultProgress({
+                keyResult: planTask.keyResult,
+                isOnCreate,
+              });
+            }
+  
             case NAME.ACHIEVE: {
               if (planTask.achieveMK) {
-                if (task.status === 'Done') {
-                  if (!planTask.keyResult) {
-                    throw new Error('KeyResult is missing for the plan task.');
-                  }
+                if (!planTask.keyResult) {
+                  throw new Error('KeyResult is missing for the plan task.');
+                }
+  
+                let progress = 0;
+                if (isOnCreate === 'ON_DELETE' && task.status === 'Done') {
+                  progress = 0;
+                } else {
+                  progress = task.status === 'Done' ? 100 : 0;
+                }
+  
+                return this.okrProgressService.calculateKeyResultProgress({
+                  keyResult: { ...planTask.keyResult, progress },
+                  isOnCreate,
+                });
+              }
+              return null;
+            }
+  
+            default: {
 
-                  return await this.okrProgressService.calculateKeyResultProgress(
-                    {
-                      keyResult: { ...planTask.keyResult, progress: 100 },
-                      isOnCreate,
-                      // actualValueToUpdate: task?.actualValue,
-                    },
-                  );
-                } else if (task.status === 'Not') {
-                  if (!planTask.keyResult) {
-                    throw new Error('KeyResult is missing for the plan task.');
-                  }
+              let actualValueToUpdate = reportTaskData(task.id)?.actualValue;
+              if (isOnCreate === 'ON_DELETE') {
+                return this.okrProgressService.calculateKeyResultProgress({
+                  keyResult: {
+                    ...planTask.keyResult,
+                    actualValue: 0,
+                  },
+                  isOnCreate,
+                  actualValueToUpdate,
+                });
+              } else {
+                let actualValue =
+                  parseFloat(task?.actualValue?.toString() || '0') ||
+                  parseFloat(planTask?.targetValue?.toString() || '0');
+  
+                if (isOnCreate === 'ON_CREATE') {
 
-                  return await this.okrProgressService.calculateKeyResultProgress(
-                    {
-                      keyResult: { ...planTask.keyResult, progress: 0 },
-                      isOnCreate,
-                      // actualValueToUpdate: task?.actualValue,
+                  return this.okrProgressService.calculateKeyResultProgress({
+                    keyResult: {
+                      ...planTask.keyResult,
+                      actualValue,
                     },
-                  );
+                    isOnCreate,
+                  });
+                }
+  
+                if (isOnCreate === 'ON_UPDATE') {
+                  return this.okrProgressService.calculateKeyResultProgress({
+                    keyResult: {
+                      ...planTask.keyResult,
+                      actualValue,
+                    },
+                    isOnCreate,
+                    actualValueToUpdate,
+                  });
                 }
               }
-
-              break;
             }
-
-            default:
-              if(isOnCreate){
-                return await this.okrProgressService.calculateKeyResultProgress(
-                  {
-                    keyResult: {
-                      ...planTask.keyResult,
-
-                      actualValue:
-                        parseFloat(task?.actualValue.toString()) ||
-                        parseFloat(planTask?.targetValue.toString()),
-
-                    },
-                    isOnCreate,
-                  },
-                );
-            }
-            else{
-                return await this.okrProgressService.calculateKeyResultProgress(
-                  {
-                    keyResult: {
-                      ...planTask.keyResult,
-
-                      actualValue:
-                        parseFloat(task?.actualValue.toString()) ||
-                        parseFloat(planTask?.targetValue.toString()),
-
-                    },
-                    isOnCreate,
-                    actualValueToUpdate: planTask.targetValue,
-                  },
-                );
           }
-           
-
-          }
-
-          return null; 
-        }),
+        })
       );
-      return results;
+      return results.filter(Boolean); // Remove `null` values from results
     } catch (error) {
       return [];
     }
   }
+  
 
   
   // Method to update the isReported value of the plan
@@ -314,20 +306,24 @@ export class OkrReportTaskService {
         const existingTask = currentTasks.find(
           (task) => task.planTaskId === planTaskId,
         );
+      
         if (existingTask) {
-          const taskReport = await this.reportTaskRepo.update(
-            { planTaskId },
-            updatePayload,
-          );
-          savedReportTasks.push(taskReport);
+          await this.reportTaskRepo.update({ planTaskId }, updatePayload);
+      
+          // Fetch the updated task
+          const updatedTask = await this.reportTaskRepo.findOne({ where: { planTaskId } });
+      
+          if (updatedTask) {
+            savedReportTasks.push(updatedTask);
+          }
         }
       }
 
+
       const check = await this.checkAndUpdateProgressByKey(
-  savedReportTasks,
-       false,
-      currentTasks,
-    
+          savedReportTasks,
+          'ON_UPDATE',
+          currentTasks,
       );
     } catch (error) {
       throw new Error(
