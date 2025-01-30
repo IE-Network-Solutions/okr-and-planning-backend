@@ -11,6 +11,7 @@ import { PlanningPeriodsService } from '../planningPeriods/planning-periods/plan
 import { GetFromOrganizatiAndEmployeInfoService } from '../objective/services/get-data-from-org.service';
 import { OkrReportTaskService } from '../okr-report-task/okr-report-task.service';
 import { PlanService } from '../plan/plan.service';
+import { PaginationService } from '@root/src/core/pagination/pagination.service';
 
 describe('OkrReportService', () => {
   let okrReportService: OkrReportService;
@@ -42,6 +43,10 @@ describe('OkrReportService', () => {
         {
           provide: OkrReportTaskService,
           useValue: mock<OkrReportTaskService>(),
+        },
+        {
+          provide: PaginationService,
+          useValue: mock<PaginationService>(),
         },
         {
           provide: PlanService,
