@@ -13,6 +13,7 @@ import { mock } from 'jest-mock-extended';
 import { GetFromOrganizatiAndEmployeInfoService } from '../objective/services/get-data-from-org.service';
 import { OkrReportTaskService } from '../okr-report-task/okr-report-task.service';
 import { PlanService } from '../plan/plan.service';
+import { PaginationService } from '@root/src/core/pagination/pagination.service';
 
 describe('OkrReportController', () => {
   let okrReportController: OkrReportController;
@@ -55,6 +56,10 @@ describe('OkrReportController', () => {
         {
           provide: PlanningPeriodsService,
           useValue: mock<PlanningPeriodsService>(),
+        },
+        {
+          provide: PaginationService,
+          useValue: mock<PaginationService>(),
         },
         {
           provide: PlanService,

@@ -28,7 +28,7 @@ export class OkrProgressService {
     actualValueToUpdate,
   }: {
     keyResult: KeyResultWithActualValue;
-    isOnCreate: boolean;
+    isOnCreate: 'ON_CREATE' | 'ON_UPDATE' | 'ON_DELETE';
     actualValueToUpdate?: any;
   }): Promise<any> {
     const updateValue = new UpdateKeyResultDto();
@@ -50,33 +50,39 @@ export class OkrProgressService {
       const previousValue = await this.keyResultService.findOnekeyResult(
         keyResult.id,
       );
+      const keyResultCurrentValue = parseFloat(
+        previousValue.currentValue.toString(),
+      );
+      let newValue = 0;
 
-      const previousCurrentValue = isOnCreate
-        ? parseFloat(previousValue.currentValue.toString())
-        : parseFloat(previousValue.currentValue.toString()) -
-          actualValueToUpdate;
-      //  previousValue.lastUpdateValue;
+      if (isOnCreate === 'ON_CREATE') {
+        newValue =
+          keyResultCurrentValue +
+          parseFloat(keyResult['actualValue'].toString());
+      } else {
+        const diff =
+          parseFloat(keyResult['actualValue'].toString()) - actualValueToUpdate;
 
-      const currentValue =
-        previousCurrentValue + parseFloat(keyResult['actualValue'].toString());
-      // if (
-      //   parseFloat(currentValue.toString()) >
-      //   parseFloat(previousValue.targetValue.toString())
-      // ) {
-      //   currentValue = parseFloat(previousValue.targetValue.toString());
-      // }
+        if (diff < 0) {
+          const absoluteValueOfDiff = Math.abs(diff); // Store absolute value
+          newValue = keyResultCurrentValue - absoluteValueOfDiff;
+        } else if (diff > 0) {
+          newValue = keyResultCurrentValue + Math.abs(diff);
+        } else {
+          return;
+        }
+      }
       const initialDifference =
-        currentValue - parseFloat(keyResult.initialValue.toString());
-      const targetDifference = parseFloat(keyResult.targetValue.toString());
-      -parseFloat(keyResult.initialValue.toString());
+        newValue - parseFloat(keyResult.initialValue.toString());
+      const targetDifference =
+        parseFloat(keyResult.targetValue.toString()) -
+        parseFloat(keyResult.initialValue.toString());
       let progress = (initialDifference / targetDifference) * 100;
       if (progress > 100) {
         progress = 100;
       }
-
       updateValue.progress = progress;
-      // updateValue['lastUpdateValue'] = keyResult.currentValue;
-      updateValue.currentValue = currentValue;
+      updateValue.currentValue = newValue;
       keyResult.progress = progress;
     }
 

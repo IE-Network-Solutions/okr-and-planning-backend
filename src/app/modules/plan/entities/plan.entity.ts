@@ -41,6 +41,9 @@ export class Plan extends BaseModel {
   @TreeChildren()
   plan: Plan[];
 
+  @Column({ type: 'string', nullable: true })
+  parentPlanId: string;
+
   @TreeParent()
   parentPlan: Plan;
 

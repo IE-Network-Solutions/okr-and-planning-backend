@@ -15,6 +15,8 @@ import { UUID } from 'crypto';
 import { CreateReportDTO } from './dto/create-report.dto';
 import { RockStarDto } from './dto/report-rock-star.dto';
 import { Report } from './entities/okr-report.entity';
+import { PaginationDto } from '@root/src/core/commonDto/pagination-dto';
+import { Pagination } from 'nestjs-typeorm-paginate';
 
 @Controller('okr-report')
 @ApiTags('okr-report')
@@ -35,14 +37,26 @@ export class OkrReportController {
     @Body() userIds: (string | 'all')[], // Expecting userIds to be an array of strings or 'all'
     @Headers('tenantId') tenantId: UUID, // Expecting tenantId from headers
     @Param('planningPeriodId') planningPeriodId: string, // Extract the planningPeriodId from the route
-  ): Promise<Report[]> {
+    @Query() paginationOptions?: PaginationDto,
+  ): Promise<Pagination<Report>> {
+    const report = {
+      items: [],
+      meta: {
+        totalItems: 0,
+        itemCount: 0,
+        itemsPerPage: 0,
+        totalPages: 0,
+        currentPage: 0,
+      },
+    };
     if (!userIds || userIds.length === 0) {
-      return []; // Return empty array if no userIds provided
+      return report;
     }
     return this.reportService.getAllReportsByTenantAndPeriod(
       tenantId,
       userIds,
       planningPeriodId,
+      paginationOptions,
     );
   }
   @Delete(':id')

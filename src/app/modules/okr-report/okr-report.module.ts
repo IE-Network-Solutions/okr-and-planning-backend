@@ -10,6 +10,7 @@ import { HttpModule } from '@nestjs/axios';
 import { OkrReportTaskModule } from '../okr-report-task/okr-report-task.module';
 import { PlanModule } from '../plan/plan.module';
 import { FailureReasonModule } from '../failure-reason/failure-reason.module';
+import { PaginationModule } from '@root/src/core/pagination/pagination.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { FailureReasonModule } from '../failure-reason/failure-reason.module';
     PlanModule,
     PlanningPeriodsModule,
     FailureReasonModule,
+    PaginationModule,
   ],
   controllers: [OkrReportController],
   providers: [
