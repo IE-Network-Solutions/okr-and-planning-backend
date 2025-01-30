@@ -15,7 +15,6 @@ export class ReportSubscriber implements EntitySubscriberInterface<Report> {
   }
 
   async afterSoftRemove(event: SoftRemoveEvent<Report>) {
-
     const reportTaskRepository = event.connection.getRepository(ReportTask);
 
     try {

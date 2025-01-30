@@ -53,7 +53,7 @@ export class VpScoreInstanceController {
   findOneVpScoreInstance(@Param('id') id: string) {
     return this.vpScoreInstanceService.findOneVpScoreInstance(id);
   }
-  @Get('/by-user/:id')
+  @Get('/by-user/:userId')
   findOneVpScoreInstanceOfUserScore(
     @Param('userId') userId: string,
     @Headers('tenantId') tenantId: string,
