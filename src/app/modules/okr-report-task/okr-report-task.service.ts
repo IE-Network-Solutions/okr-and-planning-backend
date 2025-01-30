@@ -435,9 +435,7 @@ export class OkrReportTaskService {
     forPlan: string,
   ): Promise<any> {
     try {
-      const isForPlan = 
-      forPlan === '1' ? true : 
-      forPlan === '2' ? false : true;  
+      const isForPlan = forPlan === '1' ? true : forPlan === '2' ? false : true;
 
       const queryBuilder = this.planTaskRepository
         .createQueryBuilder('planTask')

@@ -266,7 +266,6 @@ export class VpScoreInstanceService {
       const dataList = new VpScoreTargetDashboardCriteriaDto();
 
       for (const instance of vpScoreInstance) {
-      
         for (const breakdown of instance.breakdown) {
           const criteria = await this.vpCriteriaService.findOneVpCriteria(
             breakdown.criteriaId,
@@ -277,7 +276,7 @@ export class VpScoreInstanceService {
           dataList.actualScore = breakdown.score;
           dataList.targetValue = target.target;
           dataList.criteriaName = criteria.name;
-          breakdownDataList.push({...dataList});
+          breakdownDataList.push({ ...dataList });
         }
       }
 

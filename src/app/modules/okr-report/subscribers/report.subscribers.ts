@@ -33,7 +33,7 @@ export class ReportSubscriber implements EntitySubscriberInterface<Report> {
         //   );
 
         // if (check.length > 0) {
-          await event.manager.softRemove(reportTasks);
+        await event.manager.softRemove(reportTasks);
         // }
       }
     } catch (error) {
