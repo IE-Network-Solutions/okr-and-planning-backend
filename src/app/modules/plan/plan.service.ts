@@ -143,7 +143,7 @@ export class PlanService {
       };
 
       if (boolValue) {
-        whereCondition.isValidated = true;
+        // whereCondition.isValidated = true;
         whereCondition.isReported = false;
       } else {
         whereCondition.isReported = false;
@@ -209,16 +209,14 @@ export class PlanService {
   }
   async remove(id: string) {
     try {
-      const plan = await this.planRepository.findOneByOrFail({ id });
-      if (!plan) {
-        throw new NotFoundException('Error while deleting the plan');
-      }
-
       return await this.planRepository.softRemove({ id });
     } catch (error) {
-      if (error.name === 'EntityNotFoundError') {
+      if (
+        error.name === 'EntityNotFoundError' ||
+        error instanceof NotFoundException
+      ) {
         throw new NotFoundException(
-          `The specified plan with id ${id} can not be found`,
+          `The specified plan with id ${id} cannot be found.`,
         );
       }
       throw error;

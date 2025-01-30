@@ -20,6 +20,9 @@ import { GetFromOrganizatiAndEmployeInfoService } from '../objective/services/ge
 import { ReportStatusEnum } from '@root/src/core/interfaces/reportStatus.type';
 import { OkrReportTaskService } from '../okr-report-task/okr-report-task.service';
 import { PlanService } from '../plan/plan.service';
+import { PaginationDto } from '@root/src/core/commonDto/pagination-dto';
+import { IPaginationOptions, Pagination } from 'nestjs-typeorm-paginate';
+import { PaginationService } from '@root/src/core/pagination/pagination.service';
 
 @Injectable()
 export class OkrReportService {
@@ -31,6 +34,7 @@ export class OkrReportService {
     private okrReportTaskService: OkrReportTaskService,
     private planService: PlanService,
     private readonly getFromOrganizatiAndEmployeInfoService: GetFromOrganizatiAndEmployeInfoService,
+    private readonly paginationService: PaginationService,
   ) {}
   async createReportWithTasks(
     reportData: CreateReportDTO,
@@ -70,7 +74,12 @@ export class OkrReportService {
     tenantId: UUID,
     userIds: string[],
     planningPeriodId: string,
-  ): Promise<Report[]> {
+    paginationOptions?: PaginationDto,
+  ): Promise<Pagination<Report>> {
+    const options: IPaginationOptions = {
+      page: paginationOptions?.page,
+      limit: paginationOptions?.limit,
+    };
     // Use queryBuilder to fetch reports with complex filtering
     const reports = await this.reportRepository
       .createQueryBuilder('report') // Start from the 'report' entity
@@ -87,47 +96,91 @@ export class OkrReportService {
 
       // Apply filtering conditions
       .where('report.tenantId = :tenantId', { tenantId }) // Filter by tenantId
-      // .andWhere('report.isValidated = :isValidated', { isValidated: false })
       .andWhere(
         userIds.includes('all') ? '1=1' : 'report.userId IN (:...userIds)',
         userIds.includes('all') ? {} : { userIds },
       )
       .andWhere('planningUser.planningPeriodId = :planningPeriodId', {
         planningPeriodId,
-      }) // Filter by planningPeriodId
+      }); // Filter by planningPeriodId
 
-      // Order by createdAt in descending order (latest first)
-      .orderBy('report.createdAt', 'DESC')
+    // Order by createdAt in descending order (latest first)
 
-      .getMany(); // Fetch the results
+    const paginatedData = await this.paginationService.paginate<Report>(
+      reports,
+      options,
+    );
 
-    return reports;
+    return paginatedData;
   }
   // Method to delete a report by id and tenantId
+  // async deleteReport(id: string, tenantId: UUID): Promise<void> {
+  //   await this.reportRepository.manager.transaction(
+  //     async (transactionalEntityManager: EntityManager) => {
+  //       const report = await transactionalEntityManager.findOne(Report, {
+  //         where: { id, tenantId },
+  //       });
+
+  //       if (!report) {
+  //         throw new NotFoundException(`Report with ID not found`);
+  //       }
+
+  //       await transactionalEntityManager.softRemove(report);
+
+  //       const updatedValue = {
+  //         columnName: 'isReported',
+  //         value: false,
+  //       };
+  //       await this.planService.updateByColumn(
+  //         report.planId,
+  //         updatedValue,
+  //         transactionalEntityManager,
+  //       );
+
+  //     },
+  //   );
+  // }
   async deleteReport(id: string, tenantId: UUID): Promise<void> {
-    await this.reportRepository.manager.transaction(
-      async (transactionalEntityManager: EntityManager) => {
-        const report = await transactionalEntityManager.findOne(Report, {
-          where: { id, tenantId },
-        });
+    try {
+      await this.reportRepository.manager.transaction(
+        async (transactionalEntityManager: EntityManager) => {
+          const report = await transactionalEntityManager.findOne(Report, {
+            where: { id, tenantId },
+          });
 
-        if (!report) {
-          throw new NotFoundException(`Report with ID not found`);
-        }
+          if (!report) {
+            throw new NotFoundException(
+              `Report with ID  not found for tenant ${tenantId}`,
+            );
+          }
 
-        await transactionalEntityManager.softRemove(report);
+          // const reportTasks =
+          //   await this.okrReportTaskService.getReportTasksByReportId(id);
 
-        const updatedValue = {
-          columnName: 'isReported',
-          value: false,
-        };
-        await this.planService.updateByColumn(
-          report.planId,
-          updatedValue,
-          transactionalEntityManager,
-        );
-      },
-    );
+          await transactionalEntityManager.softRemove(report);
+
+          // if (reportTasks.length > 0) {
+          //   await this.okrReportTaskService.checkAndUpdateProgressByKey(
+          //     reportTasks,
+          //     'ON_DELETE',
+          //   );
+          // }
+
+          const updatedValue = {
+            columnName: 'isReported',
+            value: false,
+          };
+
+          await this.planService.updateByColumn(
+            report.planId,
+            updatedValue,
+            transactionalEntityManager,
+          );
+        },
+      );
+    } catch (error) {
+      return error;
+    }
   }
   async rockStart(rockStarDto: RockStarDto, tenantId: string) {
     const startOfCurrentWeek = startOfWeek(new Date(), { weekStartsOn: 1 });
