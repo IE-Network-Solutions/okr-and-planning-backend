@@ -173,16 +173,20 @@ export class UserVpScoringService {
     try {
       let result = 0;
       const breakDownData = [];
-      const userScoring = await this.findOneUserVpScoringByUserId(
+      let userScoring
+   
+     userScoring = await this.findOneUserVpScoringByUserId(
         userId,
         tenantId,
       );
-      if (userScoring) {
+          if (userScoring) {
         const totalPercentage = userScoring.vpScoring.totalPercentage;
         const vpScoringCriterions = userScoring.vpScoring.vpScoringCriterions;
+       
         const currentMonth = await this.getUsersService.getActiveMonth(
           tenantId,
         );
+        
         const user = await this.getUsersService.getUsers(userId, tenantId);
 
         const userDepartmentId = user.employeeJobInformation[0].departmentId;
@@ -237,7 +241,7 @@ export class UserVpScoringService {
         const instance = new CreateVpScoreInstanceDto();
         instance.monthId = currentMonth.id;
         instance.userId = userId;
-        instance.vpScore = instance.vpScore = Math.max(result, 0);
+        instance.vpScore = instance.vpScore = Math.max(0, Math.min(result, totalPercentage));
         instance.vpScoringId = userScoring.vpScoring.id;
         instance.breakdown = breakDownData;
         const savedInstance =
@@ -247,6 +251,11 @@ export class UserVpScoringService {
           );
         return savedInstance;
       }
+      else{
+        throw new NotFoundException('User Vp Scoring Not Found');
+
+      }
+   
     } catch (error) {
       throw new BadRequestException(error.message);
     }
