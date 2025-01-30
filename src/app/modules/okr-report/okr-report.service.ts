@@ -154,17 +154,17 @@ export class OkrReportService {
             );
           }
 
-          const reportTasks =
-            await this.okrReportTaskService.getReportTasksByReportId(id);
+          // const reportTasks =
+          //   await this.okrReportTaskService.getReportTasksByReportId(id);
 
           await transactionalEntityManager.softRemove(report);
 
-          if (reportTasks.length > 0) {
-            await this.okrReportTaskService.checkAndUpdateProgressByKey(
-              reportTasks,
-              'ON_DELETE',
-            );
-          }
+          // if (reportTasks.length > 0) {
+          //   await this.okrReportTaskService.checkAndUpdateProgressByKey(
+          //     reportTasks,
+          //     'ON_DELETE',
+          //   );
+          // }
 
           const updatedValue = {
             columnName: 'isReported',
