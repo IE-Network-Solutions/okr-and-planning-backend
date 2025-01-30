@@ -14,7 +14,6 @@ import { OkrReportTaskService } from '../../okr-report-task/okr-report-task.serv
 export class PlanTaskSubscriber implements EntitySubscriberInterface<PlanTask> {
   constructor(private readonly okrReportTaskService: OkrReportTaskService) {} // Injecting the service
 
-
   listenTo() {
     return PlanTask;
   }
@@ -36,6 +35,5 @@ export class PlanTaskSubscriber implements EntitySubscriberInterface<PlanTask> {
       'ON_DELETE',
     );
     await reportTaskRepository.softRemove(reportTasks);
-    
   }
 }

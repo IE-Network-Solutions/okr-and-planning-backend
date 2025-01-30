@@ -37,25 +37,26 @@ export class OkrReportController {
     @Body() userIds: (string | 'all')[], // Expecting userIds to be an array of strings or 'all'
     @Headers('tenantId') tenantId: UUID, // Expecting tenantId from headers
     @Param('planningPeriodId') planningPeriodId: string, // Extract the planningPeriodId from the route
-     @Query() paginationOptions?: PaginationDto,
-  ):Promise<Pagination<Report>> {
-    const report= {  items:[],
+    @Query() paginationOptions?: PaginationDto,
+  ): Promise<Pagination<Report>> {
+    const report = {
+      items: [],
       meta: {
         totalItems: 0,
         itemCount: 0,
         itemsPerPage: 0,
-        totalPages:0,
+        totalPages: 0,
         currentPage: 0,
-      }
-    }
+      },
+    };
     if (!userIds || userIds.length === 0) {
-      return  report
+      return report;
     }
     return this.reportService.getAllReportsByTenantAndPeriod(
       tenantId,
       userIds,
       planningPeriodId,
-      paginationOptions
+      paginationOptions,
     );
   }
   @Delete(':id')

@@ -17,7 +17,6 @@ export class MilestoneSubscriber
     return Milestone;
   }
   async afterSoftRemove(event: SoftRemoveEvent<Milestone>) {
-
     const planTaskRepository: Repository<PlanTask> =
       event.connection.getRepository(PlanTask);
 
@@ -25,7 +24,7 @@ export class MilestoneSubscriber
       where: { milestoneId: event.entity.id },
     });
 
-    if(planTasks?.length>0){
+    if (planTasks?.length > 0) {
       for (const planTask of planTasks) {
         await planTaskRepository.softRemove(planTask);
       }

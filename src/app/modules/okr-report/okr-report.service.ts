@@ -34,7 +34,7 @@ export class OkrReportService {
     private okrReportTaskService: OkrReportTaskService,
     private planService: PlanService,
     private readonly getFromOrganizatiAndEmployeInfoService: GetFromOrganizatiAndEmployeInfoService,
-     private readonly paginationService: PaginationService,
+    private readonly paginationService: PaginationService,
   ) {}
   async createReportWithTasks(
     reportData: CreateReportDTO,
@@ -74,12 +74,12 @@ export class OkrReportService {
     tenantId: UUID,
     userIds: string[],
     planningPeriodId: string,
-   paginationOptions?: PaginationDto,
+    paginationOptions?: PaginationDto,
   ): Promise<Pagination<Report>> {
-        const options: IPaginationOptions = {
-            page: paginationOptions?.page,
-            limit: paginationOptions?.limit,
-          };
+    const options: IPaginationOptions = {
+      page: paginationOptions?.page,
+      limit: paginationOptions?.limit,
+    };
     // Use queryBuilder to fetch reports with complex filtering
     const reports = await this.reportRepository
       .createQueryBuilder('report') // Start from the 'report' entity
@@ -102,14 +102,14 @@ export class OkrReportService {
       )
       .andWhere('planningUser.planningPeriodId = :planningPeriodId', {
         planningPeriodId,
-      }) // Filter by planningPeriodId
+      }); // Filter by planningPeriodId
 
-      // Order by createdAt in descending order (latest first)
-    
+    // Order by createdAt in descending order (latest first)
+
     const paginatedData = await this.paginationService.paginate<Report>(
       reports,
-            options,
-          );
+      options,
+    );
 
     return paginatedData;
   }
@@ -136,7 +136,7 @@ export class OkrReportService {
   //         updatedValue,
   //         transactionalEntityManager,
   //       );
-       
+
   //     },
   //   );
   // }
@@ -147,33 +147,37 @@ export class OkrReportService {
           const report = await transactionalEntityManager.findOne(Report, {
             where: { id, tenantId },
           });
-      
+
           if (!report) {
-            throw new NotFoundException(`Report with ID  not found for tenant ${tenantId}`);
+            throw new NotFoundException(
+              `Report with ID  not found for tenant ${tenantId}`,
+            );
           }
-      
-          const reportTasks = await this.okrReportTaskService.getReportTasksByReportId(id);
-      
+
+          const reportTasks =
+            await this.okrReportTaskService.getReportTasksByReportId(id);
+
           await transactionalEntityManager.softRemove(report);
-      
+
           if (reportTasks.length > 0) {
-            console.log("have report tasks",`have report tasks ${reportTasks.length}`)
-            await this.okrReportTaskService.checkAndUpdateProgressByKey(reportTasks, 'ON_DELETE');
+            await this.okrReportTaskService.checkAndUpdateProgressByKey(
+              reportTasks,
+              'ON_DELETE',
+            );
           }
-      
+
           const updatedValue = {
             columnName: 'isReported',
             value: false,
           };
-      
+
           await this.planService.updateByColumn(
             report.planId,
             updatedValue,
             transactionalEntityManager,
           );
-        }
+        },
       );
-      
     } catch (error) {
       return error;
     }

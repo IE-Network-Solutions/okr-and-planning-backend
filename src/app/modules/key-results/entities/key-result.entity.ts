@@ -1,11 +1,5 @@
 import { BaseModel } from '@root/src/database/base.model';
-import {
-  Column,
-  Entity,
-  JoinColumn,
-  ManyToOne,
-  OneToMany,
-} from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
 import { Objective } from '../../objective/entities/objective.entity';
 import { Milestone } from '../../milestones/entities/milestone.entity';
 import { MetricType } from '../../metric-types/entities/metric-type.entity';

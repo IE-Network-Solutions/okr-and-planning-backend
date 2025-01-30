@@ -50,32 +50,36 @@ export class OkrProgressService {
       const previousValue = await this.keyResultService.findOnekeyResult(
         keyResult.id,
       );
-      const keyResultCurrentValue = parseFloat(previousValue.currentValue.toString());
+      const keyResultCurrentValue = parseFloat(
+        previousValue.currentValue.toString(),
+      );
       let newValue = 0;
-      
+
       if (isOnCreate === 'ON_CREATE') {
-        newValue = keyResultCurrentValue + parseFloat(keyResult['actualValue'].toString());
+        newValue =
+          keyResultCurrentValue +
+          parseFloat(keyResult['actualValue'].toString());
       } else {
-        console.log(keyResult,isOnCreate,"dadadadadadadadadadad")
-        let diff = parseFloat(keyResult['actualValue'].toString()) - actualValueToUpdate;
-        
+        const diff =
+          parseFloat(keyResult['actualValue'].toString()) - actualValueToUpdate;
+
         if (diff < 0) {
-          let absoluteValueOfDiff = Math.abs(diff); // Store absolute value
+          const absoluteValueOfDiff = Math.abs(diff); // Store absolute value
           newValue = keyResultCurrentValue - absoluteValueOfDiff;
-        } else if(diff > 0){
+        } else if (diff > 0) {
           newValue = keyResultCurrentValue + Math.abs(diff);
-        }
-        else 
-        {
+        } else {
           return;
         }
       }
       const initialDifference =
         newValue - parseFloat(keyResult.initialValue.toString());
-      const targetDifference = parseFloat(keyResult.targetValue.toString()) - parseFloat(keyResult.initialValue.toString());
-      let  progress = (initialDifference / targetDifference) * 100;
-      if(progress>100){
-        progress=100
+      const targetDifference =
+        parseFloat(keyResult.targetValue.toString()) -
+        parseFloat(keyResult.initialValue.toString());
+      let progress = (initialDifference / targetDifference) * 100;
+      if (progress > 100) {
+        progress = 100;
       }
       updateValue.progress = progress;
       updateValue.currentValue = newValue;

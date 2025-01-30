@@ -97,12 +97,12 @@ export class OkrReportTaskService {
       if (!planId) {
         throw new Error('Plan not found for the given planning period user');
       }
-      const planningDataId=planningId ?? planId;
+      const planningDataId = planningId ?? planId;
       const reportScore = await this.calculateReportScore(createReportDto);
 
       const reportData = this.createReportData({
         reportScore,
-        planId:planningDataId,
+        planId: planningDataId,
         userId,
         tenantId,
       });
@@ -116,7 +116,9 @@ export class OkrReportTaskService {
         tenantId,
       );
       const savedReportTasks = await this.reportTaskRepo.save(reportTasks);
-      const checkPlanIsReported = await this.updatePlanIsReported(planningDataId);
+      const checkPlanIsReported = await this.updatePlanIsReported(
+        planningDataId,
+      );
       const check = await this.checkAndUpdateProgressByKey(savedReportTasks);
 
       if (check && checkPlanIsReported) {
@@ -138,12 +140,13 @@ export class OkrReportTaskService {
   async checkAndUpdateProgressByKey(
     savedReportTasks: any[],
     isOnCreate: 'ON_CREATE' | 'ON_UPDATE' | 'ON_DELETE' = 'ON_CREATE',
-    reportTask: ReportTask[] = []
+    reportTask: ReportTask[] = [],
   ): Promise<any[]> {
-
     const reportTaskData = (reportTaskId: string) =>
-      reportTask?.find((reportTask: ReportTask) => reportTask.id === reportTaskId);
-  
+      reportTask?.find(
+        (reportTask: ReportTask) => reportTask.id === reportTaskId,
+      );
+
     try {
       const results = await Promise.all(
         savedReportTasks.map(async (task) => {
@@ -152,25 +155,23 @@ export class OkrReportTaskService {
           });
 
           if (!planTask) return null;
-  
+
           const metricsType = await this.getPlanTaskById(planTask.id);
-  
+
           switch (metricsType?.keyResult?.metricType.name) {
             case NAME.MILESTONE: {
-
-
               const milestoneUpdate = await this.findMilestoneById(
-                planTask?.milestoneId
+                planTask?.milestoneId,
               );
-  
+
               if (!milestoneUpdate) {
                 throw new Error(
-                  `Milestone with ID ${planTask?.milestoneId} not found`
+                  `Milestone with ID ${planTask?.milestoneId} not found`,
                 );
               }
-  
+
               let updatedStatus: Status;
-  
+
               if (isOnCreate !== 'ON_DELETE') {
                 if (planTask.achieveMK && task.status === 'Done') {
                   updatedStatus = Status.COMPLETED;
@@ -182,25 +183,25 @@ export class OkrReportTaskService {
               } else {
                 updatedStatus = Status.NOTCOMPLETED;
               }
-  
+
               await this.updateMilestone(planTask?.milestoneId, {
                 ...milestoneUpdate,
                 status: updatedStatus,
                 updatedAt: new Date(),
               });
-  
+
               return await this.okrProgressService.calculateKeyResultProgress({
                 keyResult: planTask.keyResult,
                 isOnCreate,
               });
             }
-  
+
             case NAME.ACHIEVE: {
               if (planTask.achieveMK) {
                 if (!planTask.keyResult) {
                   throw new Error('KeyResult is missing for the plan task.');
                 }
-  
+
                 let progress = 0;
                 if (isOnCreate === 'ON_DELETE' && task.status === 'Done') {
                   progress = 0;
@@ -208,68 +209,70 @@ export class OkrReportTaskService {
                   progress = task.status === 'Done' ? 100 : 0;
                 }
 
-  
-                return await this.okrProgressService.calculateKeyResultProgress({
-                  keyResult: { ...planTask.keyResult, progress },
-                  isOnCreate,
-                });
+                return await this.okrProgressService.calculateKeyResultProgress(
+                  {
+                    keyResult: { ...planTask.keyResult, progress },
+                    isOnCreate,
+                  },
+                );
               }
               return null;
             }
-  
+
             default: {
-
-              let actualValueToUpdate = reportTaskData(task.id)?.actualValue;
-
+              const actualValueToUpdate = reportTaskData(task.id)?.actualValue;
 
               if (isOnCreate === 'ON_DELETE') {
-                
-                return await this.okrProgressService.calculateKeyResultProgress({
-                  keyResult: {
-                    ...planTask.keyResult,
-                    actualValue: 0,
-                  },
-                  isOnCreate,
-                  actualValueToUpdate,
-                });
-              } else {
-                let actualValue =
-                  parseFloat(task?.actualValue?.toString() || '0')
-  
-                if (isOnCreate === 'ON_CREATE') {
-                  return await this.okrProgressService.calculateKeyResultProgress({
+                return await this.okrProgressService.calculateKeyResultProgress(
+                  {
                     keyResult: {
                       ...planTask.keyResult,
-                      actualValue,
+                      actualValue: 0,
                     },
                     isOnCreate,
-                  });
-                }
-  
-                if (isOnCreate === 'ON_UPDATE') {
-
-                return  await this.okrProgressService.calculateKeyResultProgress({
-                  keyResult: {
-                    ...planTask.keyResult,
-                    actualValue,
+                    actualValueToUpdate,
                   },
-                  isOnCreate,
-                  actualValueToUpdate,
-                });
+                );
+              } else {
+                const actualValue = parseFloat(
+                  task?.actualValue?.toString() || '0',
+                );
+
+                if (isOnCreate === 'ON_CREATE') {
+                  return await this.okrProgressService.calculateKeyResultProgress(
+                    {
+                      keyResult: {
+                        ...planTask.keyResult,
+                        actualValue,
+                      },
+                      isOnCreate,
+                    },
+                  );
+                }
+
+                if (isOnCreate === 'ON_UPDATE') {
+                  return await this.okrProgressService.calculateKeyResultProgress(
+                    {
+                      keyResult: {
+                        ...planTask.keyResult,
+                        actualValue,
+                      },
+                      isOnCreate,
+                      actualValueToUpdate,
+                    },
+                  );
                 }
               }
             }
           }
-        })
+        }),
       );
       return results.filter(Boolean); // Remove `null` values from results
     } catch (error) {
       return [];
     }
   }
-  
 
-  
   // Method to update the isReported value of the plan
   private async updatePlanIsReported(planId: string): Promise<any> {
     try {
@@ -312,24 +315,24 @@ export class OkrReportTaskService {
         const existingTask = currentTasks.find(
           (task) => task.planTaskId === planTaskId,
         );
-      
+
         if (existingTask) {
           await this.reportTaskRepo.update({ planTaskId }, updatePayload);
-      
-          const updatedTask = await this.reportTaskRepo.findOne({ where: { planTaskId } });
-      
+
+          const updatedTask = await this.reportTaskRepo.findOne({
+            where: { planTaskId },
+          });
+
           if (updatedTask) {
             savedReportTasks.push(updatedTask);
           }
         }
       }
 
-
-
       const check = await this.checkAndUpdateProgressByKey(
-          savedReportTasks,
-          'ON_UPDATE',
-          currentTasks,
+        savedReportTasks,
+        'ON_UPDATE',
+        currentTasks,
       );
     } catch (error) {
       throw new Error(
@@ -444,7 +447,6 @@ export class OkrReportTaskService {
         .leftJoinAndSelect('keyResult.metricType', 'metricType') // Add join with metricType
         .leftJoinAndSelect('planTask.parentTask', 'parentTask')
         .leftJoinAndSelect('plan.planningUser', 'planningUser') // Add relation to planningUser from the Plan entity
-        
 
         // Apply filtering conditions
         .where('plan.tenantId = :tenantId', { tenantId })
@@ -452,7 +454,7 @@ export class OkrReportTaskService {
         .andWhere('planningUser.planningPeriodId = :planningPeriodId', {
           planningPeriodId,
         }); // Use relation to access planningPeriod ID
-        // .andWhere('plan.isValidated = :isValidated', { isValidated: true }); // Filter by validated plans only
+      // .andWhere('plan.isValidated = :isValidated', { isValidated: true }); // Filter by validated plans only
       if (!isForPlan) {
         queryBuilder.andWhere('plan.isReported = :isReported', {
           isReported: false,
@@ -501,7 +503,6 @@ export class OkrReportTaskService {
         .andWhere('(plan.isReported IS NULL OR plan.isReported = false)') // Check if isReported is null
         .getMany();
 
-        
       return reportTasks;
     } catch (error) {
       throw new ConflictException(error.message);

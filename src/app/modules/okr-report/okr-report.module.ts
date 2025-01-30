@@ -21,7 +21,7 @@ import { PaginationModule } from '@root/src/core/pagination/pagination.module';
     PlanModule,
     PlanningPeriodsModule,
     FailureReasonModule,
-    PaginationModule
+    PaginationModule,
   ],
   controllers: [OkrReportController],
   providers: [

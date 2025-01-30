@@ -233,15 +233,14 @@ export class PlanTasksService {
     planningPeriodId: string,
     tenantId: string,
   ): Promise<PlanTask[]> {
-
     // const planningPeriodUser = await this.planningUserRepository.findOne({
     //   where: { planningPeriodId, userId, tenantId }
     // });
-    
+
     // if (!planningPeriodUser) {
     //   throw new Error("Planning Period User not found");
     // }
-    
+
     // // Find the latest plan associated with the planning user
     // const latestPlan = await this.planRepository.findOne({
     //   where: { planningUserId: planningPeriodUser.id },
@@ -270,11 +269,9 @@ export class PlanTasksService {
     const unreportedTasks = await queryBuilder.getMany();
 
     return unreportedTasks;
- 
 
-  const latestPlanTasks = await queryBuilder.getMany();
-  return latestPlanTasks;
-
+    const latestPlanTasks = await queryBuilder.getMany();
+    return latestPlanTasks;
   }
 
   async findByUser(id: string, planningId: string): Promise<Plan[]> {
@@ -566,11 +563,9 @@ export class PlanTasksService {
 
     try {
       await this.taskRepository.softRemove(planTask);
-    }
-    catch (error) {
+    } catch (error) {
       return error;
     }
-
   }
 
   async findPlanTaskById(id: string): Promise<PlanTask> {

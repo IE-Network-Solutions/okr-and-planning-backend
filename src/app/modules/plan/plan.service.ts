@@ -209,9 +209,12 @@ export class PlanService {
   }
   async remove(id: string) {
     try {
-      return await this.planRepository.softRemove({id});
+      return await this.planRepository.softRemove({ id });
     } catch (error) {
-      if (error.name === 'EntityNotFoundError' || error instanceof NotFoundException) {
+      if (
+        error.name === 'EntityNotFoundError' ||
+        error instanceof NotFoundException
+      ) {
         throw new NotFoundException(
           `The specified plan with id ${id} cannot be found.`,
         );
@@ -219,7 +222,6 @@ export class PlanService {
       throw error;
     }
   }
-  
 
   async updateByColumn(
     id: string,

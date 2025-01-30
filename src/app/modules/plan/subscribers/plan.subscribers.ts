@@ -28,9 +28,15 @@ export class PlanSubscriber implements EntitySubscriberInterface<Plan> {
     await queryRunner.startTransaction();
 
     try {
-      const reports = await reportRepository.find({ where: { planId: plan.id } });
-      const planTasks = await planTaskRepository.find({ where: { planId: plan.id } });
-      const parentPlans = await planRepository.find({ where: { parentPlanId: plan.id } });
+      const reports = await reportRepository.find({
+        where: { planId: plan.id },
+      });
+      const planTasks = await planTaskRepository.find({
+        where: { planId: plan.id },
+      });
+      const parentPlans = await planRepository.find({
+        where: { parentPlanId: plan.id },
+      });
 
       if (parentPlans.length > 0) {
         await queryRunner.manager.softRemove(parentPlans);
