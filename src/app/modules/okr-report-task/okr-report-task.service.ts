@@ -370,7 +370,6 @@ export class OkrReportTaskService {
         isAchieved: value?.status === 'Done' ? true : false,
         tenantId: tenantId || null,
         customReason: value?.customReason || null,
-        actualValue: value?.actualValue || '0',
         failureReasonId: value?.failureReasonId || null,
       };
     });
@@ -436,7 +435,9 @@ export class OkrReportTaskService {
     forPlan: string,
   ): Promise<any> {
     try {
-      const isForPlan = forPlan === '1' ? false : true;
+      const isForPlan = 
+      forPlan === '1' ? true : 
+      forPlan === '2' ? false : true;  
 
       const queryBuilder = this.planTaskRepository
         .createQueryBuilder('planTask')

@@ -30,10 +30,10 @@ export class PlanTaskSubscriber implements EntitySubscriberInterface<PlanTask> {
       return;
     }
 
-    await this.okrReportTaskService.checkAndUpdateProgressByKey(
-      reportTasks,
-      'ON_DELETE',
-    );
+    // await this.okrReportTaskService.checkAndUpdateProgressByKey(
+    //   reportTasks,
+    //   'ON_DELETE',
+    // );
     await reportTaskRepository.softRemove(reportTasks);
   }
 }

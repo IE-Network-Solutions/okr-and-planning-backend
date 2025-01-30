@@ -26,15 +26,15 @@ export class ReportSubscriber implements EntitySubscriberInterface<Report> {
       });
 
       if (reportTasks.length > 0) {
-        const check =
-          await this.okrReportTaskService.checkAndUpdateProgressByKey(
-            reportTasks,
-            'ON_DELETE',
-          );
+        // const check =
+        //   await this.okrReportTaskService.checkAndUpdateProgressByKey(
+        //     reportTasks,
+        //     'ON_DELETE',
+        //   );
 
-        if (check.length > 0) {
+        // if (check.length > 0) {
           await event.manager.softRemove(reportTasks);
-        }
+        // }
       }
     } catch (error) {
       return error;
