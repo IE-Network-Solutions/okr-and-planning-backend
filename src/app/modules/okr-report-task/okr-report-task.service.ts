@@ -265,37 +265,7 @@ export class OkrReportTaskService {
               }
             }
 
-            default:
-              if (isOnCreate) {
-                return await this.okrProgressService.calculateKeyResultProgress(
-                  {
-                    keyResult: {
-                      ...planTask.keyResult,
-
-                      actualValue:
-                        parseFloat(task?.actualValue.toString()) ||
-                        parseFloat(planTask?.targetValue.toString()),
-                    },
-                    isOnCreate,
-                  },
-                );
-              } else {
-                return await this.okrProgressService.calculateKeyResultProgress(
-                  {
-                    keyResult: {
-                      ...planTask.keyResult,
-
-                      actualValue:
-                        parseFloat(task?.actualValue.toString()) ||
-                        parseFloat(planTask?.targetValue.toString()),
-                    },
-                    isOnCreate,
-                    actualValueToUpdate: reportTaskData(task.id)?.actualValue,
-                  },
-                );
-              }
-
-
+          
           }
         }),
       );
