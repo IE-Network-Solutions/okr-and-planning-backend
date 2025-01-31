@@ -102,7 +102,8 @@ export class OkrReportService {
       )
       .andWhere('planningUser.planningPeriodId = :planningPeriodId', {
         planningPeriodId,
-      }); // Filter by planningPeriodId
+      })
+      .orderBy('report.createdAt', 'DESC'); // Filter by planningPeriodId
 
     // Order by createdAt in descending order (latest first)
 
