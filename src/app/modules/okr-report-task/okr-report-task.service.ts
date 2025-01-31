@@ -119,7 +119,7 @@ export class OkrReportTaskService {
       const checkPlanIsReported = await this.updatePlanIsReported(
         planningDataId,
       );
-     const check = await this.checkAndUpdateProgressByKey(savedReportTasks);
+      const check = await this.checkAndUpdateProgressByKey(savedReportTasks);
 
       if (check && checkPlanIsReported) {
         // const vp = await this.userVpScoringService.calculateVP(
