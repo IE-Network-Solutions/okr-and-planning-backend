@@ -102,10 +102,9 @@ export class OkrReportService {
       )
       .andWhere('planningUser.planningPeriodId = :planningPeriodId', {
         planningPeriodId,
-      }); // Filter by planningPeriodId
-
-    // Order by createdAt in descending order (latest first)
-
+      })
+      .orderBy('report.createdAt', 'DESC'); // Filter by planningPeriodId
+      
     const paginatedData = await this.paginationService.paginate<Report>(
       reports,
       options,
@@ -113,33 +112,7 @@ export class OkrReportService {
 
     return paginatedData;
   }
-  // Method to delete a report by id and tenantId
-  // async deleteReport(id: string, tenantId: UUID): Promise<void> {
-  //   await this.reportRepository.manager.transaction(
-  //     async (transactionalEntityManager: EntityManager) => {
-  //       const report = await transactionalEntityManager.findOne(Report, {
-  //         where: { id, tenantId },
-  //       });
 
-  //       if (!report) {
-  //         throw new NotFoundException(`Report with ID not found`);
-  //       }
-
-  //       await transactionalEntityManager.softRemove(report);
-
-  //       const updatedValue = {
-  //         columnName: 'isReported',
-  //         value: false,
-  //       };
-  //       await this.planService.updateByColumn(
-  //         report.planId,
-  //         updatedValue,
-  //         transactionalEntityManager,
-  //       );
-
-  //     },
-  //   );
-  // }
   async deleteReport(id: string, tenantId: UUID): Promise<void> {
     try {
       await this.reportRepository.manager.transaction(

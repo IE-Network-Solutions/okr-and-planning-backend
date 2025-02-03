@@ -208,26 +208,38 @@ export class PlanningPeriodsService {
           where: { userId },
         });
 
-        if (existingUsers.length > 0) {
-          await manager.softRemove(existingUsers); // Soft remove if using soft deletes
+        const existingPlanningPeriodIds = new Set(
+          existingUsers.map((user) => user.planningPeriodId),
+        );
+
+        const planningPeriodsToDelete = existingUsers.filter(
+          (user) => !values.planningPeriods.includes(user.planningPeriodId),
+        );
+
+        if (planningPeriodsToDelete.length > 0) {
+          await manager.softRemove(planningPeriodsToDelete); // Use softRemove for soft deletes
         }
-        const newPlanningPeriodUsers = values.planningPeriods.map(
-          (planningPeriodId) =>
+
+        const newPlanningPeriodUsers = values.planningPeriods
+          .filter(
+            (planningPeriodId) =>
+              !existingPlanningPeriodIds.has(planningPeriodId),
+          )
+          .map((planningPeriodId) =>
             manager.create(PlanningPeriodUser, {
               userId,
               planningPeriodId,
               tenantId,
             }),
-        );
+          );
+
         const savedUsers = await manager.save(
           PlanningPeriodUser,
           newPlanningPeriodUsers,
         );
         return savedUsers;
       } catch (error) {
-        throw new Error(
-          `Error updating PlanningPeriodUsers for user with ID ${userId}: ${error.message}`,
-        );
+        return error;
       }
     });
   }
