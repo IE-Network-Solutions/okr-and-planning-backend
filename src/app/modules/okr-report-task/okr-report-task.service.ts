@@ -218,7 +218,7 @@ export class OkrReportTaskService {
               }
               return null;
             }
-             
+
             default: {
               const actualValueToUpdate = reportTaskData(task.id)?.actualValue;
 
@@ -369,7 +369,7 @@ export class OkrReportTaskService {
         status: value.status as ReportStatusEnum,
         isAchieved: value?.status === 'Done' ? true : false,
         tenantId: tenantId || null,
-        actualValue: value?.actualValue  ?? 0,
+        actualValue: value?.actualValue ?? 0,
         customReason: value?.customReason || null,
         failureReasonId: value?.failureReasonId || null,
       };

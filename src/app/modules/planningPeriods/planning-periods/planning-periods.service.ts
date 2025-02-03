@@ -202,41 +202,46 @@ export class PlanningPeriodsService {
     values: PlannnigPeriodUserDto,
     tenantId: string,
   ): Promise<PlanningPeriodUser[]> {
+    return await this.dataSource.transaction(async (manager) => {
+      try {
+        const existingUsers = await manager.find(PlanningPeriodUser, {
+          where: { userId },
+        });
 
-      return await this.dataSource.transaction(async (manager) => {
-        try {
-          const existingUsers = await manager.find(PlanningPeriodUser, {
-            where: { userId },
-          });
-    
-          const existingPlanningPeriodIds = new Set(
-            existingUsers.map((user) => user.planningPeriodId),
+        const existingPlanningPeriodIds = new Set(
+          existingUsers.map((user) => user.planningPeriodId),
+        );
+
+        const planningPeriodsToDelete = existingUsers.filter(
+          (user) => !values.planningPeriods.includes(user.planningPeriodId),
+        );
+
+        if (planningPeriodsToDelete.length > 0) {
+          await manager.softRemove(planningPeriodsToDelete); // Use softRemove for soft deletes
+        }
+
+        const newPlanningPeriodUsers = values.planningPeriods
+          .filter(
+            (planningPeriodId) =>
+              !existingPlanningPeriodIds.has(planningPeriodId),
+          )
+          .map((planningPeriodId) =>
+            manager.create(PlanningPeriodUser, {
+              userId,
+              planningPeriodId,
+              tenantId,
+            }),
           );
-    
-          const planningPeriodsToDelete = existingUsers.filter(
-            (user) => !values.planningPeriods.includes(user.planningPeriodId),
-          );
-    
-          if (planningPeriodsToDelete.length > 0) {
-            await manager.softRemove(planningPeriodsToDelete); // Use softRemove for soft deletes
-          }
-    
-          const newPlanningPeriodUsers = values.planningPeriods
-            .filter((planningPeriodId) => !existingPlanningPeriodIds.has(planningPeriodId))
-            .map((planningPeriodId) =>
-              manager.create(PlanningPeriodUser, {
-                userId,
-                planningPeriodId,
-                tenantId,
-              }),
-            );
-    
-          const savedUsers = await manager.save(PlanningPeriodUser, newPlanningPeriodUsers);
-          return savedUsers;
-        } catch (error) {
-           return error 
-       }
-      });
+
+        const savedUsers = await manager.save(
+          PlanningPeriodUser,
+          newPlanningPeriodUsers,
+        );
+        return savedUsers;
+      } catch (error) {
+        return error;
+      }
+    });
   }
 
   async assignUser(

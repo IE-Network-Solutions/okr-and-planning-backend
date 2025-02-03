@@ -237,11 +237,11 @@ export class PlanTasksService {
       const planningUser = await this.planningUserRepository.findOne({
         where: { planningPeriodId, userId },
       });
-  
+
       if (!planningUser) {
         throw new NotFoundException(`Planning User Not Found`);
       }
-  
+
       const plan = await this.planRepository.findOne({
         where: {
           planningUserId: planningUser.id,
@@ -250,14 +250,14 @@ export class PlanTasksService {
           tenantId,
         },
         order: {
-          createdAt: 'DESC', 
+          createdAt: 'DESC',
         },
       });
-  
+
       if (!plan) {
-       return [];
+        return [];
       }
-  
+
       const queryBuilder = this.taskRepository
         .createQueryBuilder('planTask')
         .leftJoinAndSelect('planTask.plan', 'plan')
@@ -268,13 +268,13 @@ export class PlanTasksService {
         .leftJoinAndSelect('planTask.parentTask', 'parentTask')
         .leftJoinAndSelect('plan.planningUser', 'planningUser') // Add relation to planningUser from the Plan entity
         .andWhere('planTask.planId IS NOT NULL');
-  
+
       if (plan.id) {
         queryBuilder.andWhere('plan.id = :planId', { planId: plan.id });
       }
-  
+
       const unreportedTasks = await queryBuilder.getMany();
-  
+
       return unreportedTasks;
     } catch (error) {
       throw new Error(`Failed to update PlanningPeriodUser: ${error.message}`);
