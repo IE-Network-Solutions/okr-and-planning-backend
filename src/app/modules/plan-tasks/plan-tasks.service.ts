@@ -239,7 +239,7 @@ export class PlanTasksService {
       });
 
       if (!planningUser) {
-        throw new NotFoundException(`Planning User Not Found`);
+        return [];
       }
 
       const plan = await this.planRepository.findOne({
