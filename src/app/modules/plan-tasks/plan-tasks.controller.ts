@@ -60,9 +60,7 @@ export class PlanTasksController {
     return await this.planTasksService.findByUser(id, planningId);
   }
 
-  @Get(
-    'planned-data/un-reported-plan-tasks/:userId/planning-period/:planningPeriodId',
-  )
+  @Get('planned-data/un-reported-plan-tasks/:userId/planning-period/:planningPeriodId')
   async findAllUnreportedTasks(
     @Param('userId') userId: string,
     @Param('planningPeriodId') planningPeriodId: string,
