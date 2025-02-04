@@ -101,7 +101,7 @@ export class OkrReportTaskService {
 
       const reportData = this.createReportData({
         reportScore,
-        planId:planningId ?? planId,
+        planId: planningId ?? planId,
         userId,
         tenantId,
       });
@@ -115,7 +115,9 @@ export class OkrReportTaskService {
         tenantId,
       );
       const savedReportTasks = await this.reportTaskRepo.save(reportTasks);
-      const checkPlanIsReported = await this.updatePlanIsReported(planningId ?? planId);
+      const checkPlanIsReported = await this.updatePlanIsReported(
+        planningId ?? planId,
+      );
       const check = await this.checkAndUpdateProgressByKey(savedReportTasks);
 
       if (check && checkPlanIsReported) {
@@ -139,8 +141,6 @@ export class OkrReportTaskService {
     isOnCreate = true,
     reportTask: ReportTask[] = [],
   ): Promise<any[]> {
-
-
     const reportTaskData = (reportTaskId: string) => {
       return reportTask?.find(
         (reportTask: ReportTask) => reportTask.id === reportTaskId,
@@ -424,9 +424,7 @@ export class OkrReportTaskService {
     forPlan: string,
   ): Promise<any> {
     try {
-      const isForPlan = 
-      forPlan === '1' ? true : 
-      forPlan === '2' ? false : true;  
+      const isForPlan = forPlan === '1' ? true : forPlan === '2' ? false : true;
 
       const queryBuilder = this.planTaskRepository
         .createQueryBuilder('planTask')

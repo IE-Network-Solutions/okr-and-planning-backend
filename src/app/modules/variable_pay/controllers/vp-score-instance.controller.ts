@@ -42,9 +42,8 @@ export class VpScoreInstanceController {
   @Get('')
   async findAllVpScoreInstances(
     @Headers('tenantId') tenantId: string,
-    @Body()vpScoreFilterDto:VpScoreFilterDto,
+    @Body() vpScoreFilterDto: VpScoreFilterDto,
     @Query() paginationOptions?: PaginationDto,
-
   ) {
     return this.vpScoreInstanceService.findAllVpScoreInstances(
       tenantId,

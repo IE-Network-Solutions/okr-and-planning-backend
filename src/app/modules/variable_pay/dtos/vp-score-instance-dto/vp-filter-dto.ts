@@ -11,7 +11,7 @@ import { UUID } from 'typeorm/driver/mongodb/bson.typings';
 export class VpScoreTargetFilterDto {
   @IsOptional()
   @IsArray()
- // @ValidateNested({ each: true })
+  // @ValidateNested({ each: true })
   @Type(() => String)
   activeMonthIds?: string[];
   @IsUUID()

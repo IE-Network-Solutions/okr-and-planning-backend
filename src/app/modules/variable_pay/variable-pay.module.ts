@@ -53,7 +53,7 @@ import { GetFromOrganizatiAndEmployeInfoService } from '../objective/services/ge
     VpScoreInstanceService,
     VpScoringService,
     VpScoringCriteriaService,
-    GetFromOrganizatiAndEmployeInfoService
+    GetFromOrganizatiAndEmployeInfoService,
   ],
   exports: [
     CriteriaTargetService,
