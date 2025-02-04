@@ -20,7 +20,7 @@ import {
 import { VpCriteriaService } from './vp-criteria.service';
 import { VpScoreTargetFilterDto } from '../dtos/vp-score-instance-dto/vp-filter-dto';
 import { CriteriaTargetService } from './criteria-target.service';
-
+import { VpScoreFilterDto } from '../dtos/vp-score-instance-dto/vp-score-filter';
 @Injectable()
 export class VpScoreInstanceService {
   constructor(
@@ -30,6 +30,8 @@ export class VpScoreInstanceService {
     private readonly getUsersService: GetFromOrganizatiAndEmployeInfoService,
     private readonly vpCriteriaService: VpCriteriaService,
     private readonly criteriaTargetService: CriteriaTargetService,
+    private readonly getFromOrganizatiAndEmployeInfoService: GetFromOrganizatiAndEmployeInfoService,
+
   ) {}
   async createVpScoreInstance(
     createVpScoreInstanceDto: CreateVpScoreInstanceDto,
@@ -75,6 +77,7 @@ export class VpScoreInstanceService {
   }
   async findAllVpScoreInstances(
     tenantId: string,
+    vpScoreFilterDto:VpScoreFilterDto,
     paginationOptions?: PaginationDto,
   ): Promise<Pagination<VpScoreInstance>> {
     try {
@@ -82,16 +85,28 @@ export class VpScoreInstanceService {
         page: paginationOptions.page,
         limit: paginationOptions.limit,
       };
+      const usersBasicSalary = await this.getFromOrganizatiAndEmployeInfoService.getUsersSalary(tenantId)
       const queryBuilder = this.vpScoreInstanceRepository
         .createQueryBuilder('VpScoreInstance')
         .leftJoinAndSelect('VpScoreInstance.vpScoring', 'vpScoring')
         .where('VpScoreInstance.tenantId = :tenantId', { tenantId });
+        if(vpScoreFilterDto.monthIds && vpScoreFilterDto.monthIds.length >0 ){
+          queryBuilder.andWhere('VpScoreInstance.monthId IN (:...monthId)', {
+            monthId: vpScoreFilterDto.monthIds,
+          });
+        }
+
 
       const paginatedData =
         await this.paginationService.paginate<VpScoreInstance>(
           queryBuilder,
           options,
         );
+        for(const vpInstance of paginatedData.items){
+          const userVpWithAmount =    await this.getVPamount(vpInstance,usersBasicSalary)
+          vpInstance["amount"]=userVpWithAmount || 0
+
+        }
 
       return paginatedData;
     } catch (error) {
@@ -285,5 +300,22 @@ export class VpScoreInstanceService {
     } catch (error) {
       throw new BadRequestException(error.message);
     }
+  }
+  
+  async getVPamount(vpInstance:any,usersBasicSalary:any []){
+    try {
+      const salary =usersBasicSalary.find((item)=>item.userId===vpInstance.userId)
+    
+      const amount = salary?.basicSalary*vpInstance?.vpScoring?.totalPercentage/100
+     
+      return amount
+      
+    } catch (error) {
+      
+    }
+
+
+
+
   }
 }

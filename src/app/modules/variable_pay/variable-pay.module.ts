@@ -22,6 +22,7 @@ import { PaginationModule } from '@root/src/core/pagination/pagination.module';
 import { VpScoringCriteriaService } from './services/vp-scoring-criteria.service';
 import { HttpModule } from '@nestjs/axios';
 import { ObjectiveModule } from '../objective/objective.module';
+import { GetFromOrganizatiAndEmployeInfoService } from '../objective/services/get-data-from-org.service';
 
 @Module({
   imports: [
@@ -52,6 +53,7 @@ import { ObjectiveModule } from '../objective/objective.module';
     VpScoreInstanceService,
     VpScoringService,
     VpScoringCriteriaService,
+    GetFromOrganizatiAndEmployeInfoService
   ],
   exports: [
     CriteriaTargetService,
