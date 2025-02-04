@@ -95,24 +95,21 @@ describe('VpScoreInstanceController', () => {
         orderBy: 'id',
         orderDirection: 'ASC',
       };
-      const vpResult: Pagination<VpScoreInstance> =
-        paginationResultUserVpScoringInstanceData();
+      const vpResult: Pagination<VpScoreInstance> = paginationResultUserVpScoringInstanceData();
       const paginationOptions = new PaginationDto();
-      jest
-        .spyOn(service, 'findAllVpScoreInstances')
-        .mockResolvedValue(vpResult);
-
-      mockVpScoreInstanceService.findAllVpScoreInstance.mockResolvedValue(
-        userVpScoringInstanceData(),
-      );
-
+      jest.spyOn(service, 'findAllVpScoreInstances').mockResolvedValue(vpResult);
+  
+      mockVpScoreInstanceService.findAllVpScoreInstance.mockResolvedValue(userVpScoringInstanceData());
+  
       const result = await controller.findAllVpScoreInstances(
         'tenant1',
+        null, // Pass null as the second argument
         paginationDto,
       );
-
+  
       expect(service.findAllVpScoreInstances).toHaveBeenCalledWith(
         'tenant1',
+        null, // Expect null as the second argument
         paginationDto,
       );
       expect(result).toEqual(paginationResultUserVpScoringInstanceData());
