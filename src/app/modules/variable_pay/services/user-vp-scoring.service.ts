@@ -173,9 +173,10 @@ export class UserVpScoringService {
     try {
       let result = 0;
       const breakDownData = [];
-      let userScoring;
-
-      userScoring = await this.findOneUserVpScoringByUserId(userId, tenantId);
+      const userScoring = await this.findOneUserVpScoringByUserId(
+        userId,
+        tenantId,
+      );
       if (userScoring) {
         const totalPercentage = userScoring.vpScoring.totalPercentage;
         const vpScoringCriterions = userScoring.vpScoring.vpScoringCriterions;

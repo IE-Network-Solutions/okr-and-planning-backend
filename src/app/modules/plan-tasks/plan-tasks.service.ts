@@ -233,29 +233,52 @@ export class PlanTasksService {
     planningPeriodId: string,
     tenantId: string,
   ): Promise<PlanTask[]> {
-    const queryBuilder = this.taskRepository
-      .createQueryBuilder('planTask')
-      .leftJoinAndSelect('planTask.plan', 'plan')
-      .leftJoinAndSelect('planTask.milestone', 'milestone')
-      .leftJoinAndSelect('planTask.keyResult', 'keyResult')
-      .leftJoinAndSelect('keyResult.objective', 'objective') // Add join with objective
-      .leftJoinAndSelect('keyResult.metricType', 'metricType') // Add join with metricType
-      .leftJoinAndSelect('planTask.parentTask', 'parentTask')
-      .leftJoinAndSelect('plan.planningUser', 'planningUser') // Add relation to planningUser from the Plan entity
+    try {
+      const planningUser = await this.planningUserRepository.findOne({
+        where: { planningPeriodId, userId },
+      });
 
-      // Apply filtering conditions
-      .where('plan.tenantId = :tenantId', { tenantId })
-      .andWhere('plan.userId = :userId', { userId })
-      .andWhere('planningUser.planningPeriodId = :planningPeriodId', {
-        planningPeriodId,
-      }) // Use relation to access planningPeriod ID
-      .andWhere('plan.isValidated = :isValidated', { isValidated: true }) // Filter by validated plans only
-      .andWhere('plan.isReported = :isReported', { isReported: false });
+      if (!planningUser) {
+        return [];
+      }
 
-    queryBuilder.andWhere('planTask.planId IS NOT NULL'); // Ensure the task has an associated plan ID
-    const unreportedTasks = await queryBuilder.getMany();
+      const plan = await this.planRepository.findOne({
+        where: {
+          planningUserId: planningUser.id,
+          userId,
+          isReported: false,
+          tenantId,
+        },
+        order: {
+          createdAt: 'DESC',
+        },
+      });
 
-    return unreportedTasks;
+      if (!plan) {
+        return [];
+      }
+
+      const queryBuilder = this.taskRepository
+        .createQueryBuilder('planTask')
+        .leftJoinAndSelect('planTask.plan', 'plan')
+        .leftJoinAndSelect('planTask.milestone', 'milestone')
+        .leftJoinAndSelect('planTask.keyResult', 'keyResult')
+        .leftJoinAndSelect('keyResult.objective', 'objective') // Add join with objective
+        .leftJoinAndSelect('keyResult.metricType', 'metricType') // Add join with metricType
+        .leftJoinAndSelect('planTask.parentTask', 'parentTask')
+        .leftJoinAndSelect('plan.planningUser', 'planningUser') // Add relation to planningUser from the Plan entity
+        .andWhere('planTask.planId IS NOT NULL');
+
+      if (plan.id) {
+        queryBuilder.andWhere('plan.id = :planId', { planId: plan.id });
+      }
+
+      const unreportedTasks = await queryBuilder.getMany();
+
+      return unreportedTasks;
+    } catch (error) {
+      throw new Error(`Failed to update PlanningPeriodUser: ${error.message}`);
+    }
   }
 
   async findByUser(id: string, planningId: string): Promise<Plan[]> {
@@ -522,7 +545,7 @@ export class PlanTasksService {
 
     // Delete subtasks not in the input
     if (subTasksToDelete.length > 0) {
-      await this.taskRepository.remove(subTasksToDelete);
+      await this.taskRepository.softRemove(subTasksToDelete);
     }
 
     // Process update or create operations for each subtask
@@ -538,8 +561,18 @@ export class PlanTasksService {
   }
 
   ////////////////////////////////   ahmed changes //////////////////////////
-  remove(id: string) {
-    return `This action removes a #${id} planTask`;
+  async remove(id: string) {
+    const planTask = await this.taskRepository.findOne({ where: { id } });
+
+    if (!planTask?.id) {
+      throw new NotFoundException(`PlanTask with ID ${id} not found`);
+    }
+
+    try {
+      await this.taskRepository.softRemove(planTask);
+    } catch (error) {
+      return error;
+    }
   }
 
   async findPlanTaskById(id: string): Promise<PlanTask> {
