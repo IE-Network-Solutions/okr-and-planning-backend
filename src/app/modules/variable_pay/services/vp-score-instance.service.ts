@@ -83,10 +83,15 @@ export class VpScoreInstanceService {
         page: paginationOptions.page,
         limit: paginationOptions.limit,
       };
-      const usersBasicSalary =
+      let usersBasicSalary=[]
+      try{
+       usersBasicSalary =
         await this.getUsersService.getUsersSalary(
           tenantId,
         );
+      }catch(error){
+
+      }
       const queryBuilder = this.vpScoreInstanceRepository
         .createQueryBuilder('VpScoreInstance')
         .leftJoinAndSelect('VpScoreInstance.vpScoring', 'vpScoring')
@@ -103,11 +108,14 @@ export class VpScoreInstanceService {
           options,
         );
       for (const vpInstance of paginatedData.items) {
+        vpInstance['amount']=0
+        if(usersBasicSalary && usersBasicSalary.length>0){
         const userVpWithAmount = await this.getVPamount(
           vpInstance,
           usersBasicSalary,
         );
         vpInstance['amount'] = userVpWithAmount || 0;
+      }
       }
 
       return paginatedData;

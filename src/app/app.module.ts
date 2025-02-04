@@ -58,10 +58,10 @@ configuration values obtained from a ConfigService. */
       useClass: TenantGuard,
     },
 
-    // {
-    //   provide: APP_GUARD,
-    //   useClass: AuthGuard,
-    // },
+    {
+      provide: APP_GUARD,
+      useClass: AuthGuard,
+    },
   ],
 })
 export class AppModule {}
