@@ -30,7 +30,6 @@ export class VpScoreInstanceService {
     private readonly getUsersService: GetFromOrganizatiAndEmployeInfoService,
     private readonly vpCriteriaService: VpCriteriaService,
     private readonly criteriaTargetService: CriteriaTargetService,
-    private readonly getFromOrganizatiAndEmployeInfoService: GetFromOrganizatiAndEmployeInfoService,
   ) {}
   async createVpScoreInstance(
     createVpScoreInstanceDto: CreateVpScoreInstanceDto,
@@ -85,14 +84,14 @@ export class VpScoreInstanceService {
         limit: paginationOptions.limit,
       };
       const usersBasicSalary =
-        await this.getFromOrganizatiAndEmployeInfoService.getUsersSalary(
+        await this.getUsersService.getUsersSalary(
           tenantId,
         );
       const queryBuilder = this.vpScoreInstanceRepository
         .createQueryBuilder('VpScoreInstance')
         .leftJoinAndSelect('VpScoreInstance.vpScoring', 'vpScoring')
         .where('VpScoreInstance.tenantId = :tenantId', { tenantId });
-      if (vpScoreFilterDto.monthIds && vpScoreFilterDto.monthIds.length > 0) {
+      if (vpScoreFilterDto && vpScoreFilterDto.monthIds && vpScoreFilterDto.monthIds.length > 0) {
         queryBuilder.andWhere('VpScoreInstance.monthId IN (:...monthId)', {
           monthId: vpScoreFilterDto.monthIds,
         });
