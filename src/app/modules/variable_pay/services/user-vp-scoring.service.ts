@@ -199,7 +199,7 @@ export class UserVpScoringService {
           for (const target of criteria.vpCriteria.criteriaTargets) {
             if (target.departmentId === null) {
               if (target.month === currentMonth.name) {
-                if(achievedScore>=criteria.weight){
+                if(achievedScore>criteria.weight){
                   achievedScore = criteria.weight
                 }
                 if (criteria.vpCriteria.isDeduction) {
