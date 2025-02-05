@@ -39,10 +39,10 @@ export class VpScoreInstanceController {
     );
   }
 
-  @Post('/filter')
+  @Get('/filter')
   async findAllVpScoreInstances(
     @Headers('tenantId') tenantId: string,
-    @Body() vpScoreFilterDto: VpScoreFilterDto,
+    @Query() vpScoreFilterDto: VpScoreFilterDto,
     @Query() paginationOptions?: PaginationDto,
   ) {
     return this.vpScoreInstanceService.findAllVpScoreInstances(
