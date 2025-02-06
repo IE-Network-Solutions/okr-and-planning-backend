@@ -525,25 +525,25 @@ export class OkrReportTaskService {
       throw new ConflictException(error.message);
     }
   }
-  // async deleteReportTasksByReportId(
-  //   reportId: string,
-  //   transactionalEntityManager?: EntityManager,
-  // ) {
-  //   try {
-  //     // Use transactionalEntityManager if provided, else fallback to default repository
-  //     const manager = transactionalEntityManager || this.reportTaskRepo.manager;
-  //     // Find all report tasks associated with the given reportId
+  async deleteReportTasksByReportId(
+    reportId: string,
+    transactionalEntityManager?: EntityManager,
+  ) {
+    try {
+      // Use transactionalEntityManager if provided, else fallback to default repository
+      const manager = transactionalEntityManager || this.reportTaskRepo.manager;
+      // Find all report tasks associated with the given reportId
 
-  //     const reportTasks = await manager.find(ReportTask, {
-  //       where: { reportId },
-  //     });
-  //     // Perform a soft delete on the fetched tasks
-  //     const deletedTasks = await manager.softRemove(reportTasks);
-  //     return deletedTasks;
-  //   } catch (error) {
-  //     throw new ConflictException(error.message);
-  //   }
-  // }
+      const reportTasks = await manager.find(ReportTask, {
+        where: { reportId },
+      });
+      // Perform a soft delete on the fetched tasks
+      const deletedTasks = await manager.softRemove(reportTasks);
+      return deletedTasks;
+    } catch (error) {
+      throw new ConflictException(error.message);
+    }
+  }
 
   async getReportTasks(planTaskId: string): Promise<ReportTask[]> {
     return this.reportTaskRepo.find({ where: { planTaskId } });
