@@ -191,7 +191,7 @@ export class UserVpScoringService {
 
         for (const criteria of vpScoringCriterions) {
           let eachScore = 0;
-          const achievedScore = await this.getResults(
+          let achievedScore = await this.getResults(
             tenantId,
             criteria.vpCriteria.sourceEndpoint,
             userId,
@@ -203,6 +203,9 @@ export class UserVpScoringService {
                   result =
                     result - (criteria.weight * achievedScore) / target.target;
                 } else {
+                  if (achievedScore > target.target) {
+                    achievedScore = target.target;
+                  }
                   result =
                     result + (criteria.weight * achievedScore) / target.target;
                 }
@@ -221,6 +224,10 @@ export class UserVpScoringService {
                   result =
                     result - (criteria.weight * achievedScore) / target.target;
                 } else {
+                  
+                  if (achievedScore > target.target) {
+                    achievedScore = target.target;
+                  }
                   result =
                     result + (criteria.weight * achievedScore) / target.target;
                 }

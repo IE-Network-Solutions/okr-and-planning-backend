@@ -19,6 +19,7 @@ import { VpScoreInstanceService } from '../services/vp-score-instance.service';
 import { CreateVpScoreInstanceDto } from '../dtos/vp-score-instance-dto/create-vp-score-instance.dto';
 import { UpdateVpScoreInstanceDto } from '../dtos/vp-score-instance-dto/update-vp-score-instance.dto';
 import { VpScoreTargetFilterDto } from '../dtos/vp-score-instance-dto/vp-filter-dto';
+import { VpScoreFilterDto } from '../dtos/vp-score-instance-dto/vp-score-filter';
 
 @Controller('vp-score-instance')
 @ApiTags('vp-score-instance')
@@ -38,13 +39,15 @@ export class VpScoreInstanceController {
     );
   }
 
-  @Get('')
+  @Get('/filter')
   async findAllVpScoreInstances(
     @Headers('tenantId') tenantId: string,
+    @Query() vpScoreFilterDto: VpScoreFilterDto,
     @Query() paginationOptions?: PaginationDto,
   ) {
     return this.vpScoreInstanceService.findAllVpScoreInstances(
       tenantId,
+      vpScoreFilterDto,
       paginationOptions,
     );
   }

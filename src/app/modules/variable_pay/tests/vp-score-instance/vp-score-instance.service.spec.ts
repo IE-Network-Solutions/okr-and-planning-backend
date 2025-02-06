@@ -18,6 +18,7 @@ import { VpCriteriaService } from '../../services/vp-criteria.service';
 import { CriteriaTargetService } from '../../services/criteria-target.service';
 import { PaginationDto } from '@root/src/core/commonDto/pagination-dto';
 import { Pagination } from 'nestjs-typeorm-paginate';
+import { BadRequestException } from '@nestjs/common';
 
 describe('vpScoreInstanceService', () => {
   let vpScoreInstanceService: VpScoreInstanceService;
@@ -52,6 +53,7 @@ describe('vpScoreInstanceService', () => {
           provide: CriteriaTargetService,
           useValue: mock<CriteriaTargetService>(),
         },
+  
       ],
     }).compile();
 
@@ -140,8 +142,8 @@ describe('vpScoreInstanceService', () => {
       });
     });
   });
-  describe('findAllMonths', () => {
-    it('should return paginated Month', async () => {
+  describe('findAllVpScoreInstance', () => {
+    it('should return paginated VpScoreInstance', async () => {
       const paginationOptions: PaginationDto = {
         page: 1,
         limit: 10,
@@ -170,6 +172,7 @@ describe('vpScoreInstanceService', () => {
 
       const result = await vpScoreInstanceService.findAllVpScoreInstances(
         tenantId,
+        null,
         paginationOptions,
       );
 
@@ -179,6 +182,7 @@ describe('vpScoreInstanceService', () => {
         options,
       );
     });
+       
   });
 
   describe('update', () => {

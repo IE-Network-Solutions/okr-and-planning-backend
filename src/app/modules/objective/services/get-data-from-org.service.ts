@@ -104,4 +104,19 @@ export class GetFromOrganizatiAndEmployeInfoService {
       throw new BadRequestException(error.message);
     }
   }
+
+  async getUsersSalary(tenantId: string) {
+    try {
+      const response = await this.httpService
+        .get(`${this.orgUrl}/basic-salary/active`, {
+          headers: {
+            tenantid: tenantId,
+          },
+        })
+        .toPromise();
+      return response.data;
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
+  }
 }
