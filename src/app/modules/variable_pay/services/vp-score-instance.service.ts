@@ -97,7 +97,6 @@ export class VpScoreInstanceService {
           monthId: vpScoreFilterDto.monthIds,
         });
       }
-
       const paginatedData =
         await this.paginationService.paginate<VpScoreInstance>(
           queryBuilder,
