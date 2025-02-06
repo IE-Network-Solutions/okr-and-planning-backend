@@ -264,7 +264,7 @@ export class OkrReportTaskService {
                 }
               }
             }
-            }
+          }
         }),
       );
       return results.filter(Boolean); // Remove `null` values from results

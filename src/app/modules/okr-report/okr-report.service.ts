@@ -104,7 +104,7 @@ export class OkrReportService {
         planningPeriodId,
       })
       .orderBy('report.createdAt', 'DESC'); // Filter by planningPeriodId
-      
+
     const paginatedData = await this.paginationService.paginate<Report>(
       reports,
       options,

@@ -430,7 +430,7 @@ let existingTasks:PlanTask[]
       // Extract the planId and ensure it exists
       const planId = updatePlanTasksDto[0]?.planId;
       if (!planId) {
-        throw new BadRequestException('planId is required to update tasks.');
+       return
       }
   
       // Fetch all existing tasks for the given planId
