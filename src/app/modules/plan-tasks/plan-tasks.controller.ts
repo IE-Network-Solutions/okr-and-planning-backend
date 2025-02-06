@@ -100,8 +100,8 @@ export class PlanTasksController {
     return this.planTasksService.updateTasks(updatePlanTaskDto.tasks, tenantId);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.planTasksService.remove(id);
-  }
+  // @Delete(':id')
+  // remove(@Param('id') id: string) {
+  //   return this.planTasksService.remove(id);
+  // }
 }

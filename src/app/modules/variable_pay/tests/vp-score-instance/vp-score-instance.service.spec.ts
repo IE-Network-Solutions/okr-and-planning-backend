@@ -53,7 +53,6 @@ describe('vpScoreInstanceService', () => {
           provide: CriteriaTargetService,
           useValue: mock<CriteriaTargetService>(),
         },
-  
       ],
     }).compile();
 
@@ -182,7 +181,6 @@ describe('vpScoreInstanceService', () => {
         options,
       );
     });
-       
   });
 
   describe('update', () => {
