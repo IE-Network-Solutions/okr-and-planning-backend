@@ -39,16 +39,16 @@ export class VpScoreInstanceController {
     );
   }
 
-  @Get('/filter')
+  @Post('/filter')
   async findAllVpScoreInstances(
     @Headers('tenantId') tenantId: string,
-    @Query() monthIds: string[],
+    @Body() vpScoreFilterDto: VpScoreFilterDto,
     @Query() paginationOptions?: PaginationDto,
   ) {
-    //console.log(vpScoreFilterDto,"vpScoreFilterDto")
+
     return this.vpScoreInstanceService.findAllVpScoreInstances(
       tenantId,
-      monthIds,
+      vpScoreFilterDto,
       paginationOptions,
     );
   }

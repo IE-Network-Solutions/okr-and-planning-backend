@@ -75,8 +75,8 @@ export class VpScoreInstanceService {
   }
   async findAllVpScoreInstances(
     tenantId: string,
-    // vpScoreFilterDto: VpScoreFilterDto,
-    monthIds: string[],
+    vpScoreFilterDto: VpScoreFilterDto,
+   
     paginationOptions?: PaginationDto,
   ): Promise<Pagination<VpScoreInstance>> {
     try {
@@ -92,9 +92,9 @@ export class VpScoreInstanceService {
         .createQueryBuilder('VpScoreInstance')
         .leftJoinAndSelect('VpScoreInstance.vpScoring', 'vpScoring')
         .where('VpScoreInstance.tenantId = :tenantId', { tenantId });
-      if (monthIds && monthIds && monthIds.length > 0) {
+      if (vpScoreFilterDto.monthIds && vpScoreFilterDto.monthIds && vpScoreFilterDto.monthIds.length > 0) {
         queryBuilder.andWhere('VpScoreInstance.monthId IN (:...monthId)', {
-          monthId: monthIds,
+          monthId: vpScoreFilterDto.monthIds,
         });
       }
 
