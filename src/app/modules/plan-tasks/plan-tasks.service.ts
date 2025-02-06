@@ -417,7 +417,6 @@ export class PlanTasksService {
     }
   }
 
-  ////////////////////////////////   ahmed changes //////////////////////////
 
   async updateTasks(
     updatePlanTasksDto: UpdatePlanTaskDto[],
@@ -463,70 +462,74 @@ let existingTasks:PlanTask[]
         },
       );
 
-      // Process update or create operations for each task in the input
-      // for (const updatePlanTaskDto of updatePlanTasksDto) {
-      //   // let task;
+    //  Process update or create operations for each task in the input
+      for (const updatePlanTaskDto of updatePlanTasksDto) {
+        // let task;
 
-      //   // Create a new task if ID does not exist
-      //   if (!updatePlanTaskDto.id) {
-      //     await this.createTasks([updatePlanTaskDto], tenantId);
-      //     continue;
-      //   }
+        // Create a new task if ID does not exist
+        if (!updatePlanTaskDto.id) {
+          await this.createTasks([updatePlanTaskDto], tenantId);
+          continue;
+        }
 
-      //   // Fetch the existing task or throw an error if not found
-      //   const task = await this.taskRepository.findOneByOrFail({
-      //     id: updatePlanTaskDto.id,
-      //   });
+        // Fetch the existing task or throw an error if not found
+        const task = await this.taskRepository.findOneByOrFail({
+          id: updatePlanTaskDto.id,
+        });
 
-      //   // Fetch parent tasks if the current task is not at the root level
-      //   const parentTasks =
-      //     task.level !== 0
-      //       ? await this.taskRepository.findAncestorsTree(task)
-      //       : null;
-      //   const parentTask = parentTasks?.parentTask || null;
+        // Fetch parent tasks if the current task is not at the root level
+        const parentTasks =
+          task.level !== 0
+            ? await this.taskRepository.findAncestorsTree(task)
+            : null;
+        const parentTask = parentTasks?.parentTask || null;
 
-      //   // Prepare the updated task object
-      //   Object.assign(task, {
-      //     keyResult: await this.keyResultService.findOnekeyResult(
-      //       updatePlanTaskDto.keyResultId,
-      //     ),
-      //     level: parentTask ? parentTask.level + 1 : 0,
-      //     priority: updatePlanTaskDto.priority ?? task.priority,
-      //     targetValue: updatePlanTaskDto.targetValue ?? task.targetValue,
-      //     task: updatePlanTaskDto.task ?? task.task,
-      //     weight: updatePlanTaskDto.weight,
-      //     updatedBy: updatePlanTaskDto.userId,
-      //     achieveMK: updatePlanTaskDto.achieveMK ?? false,
-      //     planId: updatePlanTaskDto.planId,
-      //   });
+        // Prepare the updated task object
+        Object.assign(task, {
+          keyResult: await this.keyResultService.findOnekeyResult(
+            updatePlanTaskDto.keyResultId,
+          ),
+          level: parentTask ? parentTask.level + 1 : 0,
+          priority: updatePlanTaskDto.priority ?? task.priority,
+          targetValue: updatePlanTaskDto.targetValue ?? task.targetValue,
+          task: updatePlanTaskDto.task ?? task.task,
+          weight: updatePlanTaskDto.weight,
+          updatedBy: updatePlanTaskDto.userId,
+          achieveMK: updatePlanTaskDto.achieveMK ?? false,
+          planId: updatePlanTaskDto.planId,
+        });
 
-      //   // Update milestone if provided
-      //   if (updatePlanTaskDto.milestoneId) {
-      //     task.milestone = await this.milestoneService.findOneMilestone(
-      //       updatePlanTaskDto.milestoneId,
-      //     );
-      //   }
+        // Update milestone if provided
+        if (updatePlanTaskDto.milestoneId) {
+          task.milestone = await this.milestoneService.findOneMilestone(
+            updatePlanTaskDto.milestoneId,
+          );
+        }
 
-      //   // Save the updated task
-      //   const finalTask = await this.taskRepository.save(task);
+        // Save the updated task
+        const finalTask = await this.taskRepository.save(task);
 
-      //   // Process subtasks if present
-      //   if (
-      //     Array.isArray(updatePlanTaskDto.subTasks) &&
-      //     updatePlanTaskDto.subTasks.length > 0
-      //   ) {
-      //     await this.updateSubTasks(
-      //       updatePlanTaskDto.subTasks,
-      //       finalTask.id,
-      //       tenantId,
-      //     );
-      //   }
-      // }
+        // Process subtasks if present
+        if (
+          Array.isArray(updatePlanTaskDto.subTasks) &&
+          updatePlanTaskDto.subTasks.length > 0
+        ) {
+          await this.updateSubTasks(
+            updatePlanTaskDto.subTasks,
+            finalTask.id,
+            tenantId,
+          );
+        }
+      }
       return await this.taskRepository.find({ where: { planId } });
     } catch (error) {
       throw 'Error updating records';
     }
   }
+
+  ////////////////////////////////   ahmed changes //////////////////////////
+
+
   async createTasks(createTaskDtos: UpdatePlanTaskDto[], tenantId: string) {
     const newTasks = createTaskDtos.map((dto) => ({
       ...dto,
@@ -574,19 +577,19 @@ let existingTasks:PlanTask[]
   }
 
   ////////////////////////////////   ahmed changes //////////////////////////
-  // async remove(id: string) {
-  //   const planTask = await this.taskRepository.findOne({ where: { id } });
+  async remove(id: string) {
+    const planTask = await this.taskRepository.findOne({ where: { id } });
 
-  //   if (!planTask?.id) {
-  //     throw new NotFoundException(`PlanTask with ID ${id} not found`);
-  //   }
+    if (!planTask?.id) {
+      throw new NotFoundException(`PlanTask with ID ${id} not found`);
+    }
 
-  //   try {
-  //     await this.taskRepository.softRemove(planTask);
-  //   } catch (error) {
-  //     return error;
-  //   }
-  // }
+    try {
+      await this.taskRepository.softRemove(planTask);
+    } catch (error) {
+      return error;
+    }
+  }
 
   async findPlanTaskById(id: string): Promise<PlanTask> {
     return await this.taskRepository.findOneByOrFail({ id });
