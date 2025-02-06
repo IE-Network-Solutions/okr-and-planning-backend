@@ -199,13 +199,12 @@ export class UserVpScoringService {
           for (const target of criteria.vpCriteria.criteriaTargets) {
             if (target.departmentId === null) {
               if (target.month === currentMonth.name) {
-              
                 if (criteria.vpCriteria.isDeduction) {
                   result =
                     result - (criteria.weight * achievedScore) / target.target;
                 } else {
-                  if(achievedScore> target.target){
-                    achievedScore =  target.target
+                  if (achievedScore > target.target) {
+                    achievedScore = target.target;
                   }
                   result =
                     result + (criteria.weight * achievedScore) / target.target;
@@ -225,6 +224,10 @@ export class UserVpScoringService {
                   result =
                     result - (criteria.weight * achievedScore) / target.target;
                 } else {
+                  
+                  if (achievedScore > target.target) {
+                    achievedScore = target.target;
+                  }
                   result =
                     result + (criteria.weight * achievedScore) / target.target;
                 }

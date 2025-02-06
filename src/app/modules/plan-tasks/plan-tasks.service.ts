@@ -417,7 +417,6 @@ export class PlanTasksService {
     }
   }
 
-  ////////////////////////////////   ahmed changes //////////////////////////
 
   async updateTasks(
     updatePlanTasksDto: UpdatePlanTaskDto[],
@@ -425,13 +424,24 @@ export class PlanTasksService {
   ): Promise<PlanTask[]> {
     try {
       // Extract the planId (assuming all tasks are associated with the same plan)
+    
+let existingTasks:PlanTask[]
+  
+      // Extract the planId and ensure it exists
       const planId = updatePlanTasksDto[0]?.planId;
-
+      if (!planId) {
+        throw new BadRequestException('planId is required to update tasks.');
+      }
+  
       // Fetch all existing tasks for the given planId
-      const existingTasks = await this.taskRepository.find({
-        where: { planId },
+      const existingPlan = await this.planRepository.findOne({
+        where: { id:planId }, relations:['tasks']
       });
 
+    
+      if(existingPlan){
+        existingTasks=existingPlan.tasks
+      }
       // Extract task IDs from the input DTO
       const inputTaskIds = updatePlanTasksDto
         .map((task) => task.id)
@@ -440,17 +450,19 @@ export class PlanTasksService {
       // Identify tasks to delete
       await this.taskRepository.manager.transaction(
         async (transactionalEntityManager) => {
-          const tasksToDelete = existingTasks.filter(
-            (task) => !inputTaskIds.includes(task.id),
-          );
-
-          if (tasksToDelete.length > 0) {
-            await transactionalEntityManager.softRemove(tasksToDelete);
+          if(existingTasks && existingTasks.length>0){
+            const tasksToDelete = existingTasks.filter(
+              (task) => !inputTaskIds.includes(task.id),
+            );
+            if (tasksToDelete.length > 0) {
+              await transactionalEntityManager.softRemove(tasksToDelete);
+            }
           }
+         
         },
       );
 
-      // Process update or create operations for each task in the input
+    //  Process update or create operations for each task in the input
       for (const updatePlanTaskDto of updatePlanTasksDto) {
         // let task;
 
@@ -514,6 +526,10 @@ export class PlanTasksService {
       throw 'Error updating records';
     }
   }
+
+  ////////////////////////////////   ahmed changes //////////////////////////
+
+
   async createTasks(createTaskDtos: UpdatePlanTaskDto[], tenantId: string) {
     const newTasks = createTaskDtos.map((dto) => ({
       ...dto,
