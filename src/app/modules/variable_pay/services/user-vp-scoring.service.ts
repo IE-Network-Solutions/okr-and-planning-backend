@@ -268,36 +268,30 @@ export class UserVpScoringService {
 
   async refreshVP(refreshVPDto: RefreshVPDto, tenantId: string): Promise<any> {
     try {
-      const allUsersVPScore = [];
       if (refreshVPDto.users && refreshVPDto.users.length > 0) {
         const allUsersVP = await Promise.all(
           refreshVPDto.users.map(async (item) => {
             const vp = await this.calculateVP(item, tenantId);
-            if (vp) {
-              allUsersVPScore.push(vp);
-            }
-          }),
+            return vp; 
+          })
         );
-        return allUsersVPScore;
+        return allUsersVP.filter(Boolean); 
       } else {
-        const users = await this.getUsersService.getAllUsersWithTenant(
-          tenantId,
-        );
+        const users = await this.getUsersService.getAllUsersWithTenant(tenantId);
         const allUsersVP = await Promise.all(
           users.map(async (item) => {
             const vp = await this.calculateVP(item.id, tenantId);
-            if (vp) {
-              allUsersVPScore.push(vp);
-            }
-          }),
+            return vp; 
+          })
         );
-        return allUsersVPScore;
+        return allUsersVP.filter(Boolean); 
       }
     } catch (error) {
-      //  throw new BadRequestException(error.message);
+      throw new BadRequestException(error.message);
     }
   }
-
+  
+  
   async getResults(tenantId: string, url: string, userId: string) {
     try {
       const response = await this.httpService
