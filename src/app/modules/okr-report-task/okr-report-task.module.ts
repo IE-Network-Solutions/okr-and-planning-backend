@@ -40,6 +40,7 @@ import { PaginationModule } from '@root/src/core/pagination/pagination.module';
     OkrProgressModule,
     PaginationModule,
     VariablePayModule,
+    KeyResultsModule,
     forwardRef(() => OkrReportModule),
   ],
   controllers: [OkrReportTaskController],
