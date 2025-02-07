@@ -14,7 +14,6 @@ import { ApiTags } from '@nestjs/swagger';
 import { UUID } from 'crypto';
 import { OkrReportTaskService } from './okr-report-task.service';
 import { ReportTaskInput } from './dto/create-okr-report-task.dto';
-// import { ReportTaskDTO } from './dto/create-okr-report-task.dto';
 
 @Controller('okr-report-task')
 @ApiTags('okr-report-task')
@@ -52,8 +51,7 @@ export class OkrReportTaskController {
     );
   }
 
-  // GET endpoint to fetch all reports filtered by tenantId
-  @Post('/by-planning-period/:planningPeriodId') // Expecting planningPeriodId from the URL
+  @Post('/by-planning-period/:planningPeriodId') 
   async getAllReportTasks(
     @Body() userIds: string[], // Expecting userIds to be an array of strings
     @Headers('tenantId') tenantId: UUID, // Expecting tenantId from headers
@@ -63,7 +61,6 @@ export class OkrReportTaskController {
       return [];
     }
 
-    // Pass tenantId, userIds, and planningPeriodId to your service method
     return this.okrReportTaskService.findAllReportTasks(
       tenantId,
       userIds,
@@ -71,16 +68,13 @@ export class OkrReportTaskController {
     );
   }
 
-  // GET endpoint to fetch all reports filtered by tenantId
-  @Patch('/update-report-tasks/:reportId') // Expecting planningPeriodId from the URL
+  @Patch('/update-report-tasks/:reportId') 
   async updateReportData(
-    @Body() reportTask: ReportTaskInput, // Expecting userIds to be an array of strings
-    @Param('reportId') reportId: string, // Extract the planningPeriodId from the route
+    @Body() reportTask: ReportTaskInput, 
+    @Param('reportId') reportId: string, 
   ): Promise<any> {
-    // Pass tenantId, userIds, and planningPeriodId to your service method
     return this.okrReportTaskService.updateReportTasks(reportId, reportTask);
   }
-  // DELETE endpoint to delete a report by id
   @Delete(':id')
   async deleteReport(
     @Param('id') id: string,

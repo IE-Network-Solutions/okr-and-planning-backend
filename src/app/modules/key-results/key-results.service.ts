@@ -129,6 +129,7 @@ export class KeyResultsService {
       const keyResult = await this.keyResultRepository.findOneOrFail({
         where: { id: id },
         relations: ['milestones'],
+        cache: false,
       });
       return keyResult;
     } catch (error) {

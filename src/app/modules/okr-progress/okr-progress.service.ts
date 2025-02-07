@@ -35,6 +35,7 @@ export class OkrProgressService {
     const keyResults = await this.keyResultService.findOnekeyResult(
       keyResult.id,
     );
+
     if (keyResult.metricType.name === NAME.MILESTONE) {
       let keyResultProgress = 0;
       keyResults.milestones.forEach((milestone) => {
@@ -47,50 +48,45 @@ export class OkrProgressService {
     } else if (keyResult.metricType.name === NAME.ACHIEVE) {
       updateValue.progress = parseFloat(keyResult.progress.toString());
     } else {
-      const previousValue = await this.keyResultService.findOnekeyResult(
-        keyResult.id,
-      );
+      const previousValue = keyResults; // Already fetched above
       const keyResultCurrentValue = parseFloat(
-        previousValue.currentValue.toString(),
+        previousValue.currentValue?.toString() || '0',
       );
-      let newValue = 0;
+      let newValue = keyResultCurrentValue;
 
-      if (isOnCreate === 'ON_CREATE') {
-        newValue =
-          keyResultCurrentValue +
-          parseFloat(keyResult['actualValue'].toString());
-      } else {
+      if (actualValueToUpdate !== undefined) {
         const diff =
-          parseFloat(keyResult['actualValue'].toString()) - actualValueToUpdate;
+          parseFloat(keyResult.actualValue?.toString() || '0') -
+          parseFloat(actualValueToUpdate.toString());
 
-        if (diff < 0) {
-          const absoluteValueOfDiff = Math.abs(diff); // Store absolute value
-          newValue = keyResultCurrentValue - absoluteValueOfDiff;
-        } else if (diff > 0) {
-          newValue = keyResultCurrentValue + Math.abs(diff);
-        } else {
-          return;
+        if (diff !== 0) {
+          newValue = keyResultCurrentValue + diff;
         }
       }
+
       const initialDifference =
         newValue - parseFloat(keyResult.initialValue.toString());
       const targetDifference =
         parseFloat(keyResult.targetValue.toString()) -
         parseFloat(keyResult.initialValue.toString());
       let progress = (initialDifference / targetDifference) * 100;
+
       if (progress > 100) {
         progress = 100;
       }
+
       updateValue.progress = progress;
       updateValue.currentValue = newValue;
-      keyResult.progress = progress;
     }
 
-    const finalUpdate = await this.keyResultService.updatekeyResult(
+    // **Update and Fetch Latest Key Result**
+    await this.keyResultService.updatekeyResult(
       keyResult.id,
       updateValue,
       keyResult.tenantId,
     );
-    return finalUpdate;
+
+    // **Return the latest updated Key Result**
+    return this.keyResultService.findOnekeyResult(keyResult.id);
   }
 }
