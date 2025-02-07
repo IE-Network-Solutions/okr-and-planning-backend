@@ -49,18 +49,19 @@ export class OkrProgressService {
       updateValue.progress = parseFloat(keyResult.progress.toString());
     } else {
       const previousValue = keyResults; // Already fetched above
-      const keyResultCurrentValue = parseFloat(previousValue.currentValue?.toString() || '0');
+      const keyResultCurrentValue = parseFloat(
+        previousValue.currentValue?.toString() || '0',
+      );
       let newValue = keyResultCurrentValue;
 
       if (actualValueToUpdate !== undefined) {
         const diff =
-          parseFloat(keyResult.actualValue?.toString() || '0') - parseFloat(actualValueToUpdate.toString());
+          parseFloat(keyResult.actualValue?.toString() || '0') -
+          parseFloat(actualValueToUpdate.toString());
 
         if (diff !== 0) {
           newValue = keyResultCurrentValue + diff;
         }
-        console.log(`Difference: ${diff}, actualValueToUpdate: ${actualValueToUpdate}, ABS: ${Math.abs(diff)}`);
-
       }
 
       const initialDifference =
