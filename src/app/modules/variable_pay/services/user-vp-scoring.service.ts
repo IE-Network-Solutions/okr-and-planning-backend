@@ -265,14 +265,17 @@ export class UserVpScoringService {
       throw new BadRequestException(error.message);
     }
   }
-
   async refreshVP(refreshVPDto: RefreshVPDto, tenantId: string): Promise<any> {
     try {
       if (refreshVPDto.users && refreshVPDto.users.length > 0) {
         const allUsersVP = await Promise.all(
           refreshVPDto.users.map(async (item) => {
-            const vp = await this.calculateVP(item, tenantId);
-            return vp; 
+            try {
+              const vp = await this.calculateVP(item, tenantId);
+              return vp; 
+            } catch (error) {
+              return null;
+            }
           })
         );
         return allUsersVP.filter(Boolean); 
@@ -280,8 +283,12 @@ export class UserVpScoringService {
         const users = await this.getUsersService.getAllUsersWithTenant(tenantId);
         const allUsersVP = await Promise.all(
           users.map(async (item) => {
-            const vp = await this.calculateVP(item.id, tenantId);
-            return vp; 
+            try {
+              const vp = await this.calculateVP(item.id, tenantId);
+              return vp; 
+            } catch (error) {
+              return null; 
+            }
           })
         );
         return allUsersVP.filter(Boolean); 
@@ -290,6 +297,7 @@ export class UserVpScoringService {
       throw new BadRequestException(error.message);
     }
   }
+  
   
   
   async getResults(tenantId: string, url: string, userId: string) {
