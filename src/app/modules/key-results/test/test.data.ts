@@ -31,6 +31,7 @@ export const keyResultData = (): KeyResult => {
     updatedBy: 'selam',
     createdBy: 'selam',
     sessionId: 'sessionId',
+    isClosed: false,
   };
 };
 
