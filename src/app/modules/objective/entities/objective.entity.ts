@@ -19,6 +19,8 @@ export class Objective extends BaseModel {
   allignedKeyResultId: string;
   @Column({ type: 'uuid' })
   tenantId: string;
+  @Column({ type: 'boolean', default:false })
+  isClosed: boolean;
   @OneToMany(() => KeyResult, (key) => key.objective)
   keyResults: KeyResult[];
   @ManyToOne(() => KeyResult, (obj) => obj.obj)

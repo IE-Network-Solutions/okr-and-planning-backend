@@ -18,6 +18,7 @@ import { JobInformationDto } from '../dto/job-information.dto';
 import { AverageOkrRule } from '../../average-okr-rule/entities/average-okr-rule.entity';
 import { ObjectiveService } from './objective.service';
 import { paginationOptions } from '@root/src/core/commonTestData/commonTest.data';
+import { UpdateObjectiveStatusDto } from '../dto/update-objective-status.dto';
 
 @Injectable()
 export class OKRCalculationService {
