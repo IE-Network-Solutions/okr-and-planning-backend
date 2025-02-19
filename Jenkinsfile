@@ -141,10 +141,27 @@ pipeline {
             }
         }
 
-        stage('Run Migrations') {
+   stage('Run Migrations') {
             steps {
-                sshagent([env.SSH_CREDENTIALS_ID_1]) {
-                    sh "ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} 'cd ~/$REPO_DIR && npm run migration:run'"
+                sshagent (credentials: [SSH_CREDENTIALS_ID_1]) {
+                    script {
+                        def output = sh(
+                            script: """
+                                ssh -o StrictHostKeyChecking=no $REMOTE_SERVER_1 '
+                                cd $REPO_DIR && npm run migration:generate-run || true'
+                            """,
+                            returnStdout: true
+                        ).trim()
+                        echo "Migration Output: ${output}"
+                        if (output.contains('No changes in database schema were found')) {
+                            echo 'No database schema changes found, skipping migration.'
+                        } else {
+                            sh """
+                                ssh -o StrictHostKeyChecking=no $REMOTE_SERVER_1 '
+                                cd $REPO_DIR && npm run migration:run'
+                            """
+                        }
+                    }
                 }
             }
         }
@@ -154,14 +171,14 @@ pipeline {
                 stage('Start App on Server 1') {
                     steps {
                         sshagent([env.SSH_CREDENTIALS_ID_1]) {
-                            sh "ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} 'cd $REPO_DIR && sudo npm run start:prod'"
+                            sh "ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} 'cd $REPO_DIR && npm run build && sudo npm run start:prod'"
                         }
                     }
                 }
                 stage('Start App on Server 2') {
                     steps {
                         withCredentials([string(credentialsId: 'pepproduction2', variable: 'SERVER_PASSWORD')]) {
-                            sh "sshpass -p '$SERVER_PASSWORD' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_2} 'cd $REPO_DIR && sudo npm run start:prod'"
+                            sh "sshpass -p '$SERVER_PASSWORD' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_2} 'cd $REPO_DIR && npm run build && sudo npm run start:prod'"
                         }
                     }
                 }
