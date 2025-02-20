@@ -12,6 +12,7 @@ import {
   BadRequestException,
   InternalServerErrorException,
   NotFoundException,
+  Patch,
 } from '@nestjs/common';
 import { ObjectiveService } from './services/objective.service';
 import { CreateObjectiveDto } from './dto/create-objective.dto';
@@ -23,6 +24,7 @@ import { FilterObjectiveDto } from './dto/filter-objective.dto';
 import { OKRDashboardService } from './services/okr-dashbord.service';
 import { ExcludeAuthGuard } from '@root/src/core/guards/exclud.guard';
 import { OKRCalculationService } from './services/okr-calculation.service';
+import { UpdateObjectiveStatusDto } from './dto/update-objective-status.dto';
 
 @Controller('objective')
 @ApiTags('Objective')
@@ -197,4 +199,18 @@ export class ObjectiveController {
       paginationOptions,
     );
   }
+
+  @Patch('/update-status')
+  async updateObjectiveStatusForAllUsers(
+    @Req() req: Request,
+   
+    @Body() updateObjectiveStatusDto?: UpdateObjectiveStatusDto,
+
+  ) {
+    const tenantId = req['tenantId'];
+    return this.objectiveService.updateObjectiveStatusForAllUsers(
+      updateObjectiveStatusDto,tenantId
+    );
+  }
+
 }

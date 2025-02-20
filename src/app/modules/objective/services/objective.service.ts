@@ -38,6 +38,7 @@ import { AverageOkrRule } from '../../average-okr-rule/entities/average-okr-rule
 import { EmptyPaginationDto } from '@root/src/core/commonDto/return-empty-paginated.dto';
 import { GetFromOrganizatiAndEmployeInfoService } from './get-data-from-org.service';
 import { AverageOkrCalculation } from './average-okr-calculation.service';
+import { UpdateObjectiveStatusDto } from '../dto/update-objective-status.dto';
 
 @Injectable()
 export class ObjectiveService {
@@ -366,5 +367,65 @@ export class ObjectiveService {
         await this.averageOkrCalculation.calculateObjectiveProgress(objectives);
       return objectiveWithProgress;
     } catch (error) {}
+  }
+  async updateObjectiveStatusForAllUsers(updateObjectiveStatusDto: UpdateObjectiveStatusDto, tenantId: string) {
+    try {
+      const { sessionId, isClosed, userId } = updateObjectiveStatusDto;
+      const objectives = userId
+        ? await this.updateObjectiveByUserId(sessionId, tenantId, isClosed, userId)
+        : await this.updateObjectiveBySessionId(sessionId, tenantId, isClosed);
+      await this.keyResultService.updateKeyResultStatusForAllUsers(objectives, tenantId, isClosed);
+  
+      return this.objectiveRepository.find({
+        where: userId ? { tenantId, sessionId, userId } : { tenantId, sessionId },
+       
+      });
+  
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
+  }
+
+  async updateObjectiveBySessionId(sessionId:string,tenantId:string,isClosed:boolean) {
+    try {
+    
+      if(sessionId  && tenantId){
+        const objective = await this.objectiveRepository.update(
+          { tenantId: tenantId, sessionId: sessionId },  
+          { isClosed: isClosed }
+        );       
+    return await this.objectiveRepository.find({
+          where: { tenantId, sessionId },
+        });
+       
+      }
+      
+    } catch (error) {
+      throw new BadRequestException(error.message);
+
+    }
+
+  }
+
+  async updateObjectiveByUserId(sessionId:string,tenantId:string,isClosed:boolean,userId:string) {
+    try {
+    
+      if(sessionId  && tenantId && userId){
+        const objective = await this.objectiveRepository.update(
+          { tenantId: tenantId, sessionId: sessionId,userId:userId },  
+          { isClosed: isClosed }
+        );
+       
+       return await this.objectiveRepository.find({
+          where: { tenantId, sessionId, userId},
+        });
+      
+      }
+      
+    } catch (error) {
+      throw new BadRequestException(error.message);
+
+    }
+
   }
 }

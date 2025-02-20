@@ -8,10 +8,12 @@ pipeline {
                     withCredentials([
                         string(credentialsId: 'REMOTE_SERVER_TEST', variable: 'REMOTE_SERVER_TEST'),
                         string(credentialsId: 'REMOTE_SERVER_PROD', variable: 'REMOTE_SERVER_PROD')
+
                     ]) {
                         def branchName = env.GIT_BRANCH ?: sh(script: "git rev-parse --abbrev-ref HEAD", returnStdout: true).trim()
 
                         if (branchName.contains('develop')) {
+
                             env.SSH_CREDENTIALS_ID = 'peptest'
                             env.REMOTE_SERVER = REMOTE_SERVER_TEST
                         } else if (branchName.contains('production')) {
@@ -24,6 +26,7 @@ pipeline {
         }
 
         stage('Fetch Environment Variables') {
+
             steps {
                 script {
                     sshagent([env.SSH_CREDENTIALS_ID]) {
@@ -47,6 +50,7 @@ pipeline {
         }
 
         stage('Prepare Repository') {
+
             steps {
                 sshagent([env.SSH_CREDENTIALS_ID]) {
                     sh """
@@ -56,11 +60,13 @@ pipeline {
                             sudo chmod -R 755 $REPO_DIR
                         fi'
                     """
+
                 }
             }
         }
 
         stage('Pull Latest Changes') {
+
             steps {
                 sshagent([env.SSH_CREDENTIALS_ID]) {
                     sh """
@@ -76,6 +82,7 @@ pipeline {
         }
 
         stage('Install Dependencies') {
+
             steps {
                 sshagent([env.SSH_CREDENTIALS_ID]) {
                     sh """
@@ -100,6 +107,7 @@ pipeline {
                             echo 'No database schema changes found, skipping migration.'
                         } else {
                             sh "ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER} 'cd ~/$REPO_DIR && npm run migration:run'"
+
                         }
                     }
                 }
@@ -107,6 +115,7 @@ pipeline {
         }
 
         stage('Run Nest.js App') {
+
             steps {
                 sshagent([env.SSH_CREDENTIALS_ID]) {
                     sh """
