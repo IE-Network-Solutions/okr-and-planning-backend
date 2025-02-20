@@ -235,7 +235,7 @@ export class ObjectiveService {
         .leftJoinAndSelect('keyResults.metricType', 'metricType')
         .andWhere('objective.tenantId = :tenantId', { tenantId });
 
-      if (filterDto && filterDto.users.length > 0) {
+      if (filterDto.users && filterDto.users.length > 0) {
         queryBuilder.andWhere('objective.userId IN (:...userIds)', {
           userIds: filterDto.users,
         });
