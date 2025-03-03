@@ -62,7 +62,6 @@ export class KeyResultsController {
     );
   }
 
-
   @Put('/bulk-update/objectives')
   updatekeyResults(
     @Req() req: Request,
