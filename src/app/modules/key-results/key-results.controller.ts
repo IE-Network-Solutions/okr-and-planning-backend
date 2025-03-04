@@ -62,6 +62,17 @@ export class KeyResultsController {
     );
   }
 
+  @Put('/bulk-update/objectives')
+  updatekeyResults(
+    @Req() req: Request,
+    @Body() updatekeyResultDto: UpdateKeyResultDto[],
+  ) {
+    const tenantId = req['tenantId'];
+    return this.keyResultService.updatekeyResults(
+      updatekeyResultDto,
+      tenantId,
+    );
+  }
   @Delete(':id')
   removekeyResult(@Req() req: Request, @Param('id') id: string) {
     return this.keyResultService.removekeyResult(id);
