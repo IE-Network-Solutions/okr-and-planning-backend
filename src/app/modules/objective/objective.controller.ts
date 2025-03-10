@@ -103,13 +103,12 @@ export class ObjectiveController {
   @Get('/objective-filter/all/objective')
   objectiveAll(
     @Req() req: Request,
-    @Body() filterDto?: FilterObjectiveDto,
     @Query() paginationOptions?: PaginationDto,
   ) {
     const tenantId = req['tenantId'];
     return this.objectiveService.objectiveFilter(
       tenantId,
-      filterDto,
+      null,
       paginationOptions,
     );
   }
