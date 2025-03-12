@@ -217,35 +217,44 @@ export class KeyResultsService {
   }
   async deleteAndUpdateKeyResults(
     deleteAndUpdateKeyResultDto: DeleteAndUpdateKeyResultDto,
-    tenantId: string
+    tenantId: string,
+    objectiveId:string
   ): Promise<KeyResult[]> {
     const queryRunner = this.keyResultRepository.manager.connection.createQueryRunner();
-  
     await queryRunner.connect();
     await queryRunner.startTransaction();
   
     try {
       const { toBeUpdated, toBeDeleted } = deleteAndUpdateKeyResultDto;
-  
       for (const keyResult of toBeUpdated) {
-        await queryRunner.manager.update(KeyResult, keyResult.id, { ...keyResult, tenantId });
+     await queryRunner.manager.update(KeyResult, keyResult.id, { ...keyResult });
+     
       }
-  
-   
+
       if (toBeDeleted) {
-        await queryRunner.manager.delete(KeyResult, toBeDeleted);
-      }
-  
-      await queryRunner.commitTransaction();
-  
     
-      return await queryRunner.manager.find(KeyResult, {
-        where: { objectiveId: toBeUpdated[0]?.objectiveId },
+        const entityToDelete = await queryRunner.manager.findOne(KeyResult, {
+          where: { id: toBeDeleted },
+        });
+ 
+   if (entityToDelete) {
+    await queryRunner.manager.softRemove(entityToDelete);
+  } else {
+    throw  new NotFoundException("KeyResult Not Found");
+  }
+}
+
+      await queryRunner.commitTransaction();
+       return await queryRunner.manager.find(KeyResult, {
+       where: { objectiveId: objectiveId},
       });
   
     } catch (error) {
       await queryRunner.rollbackTransaction();
-      throw new Error(`Transaction failed: ${error.message}`);
+      if (error instanceof BadRequestException) {
+        throw error; 
+      }
+      throw new BadRequestException(`${error.message}`);
     } finally {
       await queryRunner.release();
     }
