@@ -106,9 +106,8 @@ export class ObjectiveController {
     @Query() paginationOptions?: PaginationDto,
   ) {
     const tenantId = req['tenantId'];
-    return this.objectiveService.objectiveFilter(
+    return this.objectiveService.objectiveFilterWithoutUser(
       tenantId,
-      null,
       paginationOptions,
     );
   }
