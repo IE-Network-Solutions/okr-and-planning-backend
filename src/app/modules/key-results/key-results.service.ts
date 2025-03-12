@@ -16,6 +16,7 @@ import { MetricTypesService } from '../metric-types/metric-types.service';
 import { UpdateMilestoneDto } from '../milestones/dto/update-milestone.dto';
 import { GetFromOrganizatiAndEmployeInfoService } from '../objective/services/get-data-from-org.service';
 import { Objective } from '../objective/entities/objective.entity';
+import { DeleteAndUpdateKeyResultDto } from './dto/delete-update-key-result.dto';
 
 @Injectable()
 export class KeyResultsService {
@@ -214,6 +215,42 @@ export class KeyResultsService {
     );
     return keyResults;
   }
+  async deleteAndUpdateKeyResults(
+    deleteAndUpdateKeyResultDto: DeleteAndUpdateKeyResultDto,
+    tenantId: string
+  ): Promise<KeyResult[]> {
+    const queryRunner = this.keyResultRepository.manager.connection.createQueryRunner();
+  
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+  
+    try {
+      const { toBeUpdated, toBeDeleted } = deleteAndUpdateKeyResultDto;
+  
+      for (const keyResult of toBeUpdated) {
+        await queryRunner.manager.update(KeyResult, keyResult.id, { ...keyResult, tenantId });
+      }
+  
+   
+      if (toBeDeleted) {
+        await queryRunner.manager.delete(KeyResult, toBeDeleted);
+      }
+  
+      await queryRunner.commitTransaction();
+  
+    
+      return await queryRunner.manager.find(KeyResult, {
+        where: { objectiveId: toBeUpdated[0]?.objectiveId },
+      });
+  
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw new Error(`Transaction failed: ${error.message}`);
+    } finally {
+      await queryRunner.release();
+    }
+  }
+  
   async removekeyResult(id: string): Promise<KeyResult> {
     const keyResult = await this.findOnekeyResult(id);
     if (!keyResult) {
