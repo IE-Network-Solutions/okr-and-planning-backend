@@ -63,15 +63,17 @@ export class KeyResultsController {
     );
   }
 
-  @Put('/bulk-update/objectives')
+  @Put('/bulk-update/objectives/:objectiveId')
   updatekeyResults(
     @Req() req: Request,
+    @Param('objectiveId') objectiveId: string,
     @Body() deleteAndUpdateKeyResultDto:DeleteAndUpdateKeyResultDto,
   ) {
     const tenantId = req['tenantId'];
     return this.keyResultService.deleteAndUpdateKeyResults(
       deleteAndUpdateKeyResultDto,
       tenantId,
+      objectiveId
     );
   }
   @Delete(':id')
