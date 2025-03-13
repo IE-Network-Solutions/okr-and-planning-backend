@@ -3,7 +3,7 @@ import { Column, Entity } from 'typeorm';
 
 @Entity()
 export class AverageOkrRule extends BaseModel {
-  @Column({ type: 'varchar', nullable: true })
+  @Column({ type: 'varchar', nullable: false,unique:true })
   title: string;
   @Column({ type: 'int' })
   myOkrPercentage: number;
