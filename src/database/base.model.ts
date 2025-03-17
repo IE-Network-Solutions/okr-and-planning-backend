@@ -18,7 +18,7 @@ export class BaseModel {
   @UpdateDateColumn()
   updatedAt!: Date;
 
-  @DeleteDateColumn()
+  @DeleteDateColumn({name: 'deletedAt'})
   deletedAt?: Date;
 
   @Column({ nullable: true })
