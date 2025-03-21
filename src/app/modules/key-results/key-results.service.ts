@@ -146,9 +146,17 @@ export class KeyResultsService {
   ): Promise<KeyResult> {
     try {
       const keyResult = await this.findOnekeyResult(id);
+      const oldKeyResultMetricsType =
+        await this.metricTypeService.findOneMetricType(keyResult?.metricTypeId);
+      const newKeyResultMetricsType =
+        await this.metricTypeService.findOneMetricType(
+          updatekeyResultDto?.metricTypeId,
+        );
+
       if (!keyResult) {
         throw new NotFoundException(`keyResult Not Found`);
       }
+
       const keyResultTobeUpdated = new UpdateKeyResultDto();
       keyResultTobeUpdated.title = updatekeyResultDto.title;
       keyResultTobeUpdated.deadline = updatekeyResultDto.deadline;
@@ -158,6 +166,7 @@ export class KeyResultsService {
       keyResultTobeUpdated.weight = updatekeyResultDto.weight;
       keyResultTobeUpdated.progress = updatekeyResultDto.progress;
       keyResultTobeUpdated.currentValue = updatekeyResultDto.currentValue;
+      keyResultTobeUpdated.metricTypeId = updatekeyResultDto.metricTypeId;
 
       //  keyResultTobeUpdated['lastUpdateValue'] = updatekeyResultDto['lastUpdateValue'];
 
@@ -166,6 +175,7 @@ export class KeyResultsService {
 
         keyResultTobeUpdated,
       );
+
       if (
         updatekeyResultDto.milestones &&
         updatekeyResultDto.milestones.length > 0
@@ -175,6 +185,12 @@ export class KeyResultsService {
           tenantId,
           updatekeyResultDto.id,
         );
+      }
+      if (
+        oldKeyResultMetricsType !== newKeyResultMetricsType &&
+        oldKeyResultMetricsType?.name === 'Milestone'
+      ) {
+        await this.milestonesService.removeMilestoneByKeyresultId(id);
       }
       return await this.findOnekeyResult(id);
     } catch (error) {
