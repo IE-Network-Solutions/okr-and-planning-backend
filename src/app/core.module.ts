@@ -20,6 +20,7 @@ import { RecognitionTypeModule } from './modules/recognitionType/recognition-typ
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { VariablePayModule } from './modules/variable_pay/variable-pay.module';
 import { PlanCommentsModule } from './modules/plan-comments/plan-comments.module';
+import { WeeklyPrioritiesModule } from './modules/weekly-priorities/weekly-priorities.module';
 @Global()
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { PlanCommentsModule } from './modules/plan-comments/plan-comments.module
     CarbonCopyLog,
     DashboardModule,
     VariablePayModule,
+    WeeklyPrioritiesModule
   ],
 })
 export class CoreModule {}
