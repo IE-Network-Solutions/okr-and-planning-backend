@@ -2,7 +2,7 @@ import { BaseModel } from '@root/src/database/base.model';
 import { Column, Entity, Index, Unique } from 'typeorm';
 
 @Entity()
-@Index(['title', 'tenantId'], { unique: true, where: 'deletedAt IS NULL' })
+@Unique(['title', 'tenantId'])
 export class AverageOkrRule extends BaseModel {
   @Column({ type: 'varchar', nullable: false,})
   title: string;
