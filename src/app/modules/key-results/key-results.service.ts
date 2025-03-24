@@ -17,6 +17,7 @@ import { UpdateMilestoneDto } from '../milestones/dto/update-milestone.dto';
 import { GetFromOrganizatiAndEmployeInfoService } from '../objective/services/get-data-from-org.service';
 import { Objective } from '../objective/entities/objective.entity';
 import { DeleteAndUpdateKeyResultDto } from './dto/delete-update-key-result.dto';
+import { NAME } from '../metric-types/enum/metric-type.enum';
 
 @Injectable()
 export class KeyResultsService {
@@ -188,7 +189,7 @@ export class KeyResultsService {
       }
       if (
         oldKeyResultMetricsType !== newKeyResultMetricsType &&
-        oldKeyResultMetricsType?.name === 'Milestone'
+        oldKeyResultMetricsType?.name === NAME.MILESTONE
       ) {
         await this.milestonesService.removeMilestoneByKeyresultId(id);
       }
