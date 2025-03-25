@@ -14,14 +14,20 @@ import { ReportStatusEnum } from '@root/src/core/interfaces/reportStatus.type';
 
 @Entity()
 export class Report extends BaseModel {
-  @Column({ type: 'enum', enum: ReportStatusEnum, nullable: true })
+  @Column({ type: 'enum', enum: ReportStatusEnum })
   status: ReportStatusEnum;
+
+  @Column({ type: 'boolean', default: false })
+  isValidated: boolean;
 
   @Column()
   reportScore: string;
 
   @Column()
   reportTitle: string;
+
+  @Column({ type: 'uuid', nullable: true })
+  sessionId: string;
 
   @OneToOne(() => Plan, (plan) => plan.report, {
     onDelete: 'SET NULL',
@@ -52,5 +58,5 @@ export class Report extends BaseModel {
   @OneToMany(() => ReportTask, (reportTask) => reportTask.report, {
     cascade: true,
   })
-  reportTask: ReportTask[]; 
+  reportTask: ReportTask[];
 }

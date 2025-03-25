@@ -9,6 +9,7 @@ import {
   Query,
   Req,
   Headers,
+  NotFoundException,
 } from '@nestjs/common';
 import { PlanningPeriodsService } from './planning-periods.service';
 import { CreatePlanningPeriodsDTO } from './dto/create-planningPeriods.dto';
@@ -23,7 +24,27 @@ import { ExcludeAuthGuard } from '@root/src/core/guards/exclud.guard';
 
 import { UUID } from 'crypto';
 import { PlannnigPeriodUserDto } from './dto/planningPeriodUser.dto';
+import { FilterUserDto } from './dto/filter-user.dto';
+import { IsUUID } from 'class-validator';
 
+class ParamsWithUUID {
+  @IsUUID()
+  planningPeriodId: string;
+
+  @IsUUID()
+  userId: string;
+}
+class ParamsWithUUIDBYPLAN {
+  @IsUUID()
+  planningPeriodId: string;
+
+  @IsUUID()
+  userId: string;
+
+  @IsUUID()
+  @IsUUID()
+  planId?: string;
+}
 @Controller('planning-periods')
 @ApiTags('Planning-periods')
 export class PlanningPeriodsController {
@@ -111,7 +132,7 @@ export class PlanningPeriodsController {
   async assignUserMultiplePlannigPeriods(
     @Req() req: Request,
     @Body() plannnigPeriodUserDto: PlannnigPeriodUserDto,
-  ): Promise<PlanningPeriodUser[]> {
+  ) {
     const tenantId = req['tenantId'];
     return await this.planningPeriodService.assignMultiplePlanningPeriodForMultipleUsers(
       plannnigPeriodUserDto,
@@ -138,19 +159,19 @@ export class PlanningPeriodsController {
     @Req() req: Request,
     @Query()
     paginationOptions: PaginationDto,
+    @Query()
+    filterUSerDto?: FilterUserDto,
   ): Promise<Pagination<PlanningPeriodUser>> {
     const tenantId = req['tenantId'];
     return await this.planningPeriodService.findAll(
-      paginationOptions,
       tenantId,
+      paginationOptions,
+      filterUSerDto,
     );
   }
 
   @Get('assignment/assignedUser/:userId')
-  async findByUser(
-    @Param('userId') id: string,
-    @Headers('tenantId') tenantId: UUID,
-  ): Promise<PlanningPeriodUser[]> {
+  async findByUser(@Param('userId') id: string): Promise<PlanningPeriodUser[]> {
     return await this.planningPeriodService.findByUser(id);
   }
 
@@ -178,5 +199,35 @@ export class PlanningPeriodsController {
     @Param('id') id: string,
   ): Promise<PlanningPeriod> {
     return await this.planningPeriodService.updatePlanningPeriodStatus(id);
+  }
+
+  @Get('parent-hierarchy/:planningPeriodId/user/:userId')
+  async getPlanningPeriodParentHierarchy(
+    @Req() req: Request,
+    @Param() params: ParamsWithUUID,
+  ): Promise<PlanningPeriod> {
+    const { planningPeriodId, userId } = params;
+    const tenantId = req['tenantId'];
+
+    return await this.planningPeriodService.getPlanningPeriodParentHierarchy(
+      planningPeriodId,
+      userId,
+      tenantId,
+    );
+  }
+
+  @Get('child-hierarchy/:planningPeriodId/user/:userId')
+  async getPlanningChildPeriodHierarchy(
+    @Param() params: ParamsWithUUID,
+    @Req() req: Request,
+  ): Promise<PlanningPeriod> {
+    const { planningPeriodId, userId } = params;
+    const tenantId = req['tenantId'];
+
+    return await this.planningPeriodService.getPlanningPeriodChildHierarchy(
+      planningPeriodId,
+      userId,
+      tenantId,
+    );
   }
 }

@@ -1,5 +1,6 @@
 import { IsNumber, IsOptional, IsString } from 'class-validator';
 import { Status } from '../enum/milestone.status.enum';
+import { Transform } from 'class-transformer';
 export class CreateMilestoneDto {
   @IsOptional()
   @IsString()
@@ -12,6 +13,8 @@ export class CreateMilestoneDto {
   @IsOptional()
   @IsString()
   status?: Status;
+  @Transform(({ value }) => parseFloat(value))
+  @IsNumber({ maxDecimalPlaces: 2 })
   @IsNumber()
   weight: number;
 }

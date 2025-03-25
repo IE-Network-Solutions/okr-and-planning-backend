@@ -15,8 +15,10 @@ import { CreateKeyResultDto } from './dto/create-key-result.dto';
 import { UpdateKeyResultDto } from './dto/update-key-result.dto';
 import { PaginationDto } from '@root/src/core/commonDto/pagination-dto';
 import { KeyResult } from './entities/key-result.entity';
+import { ApiTags } from '@nestjs/swagger';
 
 @Controller('key-results')
+@ApiTags('key-result')
 export class KeyResultsController {
   constructor(private readonly keyResultService: KeyResultsService) {}
 
@@ -60,6 +62,17 @@ export class KeyResultsController {
     );
   }
 
+  @Put('/bulk-update/objectives')
+  updatekeyResults(
+    @Req() req: Request,
+    @Body() updatekeyResultDto: UpdateKeyResultDto[],
+  ) {
+    const tenantId = req['tenantId'];
+    return this.keyResultService.updatekeyResults(
+      updatekeyResultDto,
+      tenantId,
+    );
+  }
   @Delete(':id')
   removekeyResult(@Req() req: Request, @Param('id') id: string) {
     return this.keyResultService.removekeyResult(id);

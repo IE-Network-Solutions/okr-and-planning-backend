@@ -39,6 +39,11 @@ async function bootstrap() {
   app.use(cookieParser());
 
   const port = configService.get<number>('app.port');
-  await app.listen(port);
+  await app.listen(port, () => {
+    loggerService.info(
+      `${process.env.APP_NAME} is live on and serving traffic on port ${port}`,
+    );
+  });
+  //await app.listen(port);
 }
 bootstrap();

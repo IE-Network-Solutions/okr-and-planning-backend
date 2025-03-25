@@ -12,7 +12,7 @@ import { MilestonesService } from '../milestones/milestones.service';
 import { Milestone } from '../milestones/entities/milestone.entity';
 import { updateMilestoneData } from '../milestones/test/milestone.data';
 interface KeyResultWithActualValue extends KeyResult {
-  actualValue?: number; // Add actualValue as an optional property
+  actualValue?: any; // Add actualValue as an optional property
 }
 @Injectable()
 export class OkrProgressService {
@@ -28,101 +28,65 @@ export class OkrProgressService {
     actualValueToUpdate,
   }: {
     keyResult: KeyResultWithActualValue;
-    isOnCreate: boolean;
-    actualValueToUpdate?: number;
+    isOnCreate: 'ON_CREATE' | 'ON_UPDATE' | 'ON_DELETE';
+    actualValueToUpdate?: any;
   }): Promise<any> {
     const updateValue = new UpdateKeyResultDto();
     const keyResults = await this.keyResultService.findOnekeyResult(
       keyResult.id,
     );
+
     if (keyResult.metricType.name === NAME.MILESTONE) {
       let keyResultProgress = 0;
       keyResults.milestones.forEach((milestone) => {
         if (milestone.status === Status.COMPLETED) {
-          keyResultProgress += milestone.weight;
+          keyResultProgress += parseFloat(milestone.weight.toString());
         }
       });
 
       updateValue.progress = keyResultProgress;
     } else if (keyResult.metricType.name === NAME.ACHIEVE) {
-      updateValue.progress = keyResult.progress;
+      updateValue.progress = parseFloat(keyResult.progress.toString());
     } else {
-      const previousValue = await this.keyResultService.findOnekeyResult(
-        keyResult.id,
+      const previousValue = keyResults; // Already fetched above
+      const keyResultCurrentValue = parseFloat(
+        previousValue.currentValue?.toString() || '0',
       );
-      const previousCurrentValue = isOnCreate
-        ? previousValue.currentValue
-        : previousValue.currentValue - actualValueToUpdate; //  previousValue.lastUpdateValue;
-      const currentValue = previousCurrentValue + keyResult['actualValue'];
-      const initialDifference = currentValue - keyResult.initialValue;
-      const targetDifference = keyResult.targetValue - keyResult.initialValue;
-      const progress = (initialDifference / targetDifference) * 100;
+      let newValue = keyResultCurrentValue;
+
+      if (actualValueToUpdate !== undefined) {
+        const diff =
+          parseFloat(keyResult.actualValue?.toString() || '0') -
+          parseFloat(actualValueToUpdate.toString());
+
+        if (diff !== 0) {
+          newValue = keyResultCurrentValue + diff;
+        }
+      }
+
+      const initialDifference =
+        newValue - parseFloat(keyResult.initialValue.toString());
+      const targetDifference =
+        parseFloat(keyResult.targetValue.toString()) -
+        parseFloat(keyResult.initialValue.toString());
+      let progress = (initialDifference / targetDifference) * 100;
+
+      if (progress > 100) {
+        progress = 100;
+      }
 
       updateValue.progress = progress;
-      // updateValue['lastUpdateValue'] = keyResult.currentValue;
-      updateValue.currentValue = currentValue;
-      keyResult.progress = progress;
+      updateValue.currentValue = newValue;
     }
 
-    const finalUpdate = await this.keyResultService.updatekeyResult(
+    // **Update and Fetch Latest Key Result**
+    await this.keyResultService.updatekeyResult(
       keyResult.id,
       updateValue,
       keyResult.tenantId,
     );
-    return finalUpdate;
+
+    // **Return the latest updated Key Result**
+    return this.keyResultService.findOnekeyResult(keyResult.id);
   }
 }
-
-//do we allow users to excide target value?
-//get current key resukt value then on create add to current value  here save the cureent value as the last update value
-//else on update subtract current value and last update value saved  then add the new current value
-// if (keyResult.metricType.name === NAME.MILESTONE) {
-//   let keyResultProgress = 0
-//   keyResult.milestones.forEach((milestone) => {
-//     if (milestone.status === Status.COMPLETED) {
-//       keyResultProgress += milestone.weight;
-//     }
-//   });
-//   keyResult.progress = keyResultProgress
-// }
-// else if (keyResult.metricType.name === NAME.ACHIEVE) {
-//   keyResult.progress = keyResult.progress;
-// }
-// else {
-//   const previousValue = await this.keyResultService.findOnekeyResult(keyResult.id)
-
-//   if (isOncreate === true) {
-
-//     let currentValue = previousValue.currentValue + keyResult.currentValue
-//     previousValue.lastUpdateValue = keyResult.currentValue
-//     const initialDifference = currentValue - keyResult.initialValue;
-//     const targetDifference = keyResult.targetValue - keyResult.initialValue;
-//     let progress = (initialDifference / targetDifference) * 100;
-//     let updateValue = new UpdateKeyResultDto
-//     updateValue.progress = progress
-//     updateValue['lastUpdateValue'] = keyResult.currentValue
-//     const finalUpdate = await this.keyResultService.updatekeyResult(keyResult.id, updateValue, keyResult.tenantId)
-
-//     keyResult.progress = progress
-//     return finalUpdate
-
-//   }
-//   else {
-//     let previousCurrentValue = previousValue.currentValue - previousValue.lastUpdateValue
-//     previousValue.lastUpdateValue = keyResult.currentValue
-//     let currentValue = previousCurrentValue + keyResult.currentValue
-//     const initialDifference = currentValue - keyResult.initialValue;
-//     const targetDifference = keyResult.targetValue - keyResult.initialValue;
-//     let progress = (initialDifference / targetDifference) * 100;
-//     let updateValue = new UpdateKeyResultDto
-
-//     updateValue.progress = progress
-//     updateValue['lastUpdateValue'] = keyResult.currentValue
-//     const finalUpdate = await this.keyResultService.updatekeyResult(keyResult.id, updateValue, keyResult.tenantId)
-
-//     keyResult.progress = progress
-//     return finalUpdate
-
-//   }
-
-// }

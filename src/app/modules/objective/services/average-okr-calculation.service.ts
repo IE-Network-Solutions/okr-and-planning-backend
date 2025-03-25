@@ -9,11 +9,13 @@ import { GetFromOrganizatiAndEmployeInfoService } from './get-data-from-org.serv
 @Injectable()
 export class AverageOkrCalculation {
   async calculateAverageOkr(objectives: Objective[]): Promise<OkrProgressDto> {
-    const completedOkr = objectives.filter(
-      (objective) =>
-        objective['completedKeyResults'] === objective.keyResults.length,
-    ).length;
-
+    // const completedOkr = objectives.filter(
+    //   (objective) =>
+    //     objective['completedKeyResults'] === objective.keyResults.length,
+    // ).length;
+    const completedOkr = objectives.reduce((sum, objective) => {
+      return sum + objective['completedKeyResults'];
+    }, 0);
     const sumOfTeamObjectiveProgress = objectives.reduce((sum, objective) => {
       return sum + objective['objectiveProgress'];
     }, 0);
@@ -32,6 +34,33 @@ export class AverageOkrCalculation {
   }
 
   async calculateObjectiveProgress(
+    objectives: Objective[],
+  ): Promise<Objective[]> {
+    return objectives.map((objective) => {
+      let totalProgress = 0;
+      let completedKeyResults = 0;
+
+      const daysLeft = Math.ceil(
+        (new Date(objective.deadline).getTime() - Date.now()) /
+          (1000 * 60 * 60 * 24),
+      );
+
+      objective.keyResults.forEach((keyResult) => {
+        totalProgress += (keyResult.progress * keyResult.weight) / 100;
+        if (parseFloat(keyResult.progress.toString()) === 100) {
+          completedKeyResults = completedKeyResults + 1;
+        }
+      });
+
+      return {
+        ...objective,
+        daysLeft,
+        objectiveProgress: totalProgress,
+        completedKeyResults: completedKeyResults,
+      };
+    });
+  }
+  async calculateObjectiveProgressForTeamLeads(
     objectives: Objective[],
   ): Promise<Objective[]> {
     return objectives.map((objective) => {

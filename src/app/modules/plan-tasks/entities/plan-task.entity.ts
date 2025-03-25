@@ -13,12 +13,29 @@ import {
 import { KeyResult } from '../../key-results/entities/key-result.entity';
 import { Milestone } from '../../milestones/entities/milestone.entity';
 
+// export const bigintTransformer: ValueTransformer = {
+//   to: (value: number | null): string | null =>
+//     value !== null ? value.toString() : null,
+//   from: (value: string | null): number | null =>
+//     value !== null ? parseInt(value, 10) : null,
+// };
 export const bigintTransformer: ValueTransformer = {
-  to: (value: number | null): string | null =>
-    value !== null ? value.toString() : null,
-  from: (value: string | null): number | null =>
-    value !== null ? parseInt(value, 10) : null,
+  to: (value: number | null): string | null => {
+    // Ensure that the value is not undefined before calling toString
+    if (value !== null && value !== undefined) {
+      return value.toString();
+    }
+    return null; // Return null if the value is null or undefined
+  },
+  from: (value: string | null): number | null => {
+    // Ensure that the value is not null or undefined before parsing
+    if (value !== null && value !== undefined) {
+      return parseInt(value, 10);
+    }
+    return null; // Return null if the value is null or undefined
+  },
 };
+
 @Entity()
 @Tree('closure-table')
 export class PlanTask extends BaseModel {
@@ -29,9 +46,10 @@ export class PlanTask extends BaseModel {
   priority: Priority;
 
   @Column({ type: 'bigint', nullable: true, transformer: bigintTransformer })
+  // @Column({ type: 'bigint', nullable: true })
   targetValue: bigint;
 
-  @Column({ type: 'int', nullable: true })
+  @Column({ type: 'decimal', precision: 16, scale: 2, default: 5 })
   weight: number;
 
   @TreeParent()
@@ -42,7 +60,13 @@ export class PlanTask extends BaseModel {
 
   @Column({ type: 'int' })
   level: number;
+
   //////////////// ahmed changes  ////////////////////////
+  @Column({ type: 'uuid' })
+  planId: string;
+
+  @Column({ type: 'uuid', nullable: true })
+  parentTaskId: string;
 
   @Column({ type: 'text', nullable: true })
   status: string;

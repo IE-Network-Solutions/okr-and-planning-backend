@@ -8,14 +8,21 @@ import { PaginationService } from '@root/src/core/pagination/pagination.service'
 import { KeyResultsModule } from '../key-results/key-results.module';
 import { MilestonesModule } from '../milestones/milestones.module';
 import { PlanningPeriodUser } from '../planningPeriods/planning-periods/entities/planningPeriodUser.entity';
+import { GetFromOrganizatiAndEmployeInfoService } from '../objective/services/get-data-from-org.service';
+import { HttpModule } from '@nestjs/axios';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([PlanTask, Plan, PlanningPeriodUser]),
     KeyResultsModule,
     MilestonesModule,
+    HttpModule,
   ],
   controllers: [PlanTasksController],
-  providers: [PlanTasksService, PaginationService],
+  providers: [
+    PlanTasksService,
+    PaginationService,
+    GetFromOrganizatiAndEmployeInfoService,
+  ],
 })
 export class PlanTasksModule {}

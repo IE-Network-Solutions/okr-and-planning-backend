@@ -5,12 +5,13 @@ import {
 } from '@nestjs/common';
 import { CreateMilestoneDto } from './dto/create-milestone.dto';
 import { UpdateMilestoneDto } from './dto/update-milestone.dto';
-import { Connection, QueryRunner, Repository } from 'typeorm';
+import { Connection, In, QueryRunner, Repository } from 'typeorm';
 import { Milestone } from './entities/milestone.entity';
 import { PaginationDto } from '@root/src/core/commonDto/pagination-dto';
 import { PaginationService } from '@root/src/core/pagination/pagination.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IPaginationOptions, Pagination } from 'nestjs-typeorm-paginate';
+import { KeyResult } from '../key-results/entities/key-result.entity';
 
 @Injectable()
 export class MilestonesService {
@@ -154,4 +155,27 @@ export class MilestonesService {
     await this.milestoneRepository.softRemove({ id });
     return Milestone;
   }
+
+    async updateMilestoneStatusForAllUsers(
+      keyResults: KeyResult[], tenantId: string, isClosed: boolean
+    ) {
+      try {
+        if (keyResults.length > 0 && tenantId) {
+          const keyResultIds = keyResults.map(key => key.id);
+    
+          const updateResult = await this.milestoneRepository.update(
+            { keyResultId: In(keyResultIds), tenantId },
+            { isClosed } 
+          );
+    
+          return await this.milestoneRepository.find({
+            where: { keyResultId: In(keyResultIds) } 
+          })
+                }
+     
+      } catch (error) {
+        throw new BadRequestException(`Failed to update key results: ${error.message}`);
+
+      }
+    }
 }

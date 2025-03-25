@@ -3,6 +3,9 @@ import { IsInt, IsOptional, IsString } from 'class-validator';
 export class CreatePlanDto {
   @IsString()
   userId: string;
+  @IsOptional()
+  @IsString()
+  sessionId?: string;
 
   @IsOptional()
   @IsString()

@@ -4,6 +4,7 @@ import {
   IsEnum,
   IsInt,
   IsNotEmpty,
+  IsNumber,
   IsOptional,
   IsString,
   ValidateNested,
@@ -34,7 +35,7 @@ export class CreatePlanTaskDto {
 
   @IsString()
   @IsOptional()
-  planId: string | null;
+  planId: string;
 
   @IsString()
   @IsOptional()
@@ -59,10 +60,15 @@ export class CreatePlanTaskDto {
   @IsOptional()
   milestoneId?: string;
 
-  @IsInt()
   @IsOptional()
+  @Transform(({ value }) => parseFloat(value))
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @IsNumber()
   weight: number;
 
+  @IsOptional()
+  @IsString()
+  sessionId?: string;
   // Recursive sub-tasks array
   @ValidateNested({ each: true }) // Validates each sub-task recursively
   @Type(() => CreatePlanTaskDto) // Specifies that the type of sub-task is also CreatePlanTaskDto

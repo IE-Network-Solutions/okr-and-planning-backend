@@ -13,6 +13,11 @@ import { APP_GUARD } from '@nestjs/core';
 import { TenantGuard } from '../core/guards/tenant.gurad';
 import { ObjectiveSubscriber } from './modules/objective/subscribers/objective.subscribers';
 import { AuthGuard } from '../core/guards/auth.guard';
+import { PlanSubscriber } from './modules/plan/subscribers/plan.subscribers';
+import { ReportSubscriber } from './modules/okr-report/subscribers/report.subscribers';
+import { PlanTaskSubscriber } from './modules/plan-tasks/subscribers/plan-tasks.subscribers';
+import { MilestoneSubscriber } from './modules/milestones/subscribers/milestone.subscribers';
+import { KeyResultsSubscriber } from './modules/key-results/subscribers/key-results.subscribers';
 /** This is a TypeScript module that imports various modules and sets up a TypeORM connection using
 configuration values obtained from a ConfigService. */
 @Module({
@@ -35,7 +40,14 @@ configuration values obtained from a ConfigService. */
         database: configService.get<string>('db.name'),
         entities: [__dirname + '/../**/*.entity{.ts,.js}'],
         synchronize: configService.get<boolean>('db.synchronize'),
-        subscribers: [ObjectiveSubscriber],
+        subscribers: [
+          ObjectiveSubscriber,
+          KeyResultsSubscriber,
+          MilestoneSubscriber,
+          PlanSubscriber,
+          ReportSubscriber,
+          PlanTaskSubscriber,
+        ],
       }),
       inject: [ConfigService],
     }),
@@ -45,6 +57,7 @@ configuration values obtained from a ConfigService. */
       provide: APP_GUARD,
       useClass: TenantGuard,
     },
+
     {
       provide: APP_GUARD,
       useClass: AuthGuard,

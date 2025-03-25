@@ -10,6 +10,7 @@ import { Plan } from '../plan/entities/plan.entity';
 import { MilestonesService } from '../milestones/milestones.service';
 import { KeyResultsService } from '../key-results/key-results.service';
 import { mock } from 'jest-mock-extended';
+import { GetFromOrganizatiAndEmployeInfoService } from '../objective/services/get-data-from-org.service';
 
 describe('PlanTasksController', () => {
   let planTasksController: PlanTasksController;
@@ -50,6 +51,10 @@ describe('PlanTasksController', () => {
         {
           provide: DataSource,
           useValue: mock<DataSource>(), // Mock the DataSource
+        },
+        {
+          provide: GetFromOrganizatiAndEmployeInfoService,
+          useValue: mock<GetFromOrganizatiAndEmployeInfoService>(),
         },
       ],
     }).compile();

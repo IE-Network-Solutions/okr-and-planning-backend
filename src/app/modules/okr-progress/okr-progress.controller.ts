@@ -9,7 +9,6 @@ export class OkrProgressController {
 
   @Post()
   async createObjective() {
- 
-   return null
+    return null;
   }
 }

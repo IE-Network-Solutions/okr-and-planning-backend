@@ -231,6 +231,7 @@ import { KeyResult } from './entities/key-result.entity';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { MilestonesService } from '../milestones/milestones.service';
 import { MetricTypesService } from '../metric-types/metric-types.service';
+import { GetFromOrganizatiAndEmployeInfoService } from '../objective/services/get-data-from-org.service';
 describe('keyResultsService', () => {
   let keyResultsService: KeyResultsService;
   let connection: MockProxy<Connection>;
@@ -267,6 +268,11 @@ describe('keyResultsService', () => {
           provide: getRepositoryToken(KeyResult),
           useValue: mock<Repository<KeyResult>>(),
         },
+        {
+          provide: GetFromOrganizatiAndEmployeInfoService,
+          useValue: mock<GetFromOrganizatiAndEmployeInfoService>(),
+        },
+
         {
           provide: Connection,
           useValue: connection,

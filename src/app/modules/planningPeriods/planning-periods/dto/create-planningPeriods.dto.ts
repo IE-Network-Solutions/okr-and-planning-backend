@@ -1,11 +1,12 @@
 import { IsOptional, IsString } from 'class-validator';
+import { IntervalHierarchy } from '../enum/interval-type.enum';
 export class CreatePlanningPeriodsDTO {
   @IsString()
   name: string;
-
+  @IsOptional()
   @IsString()
-  intervalLength: string;
-
+  intervalLength: IntervalHierarchy;
+ 
   @IsString()
   intervalType: string;
 
@@ -13,6 +14,7 @@ export class CreatePlanningPeriodsDTO {
   @IsString()
   actionOnFailure: string;
 
+  @IsOptional()
   @IsString()
   submissionDeadline: string;
 }

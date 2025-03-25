@@ -1,12 +1,5 @@
 import { BaseModel } from '@root/src/database/base.model';
-import {
-  Column,
-  Entity,
-  JoinColumn,
-  ManyToMany,
-  ManyToOne,
-  OneToMany,
-} from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
 import { Objective } from '../../objective/entities/objective.entity';
 import { Milestone } from '../../milestones/entities/milestone.entity';
 import { MetricType } from '../../metric-types/entities/metric-type.entity';
@@ -26,25 +19,40 @@ export class KeyResult extends BaseModel {
   deadline: Date;
   @Column({ type: 'varchar', nullable: true })
   metricTypeId: string;
-  @Column({ type: 'int', default: 0 })
+  @Column({ type: 'decimal', precision: 16, scale: 2, default: 0 })
   initialValue: number;
-  @Column({ type: 'int', nullable: true })
+  @Column({ type: 'decimal', precision: 16, scale: 2, nullable: true })
   targetValue: number;
-  @Column({ type: 'int' })
+  @Column({ type: 'decimal', precision: 16, scale: 2 })
   weight: number;
-  @Column({ type: 'int', default: 0 })
+  @Column({ type: 'decimal', precision: 16, scale: 2, default: 0 })
   currentValue: number;
-  @Column({ type: 'int', default: 0 })
+  @Column({ type: 'decimal', precision: 16, scale: 2, default: 0 })
   lastUpdateValue: number;
-  @Column({ type: 'float', default: 0, nullable: true })
+  @Column({ type: 'uuid', nullable: true })
+  sessionId: string;
+  @Column({
+    type: 'decimal',
+    precision: 16,
+    scale: 2,
+    default: 0,
+    nullable: true,
+  })
   @Min(0)
   @Max(100)
   progress: number;
   @Column({ type: 'uuid' })
   tenantId: string;
-  @ManyToOne(() => Objective, (obj) => obj.keyResults)
+
+  @Column({ type: 'boolean', default:false })
+  isClosed: boolean;
+
+  @ManyToOne(() => Objective, (obj) => obj.keyResults, {
+    eager: true, // Automatically load the related Objective
+  })
   @JoinColumn({ name: 'objectiveId' })
   objective: Objective;
+
   @OneToMany(() => Milestone, (mile) => mile.keyResult)
   milestones: Milestone[];
 

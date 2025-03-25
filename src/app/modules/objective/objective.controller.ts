@@ -8,9 +8,11 @@ import {
   Req,
   Query,
   Put,
+  Headers,
   BadRequestException,
   InternalServerErrorException,
   NotFoundException,
+  Patch,
 } from '@nestjs/common';
 import { ObjectiveService } from './services/objective.service';
 import { CreateObjectiveDto } from './dto/create-objective.dto';
@@ -20,6 +22,9 @@ import { PaginationDto } from '@root/src/core/commonDto/pagination-dto';
 import { ApiTags } from '@nestjs/swagger';
 import { FilterObjectiveDto } from './dto/filter-objective.dto';
 import { OKRDashboardService } from './services/okr-dashbord.service';
+import { ExcludeAuthGuard } from '@root/src/core/guards/exclud.guard';
+import { OKRCalculationService } from './services/okr-calculation.service';
+import { UpdateObjectiveStatusDto } from './dto/update-objective-status.dto';
 
 @Controller('objective')
 @ApiTags('Objective')
@@ -27,6 +32,7 @@ export class ObjectiveController {
   constructor(
     private readonly objectiveService: ObjectiveService,
     private readonly okrDashboardService: OKRDashboardService,
+    private readonly oKRCalculationService: OKRCalculationService,
   ) {}
 
   @Post()
@@ -80,37 +86,6 @@ export class ObjectiveController {
   removeObjective(@Req() req: Request, @Param('id') id: string) {
     return this.objectiveService.removeObjective(id);
   }
-
-  @Get('/user/:userId')
-  async calculateUSerOkr(
-    @Req() req: Request,
-    @Param('userId') userId: string,
-    @Query() paginationOptions?: PaginationDto,
-  ) {
-    const tenantId = req['tenantId'];
-    const token = req['token'];
-
-    // Validate required parameters
-    if (!tenantId || !token || !userId) {
-      throw new BadRequestException(
-        'Missing required parameters: tenantId, token, or userId',
-      );
-    }
-
-    try {
-      // Call the service and return the result
-      const result = await this.okrDashboardService.handleUserOkr(
-        userId,
-        tenantId,
-        token,
-        paginationOptions,
-      );
-      return result;
-    } catch (error) {
-      throw error;
-    }
-  }
-
   @Get('/objective-filter')
   objectiveFilter(
     @Req() req: Request,
@@ -126,6 +101,7 @@ export class ObjectiveController {
   }
 
   @Post('/team')
+  @ExcludeAuthGuard()
   getTeamOkr(
     @Req() req: Request,
     @Body() filterDto?: FilterObjectiveDto,
@@ -139,6 +115,7 @@ export class ObjectiveController {
     );
   }
   @Post('/company/okr/:userId')
+  @ExcludeAuthGuard()
   getCompanyOkr(
     @Req() req: Request,
     @Param('userId') userId: string,
@@ -153,4 +130,87 @@ export class ObjectiveController {
       paginationOptions,
     );
   }
+
+  @Post('/single-user-okr')
+  @ExcludeAuthGuard()
+  getOkrOfSingleUser(
+    @Headers('tenantId') tenantId: string,
+    @Headers('userId') userId: string,
+    @Query() paginationOptions?: PaginationDto,
+  ) {
+    return this.oKRCalculationService.okrOfUser(
+      userId,
+      tenantId,
+      paginationOptions,
+    );
+  }
+
+  @Post('/supervisor-okr')
+  @ExcludeAuthGuard()
+  getOkrOfSupervisor(
+    @Headers('tenantId') tenantId: string,
+    @Headers('userId') userId: string,
+    @Query() paginationOptions?: PaginationDto,
+  ) {
+    return this.okrDashboardService.getOkrOfSupervisor(
+      userId,
+      tenantId,
+      paginationOptions,
+    );
+  }
+
+  @Post('/team-okr')
+  @ExcludeAuthGuard()
+  getOkrOfTeam(
+    @Headers('tenantId') tenantId: string,
+    @Headers('userId') userId: string,
+    @Query() paginationOptions?: PaginationDto,
+  ) {
+    return this.okrDashboardService.getOkrOfTeam(
+      userId,
+      tenantId,
+      paginationOptions,
+    );
+  }
+
+  @Post('/company-okr')
+  @ExcludeAuthGuard()
+  getCompanyOkrOnVP(
+    @Headers('tenantId') tenantId: string,
+    @Headers('userId') userId: string,
+    @Query() paginationOptions?: PaginationDto,
+  ) {
+    return this.okrDashboardService.okrOfTheCompany(
+      tenantId,
+      paginationOptions,
+    );
+  }
+
+  @Get('/user/:userId')
+  async calculateUSerOkr(
+    @Req() req: Request,
+    @Param('userId') userId: string,
+    @Query() paginationOptions?: PaginationDto,
+  ) {
+    const tenantId = req['tenantId'];
+    return this.oKRCalculationService.handleUserOkr(
+      userId,
+      tenantId,
+      paginationOptions,
+    );
+  }
+
+  @Patch('/update-status')
+  async updateObjectiveStatusForAllUsers(
+    @Req() req: Request,
+   
+    @Body() updateObjectiveStatusDto?: UpdateObjectiveStatusDto,
+
+  ) {
+    const tenantId = req['tenantId'];
+    return this.objectiveService.updateObjectiveStatusForAllUsers(
+      updateObjectiveStatusDto,tenantId
+    );
+  }
+
 }
