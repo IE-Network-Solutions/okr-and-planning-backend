@@ -289,26 +289,50 @@ export class OKRCalculationService {
     tenantId: string,
     departments: any[],
     paginationOptions?: PaginationDto,
-  ) {
+  ): Promise<number> {
     try {
+      let total = 0;
       const department = departments.find((item) => item.id === departmentId);
-      const userIds = department.users.map((item) => item.id);
-      const objectiveProgress = await this.objectiveService.findUsersObjectives(
-        tenantId,
-        userIds,
-      );
-
-      if (objectiveProgress) {
-        const teamOkrProgress =
-          await this.averageOkrCalculation.calculateAverageOkr(
-            objectiveProgress,
+  
+      if (!department) return 0;
+  
+      const userIds = department.users.map((user) => user.id);
+  
+      if (userIds.length > 0) {
+        const objectiveProgress = await this.objectiveService.findUsersObjectives(
+          tenantId,
+          userIds,
+        );
+  
+        if (objectiveProgress) {
+          const teamOkrProgress =
+            await this.averageOkrCalculation.calculateAverageOkr(objectiveProgress);
+          total += teamOkrProgress.okr;
+        }
+      } else {
+        const childDepartments =
+          await this.getFromOrganizatiAndEmployeInfoService.childDepartmentWithUsers(
+            tenantId,
+            departmentId,
           );
-        return teamOkrProgress.okr;
+  
+        for (const childDepartment of childDepartments) {
+          const childTotal = await this.calculateTeamOkr(
+            childDepartment.id,
+            tenantId,
+            departments,
+            paginationOptions,
+          );
+          total += childTotal;
+        }
       }
+  
+      return total;
     } catch (error) {
       return 0;
     }
   }
+  
   async companyOkr(
     tenantId: string,
     departments: any[],
