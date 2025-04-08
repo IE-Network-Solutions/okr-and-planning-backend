@@ -106,7 +106,6 @@ export class VpScoringService {
       };
       const queryBuilder = this.vpScoringRepository
         .createQueryBuilder('VpScoring')
-        .leftJoinAndSelect('VpScoring.vpScoreInstance', 'vpScoreInstance')
         .leftJoinAndSelect(
           'VpScoring.vpScoringCriterions',
           'vpScoringCriterions',
@@ -133,7 +132,7 @@ export class VpScoringService {
         relations: [
           'userVpScoring',
           'vpScoringCriterions',
-          'vpScoreInstance',
+       
           'vpScoringCriterions.vpCriteria',
         ],
       });
