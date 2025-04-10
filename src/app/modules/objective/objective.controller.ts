@@ -101,6 +101,18 @@ export class ObjectiveController {
     );
   }
 
+  @Get('/objective-filter/all/objective')
+  objectiveAll(
+    @Req() req: Request,
+    @Query() paginationOptions?: PaginationDto,
+  ) {
+    const tenantId = req['tenantId'];
+    return this.objectiveService.objectiveFilterWithoutUser(
+      tenantId,
+      paginationOptions,
+    );
+  }
+
   @Post('/team')
   @ExcludeAuthGuard()
   getTeamOkr(
