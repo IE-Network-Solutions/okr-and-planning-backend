@@ -163,7 +163,6 @@ export class ObjectiveService {
     paginationOptions?: PaginationDto,
   ): Promise<Pagination<Objective>> {
     try {
-      console.log(userId,"userResponsem")
 
       const options: IPaginationOptions = {
         page: paginationOptions?.page,
@@ -192,7 +191,7 @@ export class ObjectiveService {
         await this.averageOkrCalculation.calculateObjectiveProgress(
           paginatedData.items,
         );
-        console.log(paginatedData,"paginatedData")
+    
       return {
         ...paginatedData,
         items: calculatedObjectives,
