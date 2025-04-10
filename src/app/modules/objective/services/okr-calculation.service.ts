@@ -19,7 +19,7 @@ import { AverageOkrRule } from '../../average-okr-rule/entities/average-okr-rule
 import { ObjectiveService } from './objective.service';
 import { paginationOptions } from '@root/src/core/commonTestData/commonTest.data';
 import { UpdateObjectiveStatusDto } from '../dto/update-objective-status.dto';
-
+import { FilterObjectiveOfAllEmployeesDto } from '../dto/filter-objective-byemployees.dto';
 @Injectable()
 export class OKRCalculationService {
   constructor(
@@ -149,6 +149,55 @@ export class OKRCalculationService {
         companyOkr: 0,
         teamOkr: 0,
       };
+    }
+  }
+
+  async getAllEmployeesOkrProgress(
+    tenantId: string,
+    filterDto: FilterObjectiveOfAllEmployeesDto,
+  ) {
+    try {
+     
+      const [allUsers, okrRule, departments] = await Promise.all([
+        this.getFromOrganizatiAndEmployeInfoService.getAllActiveUsers(tenantId),
+        this.averageOkrRuleService.findOneAverageOkrRuleByTenant(tenantId),
+        this.getFromOrganizatiAndEmployeInfoService.getDepartmentsWithUsers(tenantId),
+      ]);
+  
+      const allResults = [];
+      for (const session of filterDto.sessions) {
+        const userResults = await Promise.all(
+          allUsers.items
+            .filter(user => user.employeeJobInformation?.length > 0)
+            .map(async (user) => {
+              const jobInfo = user.employeeJobInformation[0];
+              const objectives = await this.objectiveService.findAllObjectivesBySession(
+                user.id, tenantId, session, null
+              );
+              if (jobInfo.departmentLeadOrNot) {
+                const [myOkr, teamOkr] = await Promise.all([
+                  this.averageOkrCalculation.calculateAverageOkr(objectives.items),
+                  this.calculateRecursiveOKR(jobInfo.departmentId, tenantId, departments),
+                ]);
+                
+                const total = (myOkr.okr * (okrRule?.myOkrPercentage ?? 20) / 100) +
+                             (teamOkr * (okrRule?.teamOkrPercentage ?? 80) / 100);
+                
+                return { userId: user.id, okrScore: total, sessionId: session };
+              } 
+              else {
+                const myOkr = await this.averageOkrCalculation.calculateAverageOkr(objectives.items);
+                return { userId: user.id, okrScore: myOkr.okr, sessionId: session };
+              }
+            })
+        );
+  
+        allResults.push(...userResults);
+      }
+  
+      return allResults;
+    } catch (error) {
+     throw new  BadRequestException(error.message);
     }
   }
 
@@ -289,26 +338,50 @@ export class OKRCalculationService {
     tenantId: string,
     departments: any[],
     paginationOptions?: PaginationDto,
-  ) {
+  ): Promise<number> {
     try {
+      let total = 0;
       const department = departments.find((item) => item.id === departmentId);
-      const userIds = department.users.map((item) => item.id);
-      const objectiveProgress = await this.objectiveService.findUsersObjectives(
-        tenantId,
-        userIds,
-      );
-
-      if (objectiveProgress) {
-        const teamOkrProgress =
-          await this.averageOkrCalculation.calculateAverageOkr(
-            objectiveProgress,
+  
+      if (!department) return 0;
+  
+      const userIds = department.users.map((user) => user.id);
+  
+      if (userIds.length > 0) {
+        const objectiveProgress = await this.objectiveService.findUsersObjectives(
+          tenantId,
+          userIds,
+        );
+  
+        if (objectiveProgress) {
+          const teamOkrProgress =
+            await this.averageOkrCalculation.calculateAverageOkr(objectiveProgress);
+          total += teamOkrProgress.okr;
+        }
+      } else {
+        const childDepartments =
+          await this.getFromOrganizatiAndEmployeInfoService.childDepartmentWithUsers(
+            tenantId,
+            departmentId,
           );
-        return teamOkrProgress.okr;
+  
+        for (const childDepartment of childDepartments) {
+          const childTotal = await this.calculateTeamOkr(
+            childDepartment.id,
+            tenantId,
+            departments,
+            paginationOptions,
+          );
+          total += childTotal;
+        }
       }
+  
+      return total;
     } catch (error) {
       return 0;
     }
   }
+  
   async companyOkr(
     tenantId: string,
     departments: any[],

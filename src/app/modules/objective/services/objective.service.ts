@@ -40,6 +40,7 @@ import { GetFromOrganizatiAndEmployeInfoService } from './get-data-from-org.serv
 import { AverageOkrCalculation } from './average-okr-calculation.service';
 import { UpdateObjectiveStatusDto } from '../dto/update-objective-status.dto';
 
+
 @Injectable()
 export class ObjectiveService {
   constructor(
@@ -155,6 +156,49 @@ export class ObjectiveService {
     }
   }
 
+  async findAllObjectivesBySession(
+    userId: string,
+    tenantId: string,
+    sessionId:string,
+    paginationOptions?: PaginationDto,
+  ): Promise<Pagination<Objective>> {
+    try {
+
+      const options: IPaginationOptions = {
+        page: paginationOptions?.page,
+        limit: paginationOptions?.limit,
+      };
+      const queryBuilder = this.objectiveRepository
+        .createQueryBuilder('objective')
+        .leftJoinAndSelect('objective.keyResults', 'keyResults')
+        .leftJoinAndSelect('keyResults.milestones', 'milestones')
+        .leftJoinAndSelect('keyResults.metricType', 'metricType')
+        .andWhere('objective.tenantId = :tenantId', { tenantId })
+        .where('objective.userId = :userId', { userId });
+
+      if (sessionId) {
+        queryBuilder.andWhere('objective.sessionId = :sessionId', {
+          sessionId: sessionId,
+        });
+      }
+
+      const paginatedData = await this.paginationService.paginate<Objective>(
+        queryBuilder,
+        options,
+      );
+
+      const calculatedObjectives =
+        await this.averageOkrCalculation.calculateObjectiveProgress(
+          paginatedData.items,
+        );
+      return {
+        ...paginatedData,
+        items: calculatedObjectives,
+      };
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
+  }
   async findOneObjective(id: string): Promise<Objective> {
     try {
       const Objective = await this.objectiveRepository.findOne({

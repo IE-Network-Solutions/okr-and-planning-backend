@@ -25,6 +25,7 @@ import { OKRDashboardService } from './services/okr-dashbord.service';
 import { ExcludeAuthGuard } from '@root/src/core/guards/exclud.guard';
 import { OKRCalculationService } from './services/okr-calculation.service';
 import { UpdateObjectiveStatusDto } from './dto/update-objective-status.dto';
+import { FilterObjectiveOfAllEmployeesDto } from './dto/filter-objective-byemployees.dto';
 
 @Controller('objective')
 @ApiTags('Objective')
@@ -225,4 +226,17 @@ export class ObjectiveController {
     );
   }
 
+
+
+  @Post('/get-okr-progress/all-employees')
+  async getAllEmployeesOkrProgress(
+    @Headers('tenantId') tenantId: string,
+   
+    @Body() filterObjectiveOfAllEmployeesDto: FilterObjectiveOfAllEmployeesDto,
+   
+  ) {
+    return this.oKRCalculationService.getAllEmployeesOkrProgress(tenantId,
+      filterObjectiveOfAllEmployeesDto
+    );
+  }
 }
