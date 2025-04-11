@@ -11,7 +11,8 @@ export class FilterObjectiveOfAllEmployeesDto {
 @IsUUID()
 @IsOptional()
   userId?: string;
-
+  
+  @Transform(({ value }) => (value === '' ? null : value))
   @IsUUID()
   @IsOptional()
   departmentId?: string;

@@ -40,6 +40,30 @@ export class GetFromOrganizatiAndEmployeInfoService {
     return response.data;
   }
 
+  async getChildDepartmentsWithUsers(departmentId:string,tenantId: string) {
+    const response = await this.httpService
+      .get(`${this.orgUrl}/departments/child-departments/departments/all-levels/users/${departmentId}`, {
+        headers: {
+          tenantid: tenantId,
+          Authorization: this.request['authToken'],
+        },
+      })
+      .toPromise();
+    return response.data;
+  }
+
+
+  async getOneUSer(userId:string,tenantId: string) {
+    const response = await this.httpService
+      .get(`${this.orgUrl}/users/${userId}`, {
+        headers: {
+          tenantid: tenantId,
+          Authorization: this.request['authToken'],
+        },
+      })
+      .toPromise();
+    return response.data;
+  }
   async getActiveMonth(tenantId: string) {
     const response = await this.httpService
       .get(`${this.orgUrl}/month/active/month`, {
