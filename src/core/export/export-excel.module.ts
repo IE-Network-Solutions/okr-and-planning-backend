@@ -19,7 +19,7 @@ export class ExportExcelService {
     // 2. Sheets grouped by sessionId
     const groupedBySession = this.groupBySessionId(data);
     Object.entries(groupedBySession).forEach(([sessionId, items]) => {
-      const sheetName = this.sanitizeSheetName(sessionId);
+      const sheetName = this.sanitizeSheetName((sessions.find((s) => s.id === sessionId)?.name || sessionId) as string);
       const sessionSheet = workbook.addWorksheet(sheetName);
       this.createSessionSheet(sessionSheet, items, users, sessions);
     });
