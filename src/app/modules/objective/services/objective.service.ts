@@ -191,6 +191,7 @@ export class ObjectiveService {
         await this.averageOkrCalculation.calculateObjectiveProgress(
           paginatedData.items,
         );
+
       return {
         ...paginatedData,
         items: calculatedObjectives,
