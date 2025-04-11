@@ -235,48 +235,48 @@ export class KeyResultsService {
   async deleteAndUpdateKeyResults(
     deleteAndUpdateKeyResultDto: DeleteAndUpdateKeyResultDto,
     tenantId: string,
-    objectiveId:string
+    objectiveId: string,
   ): Promise<KeyResult[]> {
-    const queryRunner = this.keyResultRepository.manager.connection.createQueryRunner();
+    const queryRunner =
+      this.keyResultRepository.manager.connection.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
-  
+
     try {
       const { toBeUpdated, toBeDeleted } = deleteAndUpdateKeyResultDto;
       for (const keyResult of toBeUpdated) {
-     await queryRunner.manager.update(KeyResult, keyResult.id, { ...keyResult });
-     
+        await queryRunner.manager.update(KeyResult, keyResult.id, {
+          ...keyResult,
+        });
       }
 
       if (toBeDeleted) {
-    
         const entityToDelete = await queryRunner.manager.findOne(KeyResult, {
           where: { id: toBeDeleted },
         });
- 
-   if (entityToDelete) {
-    await queryRunner.manager.softRemove(entityToDelete);
-  } else {
-    throw  new NotFoundException("KeyResult Not Found");
-  }
-}
+
+        if (entityToDelete) {
+          await queryRunner.manager.softRemove(entityToDelete);
+        } else {
+          throw new NotFoundException('KeyResult Not Found');
+        }
+      }
 
       await queryRunner.commitTransaction();
-       return await queryRunner.manager.find(KeyResult, {
-       where: { objectiveId: objectiveId},
+      return await queryRunner.manager.find(KeyResult, {
+        where: { objectiveId: objectiveId },
       });
-  
     } catch (error) {
       await queryRunner.rollbackTransaction();
       if (error instanceof BadRequestException) {
-        throw error; 
+        throw error;
       }
       throw new BadRequestException(`${error.message}`);
     } finally {
       await queryRunner.release();
     }
   }
-  
+
   async removekeyResult(id: string): Promise<KeyResult> {
     const keyResult = await this.findOnekeyResult(id);
     if (!keyResult) {
@@ -348,41 +348,51 @@ export class KeyResultsService {
     }
   }
 
-
   async updateKeyResultStatusForAllUsers(
     objectives: Objective[],
     tenantId: string,
-    isClosed: boolean
+    isClosed: boolean,
   ) {
     try {
-   
-  if(objectives && objectives.length > 0) {
-      const objectiveIds = objectives.map(obj => obj.id);
-      const keyResults = await this.updateKeyResultStatus(objectiveIds, tenantId, isClosed);
-        const milestones = await this.milestonesService.updateMilestoneStatusForAllUsers(keyResults, tenantId, isClosed);
-    
-      return keyResults;
-    }
+      if (objectives && objectives.length > 0) {
+        const objectiveIds = objectives.map((obj) => obj.id);
+        const keyResults = await this.updateKeyResultStatus(
+          objectiveIds,
+          tenantId,
+          isClosed,
+        );
+        const milestones =
+          await this.milestonesService.updateMilestoneStatusForAllUsers(
+            keyResults,
+            tenantId,
+            isClosed,
+          );
+
+        return keyResults;
+      }
     } catch (error) {
-      throw new BadRequestException(`Failed to update key results: ${error.message}`);
+      throw new BadRequestException(
+        `Failed to update key results: ${error.message}`,
+      );
     }
   }
-  
 
-
-  async updateKeyResultStatus(  objectiveIds: string[], tenantId: string, isClosed: boolean){
+  async updateKeyResultStatus(
+    objectiveIds: string[],
+    tenantId: string,
+    isClosed: boolean,
+  ) {
     try {
       const updateResult = await this.keyResultRepository.update(
         { objectiveId: In(objectiveIds), tenantId },
-        { isClosed } 
+        { isClosed },
       );
 
       return await this.keyResultRepository.find({
-        where: { objectiveId: In(objectiveIds) } 
-      })
+        where: { objectiveId: In(objectiveIds) },
+      });
     } catch (error) {
       throw new BadRequestException(error.message);
     }
   }
-  
 }

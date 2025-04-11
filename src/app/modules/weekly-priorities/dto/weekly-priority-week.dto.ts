@@ -1,21 +1,19 @@
-import {  IsBoolean,  IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class WeeklyPriorityWeekDto {
+  @IsString()
+  title: string;
 
-    @IsString()
-    title: string;
-  
-    @IsNumber()
-    count: number;
-  
-    @IsString()
-    startDate: string;
-  
-    @IsString()
-    endDate: string;
+  @IsNumber()
+  count: number;
 
-    @IsOptional()
-    @IsBoolean()
-    isActive?: boolean;
-  
+  @IsString()
+  startDate: string;
+
+  @IsString()
+  endDate: string;
+
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean;
 }

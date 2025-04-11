@@ -417,30 +417,29 @@ export class PlanTasksService {
     }
   }
 
-
   async updateTasks(
     updatePlanTasksDto: UpdatePlanTaskDto[],
     tenantId: string,
   ): Promise<PlanTask[]> {
     try {
       // Extract the planId (assuming all tasks are associated with the same plan)
-    
-let existingTasks:PlanTask[]
-  
+
+      let existingTasks: PlanTask[];
+
       // Extract the planId and ensure it exists
       const planId = updatePlanTasksDto[0]?.planId;
       if (!planId) {
-       return
+        return;
       }
-  
+
       // Fetch all existing tasks for the given planId
       const existingPlan = await this.planRepository.findOne({
-        where: { id:planId }, relations:['tasks']
+        where: { id: planId },
+        relations: ['tasks'],
       });
 
-    
-      if(existingPlan){
-        existingTasks=existingPlan.tasks
+      if (existingPlan) {
+        existingTasks = existingPlan.tasks;
       }
       // Extract task IDs from the input DTO
       const inputTaskIds = updatePlanTasksDto
@@ -450,7 +449,7 @@ let existingTasks:PlanTask[]
       // Identify tasks to delete
       await this.taskRepository.manager.transaction(
         async (transactionalEntityManager) => {
-          if(existingTasks && existingTasks.length>0){
+          if (existingTasks && existingTasks.length > 0) {
             const tasksToDelete = existingTasks.filter(
               (task) => !inputTaskIds.includes(task.id),
             );
@@ -458,11 +457,10 @@ let existingTasks:PlanTask[]
               await transactionalEntityManager.softRemove(tasksToDelete);
             }
           }
-         
         },
       );
 
-    //  Process update or create operations for each task in the input
+      //  Process update or create operations for each task in the input
       for (const updatePlanTaskDto of updatePlanTasksDto) {
         // let task;
 
@@ -528,7 +526,6 @@ let existingTasks:PlanTask[]
   }
 
   ////////////////////////////////   ahmed changes //////////////////////////
-
 
   async createTasks(createTaskDtos: UpdatePlanTaskDto[], tenantId: string) {
     const newTasks = createTaskDtos.map((dto) => ({

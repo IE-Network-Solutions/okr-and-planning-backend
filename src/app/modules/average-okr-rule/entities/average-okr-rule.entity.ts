@@ -4,7 +4,7 @@ import { Column, Entity, Index, Unique } from 'typeorm';
 @Entity()
 @Unique(['title', 'tenantId'])
 export class AverageOkrRule extends BaseModel {
-  @Column({ type: 'varchar', nullable: false,})
+  @Column({ type: 'varchar', nullable: false })
   title: string;
   @Column({ type: 'int' })
   myOkrPercentage: number;

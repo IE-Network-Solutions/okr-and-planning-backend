@@ -44,7 +44,7 @@ import { WeeklyPrioritiesModule } from './modules/weekly-priorities/weekly-prior
     CarbonCopyLog,
     DashboardModule,
     VariablePayModule,
-    WeeklyPrioritiesModule
+    WeeklyPrioritiesModule,
   ],
 })
 export class CoreModule {}

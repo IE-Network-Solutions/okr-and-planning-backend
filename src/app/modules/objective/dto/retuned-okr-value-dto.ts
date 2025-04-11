@@ -1,22 +1,12 @@
-import { IsArray, IsOptional, IsString } from "class-validator";
+import { IsArray, IsOptional, IsString } from 'class-validator';
 
-export class AllEmployeeOkrData{
+export class AllEmployeeOkrData {
+  @IsString()
+  userId: string;
 
+  @IsString()
+  sessionId: string;
 
-    @IsString()
-    userId: string;
-
-    
-
-    @IsString()
-    sessionId: string;
-
-    
-  
-    @IsString()
-    okrScore: number;
-
-
-
-
+  @IsString()
+  okrScore: number;
 }
