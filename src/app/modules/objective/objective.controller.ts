@@ -213,18 +213,16 @@ export class ObjectiveController {
       updateObjectiveStatusDto,tenantId
     );
   }
-
-
-
   @Post('/get-okr-progress/all-employees')
   async getAllEmployeesOkrProgress(
     @Headers('tenantId') tenantId: string,
    
     @Body() filterObjectiveOfAllEmployeesDto: FilterObjectiveOfAllEmployeesDto,
+    @Query() paginationOptions?: PaginationDto,
    
   ) {
     return this.oKRCalculationService.getAllEmployeesOkrProgress(tenantId,
-      filterObjectiveOfAllEmployeesDto
+      filterObjectiveOfAllEmployeesDto,paginationOptions
     );
   }
 }
