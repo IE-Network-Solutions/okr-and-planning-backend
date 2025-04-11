@@ -58,10 +58,10 @@ export class ExportExcelService {
     ];
 
     data.forEach((item) => {
-      const user = users.find((u) => u.userId === item.userId);
-      const session = sessions.find((s) => s.sessionId === item.sessionId);
+      const user = users.find((u) => u.id === item.userId);
+      const session = sessions.find((s) => s.id === item.sessionId);
       const firstName = user?.firstName || '';
-      const lastName = user?.lastName || '';
+      const lastName = user?.middleName || '';
       const position =
         user?.employeeJobInformation?.[0]?.position?.name || 'N/A';
       const department =
@@ -97,12 +97,12 @@ export class ExportExcelService {
       ];
 
       data.forEach((item) => {
-        const user = users.find((u) => u.userId === item.id);
-        const session = sessions.find((s) => s.sessionId === item.id);
-     
+        const user = users.find((u) => u.id === item.userId);
+        const session = sessions.find((s) => s.id === item.sessionId);
+   
   
         const firstName = user?.firstName || '';
-        const lastName = user?.lastName || '';
+        const lastName = user?.middleName || '';
         const position =
           user?.employeeJobInformation?.[0]?.position?.name || 'N/A';
         const department =
