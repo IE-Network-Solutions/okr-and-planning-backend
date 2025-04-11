@@ -221,10 +221,11 @@ export class ObjectiveController {
     @Headers('tenantId') tenantId: string,
    
     @Body() filterObjectiveOfAllEmployeesDto: FilterObjectiveOfAllEmployeesDto,
+    @Query() paginationOptions?: PaginationDto,
    
   ) {
     return this.oKRCalculationService.getAllEmployeesOkrProgress(tenantId,
-      filterObjectiveOfAllEmployeesDto
+      filterObjectiveOfAllEmployeesDto,paginationOptions
     );
   }
 }
