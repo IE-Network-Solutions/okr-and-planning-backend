@@ -93,44 +93,52 @@ export class PlanningPeriodsService {
     }
   }
 
-
-  
- async updatePlanningPeriod(
+  async updatePlanningPeriod(
     id: string,
     createPlanningPeriodsDto: CreatePlanningPeriodsDTO,
   ): Promise<PlanningPeriod> {
     try {
       const planning = await this.findOnePlanningPeriod(id);
       if (!planning) {
-        throw new NotFoundException(`Planning period with ID ${id} does not exist.`);
+        throw new NotFoundException(
+          `Planning period with ID ${id} does not exist.`,
+        );
       }
-  
-      const daysToAdd = parseInt(createPlanningPeriodsDto.submissionDeadline, 10);
+
+      const daysToAdd = parseInt(
+        createPlanningPeriodsDto.submissionDeadline,
+        10,
+      );
       if (isNaN(daysToAdd)) {
         throw new BadRequestException('Invalid submission deadline format');
       }
-  
-      const submissionDeadlineTimestamp = formatISO(addDays(new Date(), daysToAdd));
-  
+
+      const submissionDeadlineTimestamp = formatISO(
+        addDays(new Date(), daysToAdd),
+      );
+
       const updatedDto = {
         ...createPlanningPeriodsDto,
         submissionDeadline: submissionDeadlineTimestamp,
       };
-  
-      const updateResult = await this.planningPeriodRepository.update(id, updatedDto);
-  
+
+      const updateResult = await this.planningPeriodRepository.update(
+        id,
+        updatedDto,
+      );
+
       if (updateResult.affected === 0) {
-        throw new NotFoundException('Error while updating the selected planning period');
+        throw new NotFoundException(
+          'Error while updating the selected planning period',
+        );
       }
-  
+
       return await this.findOnePlanningPeriod(id);
     } catch (error) {
       throw error;
     }
   }
-  
-  
-  
+
   async removePlanningPeriod(id: string): Promise<PlanningPeriod> {
     try {
       const planning = await this.findOnePlanningPeriod(id);
@@ -177,7 +185,6 @@ export class PlanningPeriodsService {
       );
     }
   }
-
 
   async updatePlanningPeriodStatus(id: string): Promise<PlanningPeriod> {
     try {

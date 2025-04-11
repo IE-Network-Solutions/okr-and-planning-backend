@@ -44,7 +44,7 @@ export class KeyResult extends BaseModel {
   @Column({ type: 'uuid' })
   tenantId: string;
 
-  @Column({ type: 'boolean', default:false })
+  @Column({ type: 'boolean', default: false })
   isClosed: boolean;
 
   @ManyToOne(() => Objective, (obj) => obj.keyResults, {

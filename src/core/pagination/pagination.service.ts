@@ -88,26 +88,26 @@ export class PaginationService {
     };
   }
   // Add this to your PaginationService
-async paginateArray<T>(
-  items: T[],
-  options: IPaginationOptions,
-): Promise<Pagination<T>> {
-  const page = Number(options?.page ?? this.defaultPage);
-  const limit = Number(options?.limit ?? this.defaultLimit);
+  async paginateArray<T>(
+    items: T[],
+    options: IPaginationOptions,
+  ): Promise<Pagination<T>> {
+    const page = Number(options?.page ?? this.defaultPage);
+    const limit = Number(options?.limit ?? this.defaultLimit);
 
-  const startIndex = (page - 1) * limit;
-  const endIndex = startIndex + limit;
-  const paginatedItems = items.slice(startIndex, endIndex);
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    const paginatedItems = items.slice(startIndex, endIndex);
 
-  return {
-    items: paginatedItems,
-    meta: {
-      totalItems: items.length,
-      itemCount: paginatedItems.length,
-      itemsPerPage: limit,
-      totalPages: Math.ceil(items.length / limit),
-      currentPage: page,
-    },
-  };
-}
+    return {
+      items: paginatedItems,
+      meta: {
+        totalItems: items.length,
+        itemCount: paginatedItems.length,
+        itemsPerPage: limit,
+        totalPages: Math.ceil(items.length / limit),
+        currentPage: page,
+      },
+    };
+  }
 }

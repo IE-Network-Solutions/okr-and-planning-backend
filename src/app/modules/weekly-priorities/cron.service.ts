@@ -18,8 +18,8 @@ export class CronService {
       this.logger.debug('weeklyPrioritiesWeekService cron start');
 
       const currentCount =
-        ((await this.weeklyPrioritiesWeekService.findWeekWithHighestOrder()).count) ||
-        0;
+        (await this.weeklyPrioritiesWeekService.findWeekWithHighestOrder())
+          .count || 0;
       await this.weeklyPrioritiesWeekService.create({
         title: `Week ${Number(currentCount) + 1}`,
         count: Number(currentCount) + 1,

@@ -11,8 +11,16 @@ import { CronService } from './cron.service';
 import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([WeeklyPriorityTask,WeeklyPriorityWeek]), PaginationModule,ScheduleModule.forRoot(),],
-  controllers: [WeeklyPrioritiesController,WeeklyPrioritiesWeekController],
-  providers: [WeeklyPrioritiesService,WeeklyPrioritiesWeekService,CronService],
+  imports: [
+    TypeOrmModule.forFeature([WeeklyPriorityTask, WeeklyPriorityWeek]),
+    PaginationModule,
+    ScheduleModule.forRoot(),
+  ],
+  controllers: [WeeklyPrioritiesController, WeeklyPrioritiesWeekController],
+  providers: [
+    WeeklyPrioritiesService,
+    WeeklyPrioritiesWeekService,
+    CronService,
+  ],
 })
 export class WeeklyPrioritiesModule {}

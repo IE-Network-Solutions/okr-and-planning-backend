@@ -40,20 +40,22 @@ export class GetFromOrganizatiAndEmployeInfoService {
     return response.data;
   }
 
-  async getChildDepartmentsWithUsers(departmentId:string,tenantId: string) {
+  async getChildDepartmentsWithUsers(departmentId: string, tenantId: string) {
     const response = await this.httpService
-      .get(`${this.orgUrl}/departments/child-departments/departments/all-levels/users/${departmentId}`, {
-        headers: {
-          tenantid: tenantId,
-          Authorization: this.request['authToken'],
+      .get(
+        `${this.orgUrl}/departments/child-departments/departments/all-levels/users/${departmentId}`,
+        {
+          headers: {
+            tenantid: tenantId,
+            Authorization: this.request['authToken'],
+          },
         },
-      })
+      )
       .toPromise();
     return response.data;
   }
 
-
-  async getOneUSer(userId:string,tenantId: string) {
+  async getOneUSer(userId: string, tenantId: string) {
     const response = await this.httpService
       .get(`${this.orgUrl}/users/${userId}`, {
         headers: {
@@ -85,6 +87,17 @@ export class GetFromOrganizatiAndEmployeInfoService {
       .toPromise();
     return response.data;
   }
+  async getAllSessions(tenantId: string) {
+    const response = await this.httpService
+      .get(`${this.orgUrl}/session`, {
+        headers: {
+          tenantid: tenantId,
+          Authorization: this.request['authToken'],
+        },
+      })
+      .toPromise();
+    return response.data;
+  }
   async activatePreviousActiveMonth(tenantId: string) {
     const response = await this.httpService
       .get(`${this.orgUrl}/month/previousMonth/month`, {
@@ -101,12 +114,12 @@ export class GetFromOrganizatiAndEmployeInfoService {
       .get(`${this.orgUrl}/users`, {
         headers: {
           tenantid: tenantId,
+          Authorization: this.request['authToken'],
         },
       })
       .toPromise();
     return response.data;
   }
-
 
   async getAllActiveUsers(tenantId: string) {
     const response = await this.httpService
@@ -114,7 +127,6 @@ export class GetFromOrganizatiAndEmployeInfoService {
         headers: {
           tenantid: tenantId,
           Authorization: this.request['authToken'],
-
         },
       })
       .toPromise();
