@@ -18,7 +18,7 @@ import { PlannnigPeriodUserDto } from './dto/planningPeriodUser.dto';
 import { FilterUserDto } from './dto/filter-user.dto';
 import { IntervalHierarchy } from './enum/interval-type.enum';
 import { PlanService } from '../../plan/plan.service';
-import { throwError } from 'rxjs';
+import { addDays, formatISO } from 'date-fns';
 
 @Injectable()
 export class PlanningPeriodsService {
@@ -92,36 +92,45 @@ export class PlanningPeriodsService {
       throw error;
     }
   }
-  async updatePlanningPeriod(
+
+
+  
+ async updatePlanningPeriod(
     id: string,
     createPlanningPeriodsDto: CreatePlanningPeriodsDTO,
   ): Promise<PlanningPeriod> {
     try {
       const planning = await this.findOnePlanningPeriod(id);
       if (!planning) {
-        throw new NotFoundException(
-          `Planning period that you are updating with Id ${id} does not exist`,
-        );
+        throw new NotFoundException(`Planning period with ID ${id} does not exist.`);
       }
-      const updatedPlanning = await this.planningPeriodRepository.update(
-        id,
-        createPlanningPeriodsDto,
-      );
-      if (!updatedPlanning) {
-        throw new NotFoundException(
-          'Error while updating the selected planning period',
-        );
+  
+      const daysToAdd = parseInt(createPlanningPeriodsDto.submissionDeadline, 10);
+      if (isNaN(daysToAdd)) {
+        throw new BadRequestException('Invalid submission deadline format');
       }
+  
+      const submissionDeadlineTimestamp = formatISO(addDays(new Date(), daysToAdd));
+  
+      const updatedDto = {
+        ...createPlanningPeriodsDto,
+        submissionDeadline: submissionDeadlineTimestamp,
+      };
+  
+      const updateResult = await this.planningPeriodRepository.update(id, updatedDto);
+  
+      if (updateResult.affected === 0) {
+        throw new NotFoundException('Error while updating the selected planning period');
+      }
+  
       return await this.findOnePlanningPeriod(id);
     } catch (error) {
-      if (error.name === 'EntityNotFoundError') {
-        throw new NotFoundException(
-          'The update attempt can not find the specified period',
-        );
-      }
       throw error;
     }
   }
+  
+  
+  
   async removePlanningPeriod(id: string): Promise<PlanningPeriod> {
     try {
       const planning = await this.findOnePlanningPeriod(id);
@@ -141,19 +150,16 @@ export class PlanningPeriodsService {
     userId: string,
   ): Promise<PlanningPeriodUser[]> {
     try {
-      // Retrieve all planning users associated with the given userId
       const planningUsers = await this.planningUserRepository.find({
         where: { userId },
       });
 
-      // Check if any planning users were found
       if (planningUsers.length === 0) {
         throw new NotFoundException(
           `No planning period users found for userId ${userId}`,
         );
       }
 
-      // Loop through each planning user and perform soft removal
       const removedUsers: PlanningPeriodUser[] = [];
       for (const user of planningUsers) {
         const removedUser = await this.planningUserRepository.softRemove(user);
@@ -171,6 +177,8 @@ export class PlanningPeriodsService {
       );
     }
   }
+
+
   async updatePlanningPeriodStatus(id: string): Promise<PlanningPeriod> {
     try {
       const planningperiod =

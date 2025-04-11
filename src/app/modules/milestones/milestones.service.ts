@@ -155,27 +155,40 @@ export class MilestonesService {
     await this.milestoneRepository.softRemove({ id });
     return Milestone;
   }
+  async removeMilestoneByKeyresultId(id: string): Promise<Milestone[]> {
+    const milestones = await this.milestoneRepository.find({
+      where: { keyResultId: id },
+    });
 
-    async updateMilestoneStatusForAllUsers(
-      keyResults: KeyResult[], tenantId: string, isClosed: boolean
-    ) {
-      try {
-        if (keyResults.length > 0 && tenantId) {
-          const keyResultIds = keyResults.map(key => key.id);
-    
-          const updateResult = await this.milestoneRepository.update(
-            { keyResultId: In(keyResultIds), tenantId },
-            { isClosed } 
-          );
-    
-          return await this.milestoneRepository.find({
-            where: { keyResultId: In(keyResultIds) } 
-          })
-                }
-     
-      } catch (error) {
-        throw new BadRequestException(`Failed to update key results: ${error.message}`);
-
-      }
+    if (milestones.length === 0) {
+      throw new NotFoundException(`No milestones found for keyResultId ${id}`);
     }
+
+    return await this.milestoneRepository.softRemove(milestones);
+  }
+
+  async updateMilestoneStatusForAllUsers(
+    keyResults: KeyResult[],
+    tenantId: string,
+    isClosed: boolean,
+  ) {
+    try {
+      if (keyResults.length > 0 && tenantId) {
+        const keyResultIds = keyResults.map((key) => key.id);
+
+        const updateResult = await this.milestoneRepository.update(
+          { keyResultId: In(keyResultIds), tenantId },
+          { isClosed },
+        );
+
+        return await this.milestoneRepository.find({
+          where: { keyResultId: In(keyResultIds) },
+        });
+      }
+    } catch (error) {
+      throw new BadRequestException(
+        `Failed to update key results: ${error.message}`,
+      );
+    }
+  }
 }
