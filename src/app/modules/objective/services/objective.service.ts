@@ -191,7 +191,7 @@ export class ObjectiveService {
         await this.averageOkrCalculation.calculateObjectiveProgress(
           paginatedData.items,
         );
-    
+
       return {
         ...paginatedData,
         items: calculatedObjectives,
@@ -317,6 +317,44 @@ export class ObjectiveService {
           } catch (error) {}
         }
       }
+      return paginatedData;
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
+  }
+
+  async objectiveFilterWithoutUser(
+    tenantId: string,
+    paginationOptions?: PaginationDto,
+  ): Promise<Pagination<Objective>> {
+    try {
+      const options: IPaginationOptions = {
+        page: paginationOptions.page,
+        limit: paginationOptions.limit,
+      };
+      const activeSession =
+        await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(
+          tenantId,
+        );
+
+      const queryBuilder = await this.objectiveRepository
+        .createQueryBuilder('objective')
+        .leftJoinAndSelect('objective.keyResults', 'keyResults')
+
+        .leftJoinAndSelect('keyResults.milestones', 'milestones')
+        .leftJoinAndSelect('keyResults.metricType', 'metricType')
+        .andWhere('objective.tenantId = :tenantId', { tenantId });
+
+      if (activeSession) {
+        queryBuilder.andWhere('objective.sessionId = :sessionId', {
+          sessionId: activeSession.id,
+        });
+      }
+      const paginatedData = await this.paginationService.paginate<Objective>(
+        queryBuilder,
+        options,
+      );
+   
       return paginatedData;
     } catch (error) {
       throw new BadRequestException(error.message);

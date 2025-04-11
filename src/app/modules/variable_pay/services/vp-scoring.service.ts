@@ -132,7 +132,6 @@ export class VpScoringService {
         relations: [
           'userVpScoring',
           'vpScoringCriterions',
-       
           'vpScoringCriterions.vpCriteria',
         ],
       });
