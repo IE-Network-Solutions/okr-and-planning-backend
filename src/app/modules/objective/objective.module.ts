@@ -12,6 +12,8 @@ import { GetFromOrganizatiAndEmployeInfoService } from './services/get-data-from
 import { AverageOkrCalculation } from './services/average-okr-calculation.service';
 import { OKRDashboardService } from './services/okr-dashbord.service';
 import { OKRCalculationService } from './services/okr-calculation.service';
+import { ExcelModule } from '@root/src/core/export/export-excel.module';
+
 
 @Module({
   imports: [
@@ -21,6 +23,7 @@ import { OKRCalculationService } from './services/okr-calculation.service';
     KeyResultsModule,
     AverageOkrRuleModule,
     HttpModule.register({}),
+    ExcelModule,
   ],
   controllers: [ObjectiveController],
   providers: [
