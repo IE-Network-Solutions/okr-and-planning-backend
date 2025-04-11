@@ -60,9 +60,6 @@ export class ExportExcelService {
     data.forEach((item) => {
       const user = users.find((u) => u.userId === item.userId);
       const session = sessions.find((s) => s.sessionId === item.sessionId);
-   console.log(user,"j")
-   console.log(session  ,"s")
-
       const firstName = user?.firstName || '';
       const lastName = user?.lastName || '';
       const position =
