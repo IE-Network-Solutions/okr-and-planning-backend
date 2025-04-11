@@ -21,7 +21,7 @@ export class ExportExcelService {
     Object.entries(groupedBySession).forEach(([sessionId, items]) => {
       const sheetName = this.sanitizeSheetName(sessionId);
       const sessionSheet = workbook.addWorksheet(sheetName);
-      this.createSessionSheet(sessionSheet, items);
+      this.createSessionSheet(sessionSheet, items, users, sessions);
     });
 
     // Send the file
@@ -58,8 +58,9 @@ export class ExportExcelService {
     ];
 
     data.forEach((item) => {
-      const user = users.find((u) => u.userId === item.userId);
-      const session = sessions.find((s) => s.sessionId === item.sessionId);
+      const user = users.find((u) => u.userId === item.id);
+      const session = sessions.find((s) => s.sessionId === item.id);
+   
 
       const firstName = user?.firstName || '';
       const lastName = user?.lastName || '';
@@ -83,23 +84,40 @@ export class ExportExcelService {
     };
   }
 
-  private createSessionSheet(worksheet: ExcelJS.Worksheet, data: any[]): void {
+  private createSessionSheet(worksheet: ExcelJS.Worksheet, data: any[],users:any[],sessions:any[]): void {
     worksheet.columns = [
-      { header: 'User ID', key: 'userId', width: 40 },
-      {
-        header: 'OKR Score',
-        key: 'okrScore',
-        width: 15,
-        style: { numFmt: '0.00' },
-      },
-    ];
+        { header: 'Employee Name', key: 'userName', width: 30 },
+        { header: 'Job Title', key: 'jobTitle', width: 25 },
+        { header: 'Department', key: 'department', width: 25 },
+        { header: 'Quarter', key: 'sessionName', width: 30 },
+        {
+          header: 'OKR Score',
+          key: 'okrScore',
+          width: 15,
+          style: { numFmt: '0.00' },
+        },
+      ];
 
-    data.forEach((item) => {
-      worksheet.addRow({
-        userId: item.userId,
-        okrScore: Number(item.okrScore),
+      data.forEach((item) => {
+        const user = users.find((u) => u.userId === item.id);
+        const session = sessions.find((s) => s.sessionId === item.id);
+     
+  
+        const firstName = user?.firstName || '';
+        const lastName = user?.lastName || '';
+        const position =
+          user?.employeeJobInformation?.[0]?.position?.name || 'N/A';
+        const department =
+          user?.employeeJobInformation?.[0]?.department?.name || 'N/A';
+  
+        worksheet.addRow({
+          userName: `${firstName} ${lastName}`.trim() || item.userId,
+          jobTitle: position,
+          department,
+          sessionName: session?.name || item.sessionId || 'Unknown Session',
+          okrScore: Number(item.okrScore),
+        });
       });
-    });
 
     worksheet.autoFilter = {
       from: 'A1',
