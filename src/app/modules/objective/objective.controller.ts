@@ -213,9 +213,6 @@ export class ObjectiveController {
       updateObjectiveStatusDto,tenantId
     );
   }
-
-
-
   @Post('/get-okr-progress/all-employees')
   async getAllEmployeesOkrProgress(
     @Headers('tenantId') tenantId: string,
