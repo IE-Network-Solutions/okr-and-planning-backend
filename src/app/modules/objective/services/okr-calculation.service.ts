@@ -243,13 +243,13 @@ export class OKRCalculationService {
                   this.averageOkrCalculation.calculateAverageOkr(
                     objectives.items,
                   ),
-                  this.calculateRecursiveOKR(
+                  this.calculateRecursiveOKRBySession(
                     jobInfo.departmentId,
                     tenantId,
+                    session,
                     departments,
                   ),
                 ]);
-
                 okrScore =
                   (myOkr.okr * (okrRule?.myOkrPercentage ?? 20)) / 100 +
                   (teamOkr * (okrRule?.teamOkrPercentage ?? 80)) / 100;
@@ -287,7 +287,6 @@ export class OKRCalculationService {
       if (!department) {
         throw new Error(`Department with ID ${departmentId} not found`);
       }
-
       const teamUsers = department.users.filter(
         (user) => !user.employeeJobInformation[0]?.departmentLeadOrNot,
       );
@@ -314,7 +313,78 @@ export class OKRCalculationService {
         const userIds = teamUsers.map((user) => user.id);
         const objectiveProgress =
           await this.objectiveService.findUsersObjectives(tenantId, userIds);
+        if (objectiveProgress) {
+          const usersOKR = await this.averageOkrCalculation.calculateAverageOkr(
+            objectiveProgress,
+          );
+          totalOkr.value += usersOKR.okr;
+          numberOfContributor.value++;
+        }
 
+        const childDepartments =
+          await this.getFromOrganizatiAndEmployeInfoService.childDepartmentWithUsers(
+            tenantId,
+            departmentId,
+          );
+
+        for (const childDepartment of childDepartments) {
+          await this.calculateRecursiveOKR(
+            childDepartment.id,
+            tenantId,
+            departments,
+            totalOkr,
+            numberOfContributor,
+            contributorLevel,
+          );
+        }
+      }
+
+      return totalOkr.value / (numberOfContributor.value || 1);
+    } catch (error) {
+      return 0;
+    }
+  }
+  async calculateRecursiveOKRBySession(
+    departmentId: string,
+    tenantId: string,
+    sessionId : string, 
+    departments: any[],
+    totalOkr = { value: 0 },
+    numberOfContributor = { value: 0 },
+    contributorLevel = 0,
+  ): Promise<number> {
+    try {
+      const department = departments.find((item) => item.id === departmentId);
+      if (!department) {
+        throw new Error(`Department with ID ${departmentId} not found`);
+      }
+      const teamUsers = department.users.filter(
+        (user) => !user.employeeJobInformation[0]?.departmentLeadOrNot,
+      );
+
+      if (teamUsers.length === 0) {
+        const childDepartments =
+          await this.getFromOrganizatiAndEmployeInfoService.childDepartmentWithUsers(
+            tenantId,
+            departmentId,
+          );
+
+        for (const childDepartment of childDepartments) {
+          contributorLevel++;
+          await this.calculateRecursiveOKRBySession(
+            childDepartment.id,
+            tenantId,
+            sessionId,
+            departments,
+            totalOkr,
+            numberOfContributor,
+            contributorLevel,
+          );
+        }
+      } else {
+        const userIds = teamUsers.map((user) => user.id);
+        const objectiveProgress =
+          await this.objectiveService.findUsersObjectivesBySession(tenantId, sessionId,userIds);
         if (objectiveProgress) {
           const usersOKR = await this.averageOkrCalculation.calculateAverageOkr(
             objectiveProgress,
