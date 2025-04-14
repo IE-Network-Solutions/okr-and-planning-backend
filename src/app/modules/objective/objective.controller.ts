@@ -13,6 +13,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
   Patch,
+  Res,
 } from '@nestjs/common';
 import { ObjectiveService } from './services/objective.service';
 import { CreateObjectiveDto } from './dto/create-objective.dto';
@@ -25,6 +26,7 @@ import { OKRDashboardService } from './services/okr-dashbord.service';
 import { ExcludeAuthGuard } from '@root/src/core/guards/exclud.guard';
 import { OKRCalculationService } from './services/okr-calculation.service';
 import { UpdateObjectiveStatusDto } from './dto/update-objective-status.dto';
+import { FilterObjectiveOfAllEmployeesDto } from './dto/filter-objective-byemployees.dto';
 
 @Controller('objective')
 @ApiTags('Objective')
@@ -215,14 +217,41 @@ export class ObjectiveController {
   @Patch('/update-status')
   async updateObjectiveStatusForAllUsers(
     @Req() req: Request,
-   
-    @Body() updateObjectiveStatusDto?: UpdateObjectiveStatusDto,
 
+    @Body() updateObjectiveStatusDto?: UpdateObjectiveStatusDto,
   ) {
     const tenantId = req['tenantId'];
     return this.objectiveService.updateObjectiveStatusForAllUsers(
-      updateObjectiveStatusDto,tenantId
+      updateObjectiveStatusDto,
+      tenantId,
+    );
+  }
+  @Post('/get-okr-progress/all-employees')
+  async getAllEmployeesOkrProgress(
+    @Headers('tenantId') tenantId: string,
+
+    @Body() filterObjectiveOfAllEmployeesDto: FilterObjectiveOfAllEmployeesDto,
+    @Query() paginationOptions?: PaginationDto,
+  ) {
+    return this.oKRCalculationService.getAllEmployeesOkrProgress(
+      tenantId,
+      filterObjectiveOfAllEmployeesDto,
+      paginationOptions,
     );
   }
 
+  @Post('/export-okr-progress/all-employees/export')
+  async exportAllEmployeesOkrProgress(
+    @Headers('tenantId') tenantId: string,
+    @Res() res: Response,
+    @Body() filterObjectiveOfAllEmployeesDto: FilterObjectiveOfAllEmployeesDto,
+    @Query() paginationOptions?: PaginationDto,
+  ) {
+    return this.oKRCalculationService.exportAllEmployeesOkrProgress(
+      res,
+      tenantId,
+      filterObjectiveOfAllEmployeesDto,
+      paginationOptions,
+    );
+  }
 }

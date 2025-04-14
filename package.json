@@ -69,7 +69,9 @@
     "undefined": "^0.1.0",
     "uuid": "^9.0.0",
     "date-fns": "^3.6.0",
-    "winston": "^3.13.0"
+    "winston": "^3.13.0",
+    "exceljs": "^4.4.0",
+       "xlsx": "^0.18.5"
     
   },
   "devDependencies": {

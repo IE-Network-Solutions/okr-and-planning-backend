@@ -67,13 +67,13 @@ export class KeyResultsController {
   updatekeyResults(
     @Req() req: Request,
     @Param('objectiveId') objectiveId: string,
-    @Body() deleteAndUpdateKeyResultDto:DeleteAndUpdateKeyResultDto,
+    @Body() deleteAndUpdateKeyResultDto: DeleteAndUpdateKeyResultDto,
   ) {
     const tenantId = req['tenantId'];
     return this.keyResultService.deleteAndUpdateKeyResults(
       deleteAndUpdateKeyResultDto,
       tenantId,
-      objectiveId
+      objectiveId,
     );
   }
   @Delete(':id')

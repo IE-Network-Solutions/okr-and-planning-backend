@@ -155,6 +155,49 @@ export class ObjectiveService {
     }
   }
 
+  async findAllObjectivesBySession(
+    userId: string,
+    tenantId: string,
+    sessionId: string,
+    paginationOptions?: PaginationDto,
+  ): Promise<Pagination<Objective>> {
+    try {
+      const options: IPaginationOptions = {
+        page: paginationOptions?.page,
+        limit: paginationOptions?.limit,
+      };
+      const queryBuilder = this.objectiveRepository
+        .createQueryBuilder('objective')
+        .leftJoinAndSelect('objective.keyResults', 'keyResults')
+        .leftJoinAndSelect('keyResults.milestones', 'milestones')
+        .leftJoinAndSelect('keyResults.metricType', 'metricType')
+        .andWhere('objective.tenantId = :tenantId', { tenantId })
+        .where('objective.userId = :userId', { userId });
+
+      if (sessionId) {
+        queryBuilder.andWhere('objective.sessionId = :sessionId', {
+          sessionId: sessionId,
+        });
+      }
+
+      const paginatedData = await this.paginationService.paginate<Objective>(
+        queryBuilder,
+        options,
+      );
+
+      const calculatedObjectives =
+        await this.averageOkrCalculation.calculateObjectiveProgress(
+          paginatedData.items,
+        );
+
+      return {
+        ...paginatedData,
+        items: calculatedObjectives,
+      };
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
+  }
   async findOneObjective(id: string): Promise<Objective> {
     try {
       const Objective = await this.objectiveRepository.findOne({
@@ -309,7 +352,7 @@ export class ObjectiveService {
         queryBuilder,
         options,
       );
-   
+
       return paginatedData;
     } catch (error) {
       throw new BadRequestException(error.message);
@@ -406,64 +449,75 @@ export class ObjectiveService {
       return objectiveWithProgress;
     } catch (error) {}
   }
-  async updateObjectiveStatusForAllUsers(updateObjectiveStatusDto: UpdateObjectiveStatusDto, tenantId: string) {
+  async updateObjectiveStatusForAllUsers(
+    updateObjectiveStatusDto: UpdateObjectiveStatusDto,
+    tenantId: string,
+  ) {
     try {
       const { sessionId, isClosed, userId } = updateObjectiveStatusDto;
       const objectives = userId
-        ? await this.updateObjectiveByUserId(sessionId, tenantId, isClosed, userId)
+        ? await this.updateObjectiveByUserId(
+            sessionId,
+            tenantId,
+            isClosed,
+            userId,
+          )
         : await this.updateObjectiveBySessionId(sessionId, tenantId, isClosed);
-      await this.keyResultService.updateKeyResultStatusForAllUsers(objectives, tenantId, isClosed);
-  
+      await this.keyResultService.updateKeyResultStatusForAllUsers(
+        objectives,
+        tenantId,
+        isClosed,
+      );
+
       return this.objectiveRepository.find({
-        where: userId ? { tenantId, sessionId, userId } : { tenantId, sessionId },
-       
+        where: userId
+          ? { tenantId, sessionId, userId }
+          : { tenantId, sessionId },
       });
-  
     } catch (error) {
       throw new BadRequestException(error.message);
     }
   }
 
-  async updateObjectiveBySessionId(sessionId:string,tenantId:string,isClosed:boolean) {
+  async updateObjectiveBySessionId(
+    sessionId: string,
+    tenantId: string,
+    isClosed: boolean,
+  ) {
     try {
-    
-      if(sessionId  && tenantId){
+      if (sessionId && tenantId) {
         const objective = await this.objectiveRepository.update(
-          { tenantId: tenantId, sessionId: sessionId },  
-          { isClosed: isClosed }
-        );       
-    return await this.objectiveRepository.find({
+          { tenantId: tenantId, sessionId: sessionId },
+          { isClosed: isClosed },
+        );
+        return await this.objectiveRepository.find({
           where: { tenantId, sessionId },
         });
-       
       }
-      
     } catch (error) {
       throw new BadRequestException(error.message);
-
     }
-
   }
 
-  async updateObjectiveByUserId(sessionId:string,tenantId:string,isClosed:boolean,userId:string) {
+  async updateObjectiveByUserId(
+    sessionId: string,
+    tenantId: string,
+    isClosed: boolean,
+    userId: string,
+  ) {
     try {
-    
-      if(sessionId  && tenantId && userId){
+      if (sessionId && tenantId && userId) {
         const objective = await this.objectiveRepository.update(
-          { tenantId: tenantId, sessionId: sessionId,userId:userId },  
-          { isClosed: isClosed }
+          { tenantId: tenantId, sessionId: sessionId, userId: userId },
+          { isClosed: isClosed },
         );
-       
-       return await this.objectiveRepository.find({
-          where: { tenantId, sessionId, userId},
+
+        return await this.objectiveRepository.find({
+          where: { tenantId, sessionId, userId },
         });
-      
       }
-      
     } catch (error) {
       throw new BadRequestException(error.message);
-
     }
-
   }
 }

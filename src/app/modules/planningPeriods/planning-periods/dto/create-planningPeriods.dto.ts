@@ -6,7 +6,7 @@ export class CreatePlanningPeriodsDTO {
   @IsOptional()
   @IsString()
   intervalLength: IntervalHierarchy;
- 
+
   @IsString()
   intervalType: string;
 
