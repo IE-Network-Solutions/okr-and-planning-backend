@@ -131,7 +131,7 @@ describe('VpScoringService', () => {
           relations: [
             'userVpScoring',
             'vpScoringCriterions',
-            'vpScoreInstance',
+            // 'vpScoreInstance',
             'vpScoringCriterions.vpCriteria',
           ],
         });

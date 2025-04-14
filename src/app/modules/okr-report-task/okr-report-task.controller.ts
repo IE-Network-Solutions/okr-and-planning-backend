@@ -51,7 +51,7 @@ export class OkrReportTaskController {
     );
   }
 
-  @Post('/by-planning-period/:planningPeriodId') 
+  @Post('/by-planning-period/:planningPeriodId')
   async getAllReportTasks(
     @Body() userIds: string[], // Expecting userIds to be an array of strings
     @Headers('tenantId') tenantId: UUID, // Expecting tenantId from headers
@@ -68,10 +68,10 @@ export class OkrReportTaskController {
     );
   }
 
-  @Patch('/update-report-tasks/:reportId') 
+  @Patch('/update-report-tasks/:reportId')
   async updateReportData(
-    @Body() reportTask: ReportTaskInput, 
-    @Param('reportId') reportId: string, 
+    @Body() reportTask: ReportTaskInput,
+    @Param('reportId') reportId: string,
   ): Promise<any> {
     return this.okrReportTaskService.updateReportTasks(reportId, reportTask);
   }

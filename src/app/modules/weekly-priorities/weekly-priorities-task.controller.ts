@@ -40,7 +40,11 @@ export class WeeklyPrioritiesController {
     @Body() filterWeeklyPriorityDto: FilterWeeklyPriorityDto,
     @Query() paginationOptions?: PaginationDto,
   ) {
-    return this.weeklyPrioritiesService.findAll(tenantId, paginationOptions, filterWeeklyPriorityDto);
+    return this.weeklyPrioritiesService.findAll(
+      tenantId,
+      paginationOptions,
+      filterWeeklyPriorityDto,
+    );
   }
 
   @Patch(':id')

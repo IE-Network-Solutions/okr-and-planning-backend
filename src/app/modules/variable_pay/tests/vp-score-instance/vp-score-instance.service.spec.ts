@@ -166,7 +166,7 @@ describe('vpScoreInstanceService', () => {
         page: paginationOptions.page,
         limit: paginationOptions.limit,
       };
-        const mockFilter = { monthIds: [1, 2] };
+      const mockFilter = { monthIds: [1, 2] };
 
       paginationService.paginate = jest.fn().mockResolvedValue(paginatedResult);
 
@@ -176,7 +176,7 @@ describe('vpScoreInstanceService', () => {
       //   paginationOptions,
       // );
 
-     // expect(result).toEqual(paginatedResult);
+      // expect(result).toEqual(paginatedResult);
       // expect(paginationService.paginate).toHaveBeenCalledWith(
       //   queryBuilderMock,
       //   options,

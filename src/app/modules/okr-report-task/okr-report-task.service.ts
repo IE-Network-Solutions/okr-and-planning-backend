@@ -42,7 +42,6 @@ export class OkrReportTaskService {
     @InjectRepository(PlanTask)
     private planTaskRepository: Repository<PlanTask>,
 
-    @Inject(forwardRef(() => OkrReportService)) // Use forwardRef here
     private reportService: OkrReportService,
 
     private okrProgressService: OkrProgressService,
@@ -144,76 +143,94 @@ export class OkrReportTaskService {
   ): Promise<any[]> {
     const reportTaskData = (reportTaskId: string) =>
       reportTask.find((task) => task.id === reportTaskId);
-  
+
     const results = [];
-  
+
     for (const task of savedReportTasks) {
       try {
         const planTask = await this.planTaskRepository.findOne({
           where: { id: task?.planTaskId },
         });
-  
+
         if (!planTask) continue;
-  
+
         const metricsType = await this.getPlanTaskById(planTask.id);
-  
+
         switch (metricsType?.keyResult?.metricType.name) {
           case NAME.MILESTONE: {
-            const milestoneUpdate = await this.findMilestoneById(planTask?.milestoneId);
-            if (!milestoneUpdate) throw new Error(`Milestone with ID ${planTask?.milestoneId} not found`);
-  
-            const updatedStatus = 
+            const milestoneUpdate = await this.findMilestoneById(
+              planTask?.milestoneId,
+            );
+            if (!milestoneUpdate)
+              throw new Error(
+                `Milestone with ID ${planTask?.milestoneId} not found`,
+              );
+
+            const updatedStatus =
               isOnCreate !== 'ON_DELETE' && planTask.achieveMK
-                ? task.status === 'Done' ? Status.COMPLETED : Status.NOTCOMPLETED
+                ? task.status === 'Done'
+                  ? Status.COMPLETED
+                  : Status.NOTCOMPLETED
                 : Status.NOTCOMPLETED;
-  
+
             await this.updateMilestone(planTask?.milestoneId, {
               ...milestoneUpdate,
               status: updatedStatus,
               updatedAt: new Date(),
             });
-  
-            const progressUpdate = await this.okrProgressService.calculateKeyResultProgress({
-              keyResult: planTask.keyResult,
-              isOnCreate,
-            });
-  
+
+            const progressUpdate =
+              await this.okrProgressService.calculateKeyResultProgress({
+                keyResult: planTask.keyResult,
+                isOnCreate,
+              });
+
             results.push(progressUpdate);
             break;
           }
-  
+
           case NAME.ACHIEVE: {
             if (planTask.achieveMK && planTask.keyResult) {
-              const progress = isOnCreate === 'ON_DELETE' && task.status === 'Done' ? 0 : (task.status === 'Done' ? 100 : 0);
-  
-              results.push(await this.okrProgressService.calculateKeyResultProgress({
-                keyResult: { ...planTask.keyResult, progress },
-                isOnCreate,
-              }));
+              const progress =
+                isOnCreate === 'ON_DELETE' && task.status === 'Done'
+                  ? 0
+                  : task.status === 'Done'
+                  ? 100
+                  : 0;
+
+              results.push(
+                await this.okrProgressService.calculateKeyResultProgress({
+                  keyResult: { ...planTask.keyResult, progress },
+                  isOnCreate,
+                }),
+              );
             }
             break;
           }
-  
+
           default: {
-            const actualValueToUpdate = reportTaskData(task.id)?.actualValue ?? 0;
-            const actualValue = parseFloat(task?.actualValue?.toString() || '0');
-  
+            const actualValueToUpdate =
+              reportTaskData(task.id)?.actualValue ?? 0;
+            const actualValue = parseFloat(
+              task?.actualValue?.toString() || '0',
+            );
+
             if (['ON_CREATE', 'ON_UPDATE', 'ON_DELETE'].includes(isOnCreate)) {
-              results.push(await this.okrProgressService.calculateKeyResultProgress({
-                keyResult: { ...planTask.keyResult, actualValue },
-                isOnCreate,
-                actualValueToUpdate,
-              }));
+              results.push(
+                await this.okrProgressService.calculateKeyResultProgress({
+                  keyResult: { ...planTask.keyResult, actualValue },
+                  isOnCreate,
+                  actualValueToUpdate,
+                }),
+              );
             }
           }
         }
-      } catch (error) {
-      }
+      } catch (error) {}
     }
-  
+
     return results.filter(Boolean);
   }
-  
 
   // Method to update the isReported value of the plan
   private async updatePlanIsReported(planId: string): Promise<any> {

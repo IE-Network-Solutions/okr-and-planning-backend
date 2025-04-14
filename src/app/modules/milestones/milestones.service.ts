@@ -156,26 +156,28 @@ export class MilestonesService {
     return Milestone;
   }
 
-    async updateMilestoneStatusForAllUsers(
-      keyResults: KeyResult[], tenantId: string, isClosed: boolean
-    ) {
-      try {
-        if (keyResults.length > 0 && tenantId) {
-          const keyResultIds = keyResults.map(key => key.id);
-    
-          const updateResult = await this.milestoneRepository.update(
-            { keyResultId: In(keyResultIds), tenantId },
-            { isClosed } 
-          );
-    
-          return await this.milestoneRepository.find({
-            where: { keyResultId: In(keyResultIds) } 
-          })
-                }
-     
-      } catch (error) {
-        throw new BadRequestException(`Failed to update key results: ${error.message}`);
+  async updateMilestoneStatusForAllUsers(
+    keyResults: KeyResult[],
+    tenantId: string,
+    isClosed: boolean,
+  ) {
+    try {
+      if (keyResults.length > 0 && tenantId) {
+        const keyResultIds = keyResults.map((key) => key.id);
 
+        const updateResult = await this.milestoneRepository.update(
+          { keyResultId: In(keyResultIds), tenantId },
+          { isClosed },
+        );
+
+        return await this.milestoneRepository.find({
+          where: { keyResultId: In(keyResultIds) },
+        });
       }
+    } catch (error) {
+      throw new BadRequestException(
+        `Failed to update key results: ${error.message}`,
+      );
     }
+  }
 }

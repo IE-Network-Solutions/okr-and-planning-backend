@@ -68,10 +68,7 @@ export class KeyResultsController {
     @Body() updatekeyResultDto: UpdateKeyResultDto[],
   ) {
     const tenantId = req['tenantId'];
-    return this.keyResultService.updatekeyResults(
-      updatekeyResultDto,
-      tenantId,
-    );
+    return this.keyResultService.updatekeyResults(updatekeyResultDto, tenantId);
   }
   @Delete(':id')
   removekeyResult(@Req() req: Request, @Param('id') id: string) {

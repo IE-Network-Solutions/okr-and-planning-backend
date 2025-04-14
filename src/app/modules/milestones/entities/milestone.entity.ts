@@ -17,7 +17,7 @@ export class Milestone extends BaseModel {
   weight: number;
   @Column({ type: 'uuid' })
   tenantId: string;
-  @Column({ type: 'boolean', default:false })
+  @Column({ type: 'boolean', default: false })
   isClosed: boolean;
   @ManyToOne(() => KeyResult, (key) => key.milestones)
   @JoinColumn({ name: 'keyResultId' })

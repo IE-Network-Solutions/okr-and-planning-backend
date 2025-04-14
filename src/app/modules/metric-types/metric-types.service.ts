@@ -24,7 +24,10 @@ export class MetricTypesService {
     createMetricTypeDto: CreateMetricTypeDto,
     tenantId: string,
   ): Promise<MetricType> {
-    const MetricType = this.metricTypeRepository.create({...createMetricTypeDto,tenantId});
+    const MetricType = this.metricTypeRepository.create({
+      ...createMetricTypeDto,
+      tenantId,
+    });
 
     return await this.metricTypeRepository.save(MetricType);
   }

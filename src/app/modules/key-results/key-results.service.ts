@@ -285,41 +285,51 @@ export class KeyResultsService {
     }
   }
 
-
   async updateKeyResultStatusForAllUsers(
     objectives: Objective[],
     tenantId: string,
-    isClosed: boolean
+    isClosed: boolean,
   ) {
     try {
-   
-  if(objectives && objectives.length > 0) {
-      const objectiveIds = objectives.map(obj => obj.id);
-      const keyResults = await this.updateKeyResultStatus(objectiveIds, tenantId, isClosed);
-        const milestones = await this.milestonesService.updateMilestoneStatusForAllUsers(keyResults, tenantId, isClosed);
-    
-      return keyResults;
-    }
+      if (objectives && objectives.length > 0) {
+        const objectiveIds = objectives.map((obj) => obj.id);
+        const keyResults = await this.updateKeyResultStatus(
+          objectiveIds,
+          tenantId,
+          isClosed,
+        );
+        const milestones =
+          await this.milestonesService.updateMilestoneStatusForAllUsers(
+            keyResults,
+            tenantId,
+            isClosed,
+          );
+
+        return keyResults;
+      }
     } catch (error) {
-      throw new BadRequestException(`Failed to update key results: ${error.message}`);
+      throw new BadRequestException(
+        `Failed to update key results: ${error.message}`,
+      );
     }
   }
-  
 
-
-  async updateKeyResultStatus(  objectiveIds: string[], tenantId: string, isClosed: boolean){
+  async updateKeyResultStatus(
+    objectiveIds: string[],
+    tenantId: string,
+    isClosed: boolean,
+  ) {
     try {
       const updateResult = await this.keyResultRepository.update(
         { objectiveId: In(objectiveIds), tenantId },
-        { isClosed } 
+        { isClosed },
       );
 
       return await this.keyResultRepository.find({
-        where: { objectiveId: In(objectiveIds) } 
-      })
+        where: { objectiveId: In(objectiveIds) },
+      });
     } catch (error) {
       throw new BadRequestException(error.message);
     }
   }
-  
 }
