@@ -1,4 +1,3 @@
-
 import {
   BadRequestException,
   Injectable,
@@ -22,7 +21,6 @@ import { paginationOptions } from '@root/src/core/commonTestData/commonTest.data
 import { UpdateObjectiveStatusDto } from '../dto/update-objective-status.dto';
 import { FilterObjectiveOfAllEmployeesDto } from '../dto/filter-objective-byemployees.dto';
 import { ExportExcelService } from '@root/src/core/export/export-excel.service';
-
 
 @Injectable()
 export class OKRCalculationService {
@@ -164,14 +162,15 @@ export class OKRCalculationService {
     filterDto: FilterObjectiveOfAllEmployeesDto,
     paginationOptions?: PaginationDto,
   ) {
-    const users = await this.getFromOrganizatiAndEmployeInfoService.getAllActiveUsers(
-      tenantId,
-    );
+    const users =
+      await this.getFromOrganizatiAndEmployeInfoService.getAllActiveUsers(
+        tenantId,
+      );
     const sessions =
       await this.getFromOrganizatiAndEmployeInfoService.getAllSessions(
         tenantId,
       );
-     const data = await this.getAllEmployeesOkrProgress(
+    const data = await this.getAllEmployeesOkrProgress(
       tenantId,
       filterDto,
       paginationOptions,
@@ -347,7 +346,7 @@ export class OKRCalculationService {
   async calculateRecursiveOKRBySession(
     departmentId: string,
     tenantId: string,
-    sessionId : string, 
+    sessionId: string,
     departments: any[],
     totalOkr = { value: 0 },
     numberOfContributor = { value: 0 },
@@ -384,7 +383,11 @@ export class OKRCalculationService {
       } else {
         const userIds = teamUsers.map((user) => user.id);
         const objectiveProgress =
-          await this.objectiveService.findUsersObjectivesBySession(tenantId, sessionId,userIds);
+          await this.objectiveService.findUsersObjectivesBySession(
+            tenantId,
+            sessionId,
+            userIds,
+          );
         if (objectiveProgress) {
           const usersOKR = await this.averageOkrCalculation.calculateAverageOkr(
             objectiveProgress,

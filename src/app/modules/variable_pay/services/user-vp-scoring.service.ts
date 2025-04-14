@@ -224,7 +224,6 @@ export class UserVpScoringService {
                   result =
                     result - (criteria.weight * achievedScore) / target.target;
                 } else {
-                  
                   if (achievedScore > target.target) {
                     achievedScore = target.target;
                   }
@@ -272,34 +271,34 @@ export class UserVpScoringService {
           refreshVPDto.users.map(async (item) => {
             try {
               const vp = await this.calculateVP(item, tenantId);
-              return vp; 
+              return vp;
             } catch (error) {
               return null;
             }
-          })
+          }),
         );
-        return allUsersVP.filter(Boolean); 
+        return allUsersVP.filter(Boolean);
       } else {
-        const users = await this.getUsersService.getAllUsersWithTenant(tenantId);
+        const users = await this.getUsersService.getAllUsersWithTenant(
+          tenantId,
+        );
         const allUsersVP = await Promise.all(
           users.map(async (item) => {
             try {
               const vp = await this.calculateVP(item.id, tenantId);
-              return vp; 
+              return vp;
             } catch (error) {
-              return null; 
+              return null;
             }
-          })
+          }),
         );
-        return allUsersVP.filter(Boolean); 
+        return allUsersVP.filter(Boolean);
       }
     } catch (error) {
       throw new BadRequestException(error.message);
     }
   }
-  
-  
-  
+
   async getResults(tenantId: string, url: string, userId: string) {
     try {
       const response = await this.httpService

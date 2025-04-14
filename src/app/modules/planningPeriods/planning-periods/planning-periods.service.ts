@@ -489,7 +489,6 @@ export class PlanningPeriodsService {
       where: { userId, tenantId },
     });
 
-
     const plansIfExist =
       await this.planService.getAllPlansByPlanningPeriodAndUser(
         planningPeriodId,

@@ -422,11 +422,10 @@ export class ObjectiveService {
   }
   async findUsersObjectivesBySession(
     tenantId: string,
-    sessionId:string,
+    sessionId: string,
     users: string[],
   ): Promise<Objective[]> {
     try {
-   
       const queryConditions: any = {
         where: {
           userId: In(users),

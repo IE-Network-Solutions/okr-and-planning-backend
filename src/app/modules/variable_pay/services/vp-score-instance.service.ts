@@ -75,7 +75,7 @@ export class VpScoreInstanceService {
   }
   async findAllVpScoreInstances(
     tenantId: string,
-    vpScoreFilterDto: VpScoreFilterDto, 
+    vpScoreFilterDto: VpScoreFilterDto,
     paginationOptions?: PaginationDto,
   ): Promise<Pagination<VpScoreInstance>> {
     try {

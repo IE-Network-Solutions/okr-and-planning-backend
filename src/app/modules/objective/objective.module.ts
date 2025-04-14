@@ -14,7 +14,6 @@ import { OKRDashboardService } from './services/okr-dashbord.service';
 import { OKRCalculationService } from './services/okr-calculation.service';
 import { ExcelModule } from '@root/src/core/export/export-excel.module';
 
-
 @Module({
   imports: [
     TypeOrmModule.forFeature([Objective]),
