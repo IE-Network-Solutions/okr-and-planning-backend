@@ -30,7 +30,7 @@ export class OkrReportService {
     @InjectRepository(Report) private reportRepository: Repository<Report>,
     private planningPeriodService: PlanningPeriodsService,
 
-    @Inject(forwardRef(() => OkrReportTaskService))
+  //  @Inject(forwardRef(() => OkrReportTaskService))
     private okrReportTaskService: OkrReportTaskService,
     private planService: PlanService,
     private readonly getFromOrganizatiAndEmployeInfoService: GetFromOrganizatiAndEmployeInfoService,
