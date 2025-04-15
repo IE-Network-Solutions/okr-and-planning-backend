@@ -18,6 +18,8 @@ import { MetricTypesModule } from '../metric-types/metric-types.module';
 import { OkrReportModule } from '../okr-report/okr-report.module';
 import { VariablePayModule } from '../variable_pay/variable-pay.module';
 import { PaginationModule } from '@root/src/core/pagination/pagination.module';
+import { GetFromOrganizatiAndEmployeInfoService } from '../objective/services/get-data-from-org.service';
+import { HttpModule } from '@nestjs/axios';
 
 @Module({
   imports: [
@@ -42,9 +44,10 @@ import { PaginationModule } from '@root/src/core/pagination/pagination.module';
     VariablePayModule,
     KeyResultsModule,
     forwardRef(() => OkrReportModule),
+    HttpModule.register({}),
   ],
   controllers: [OkrReportTaskController],
-  providers: [OkrReportTaskService],
+  providers: [OkrReportTaskService, GetFromOrganizatiAndEmployeInfoService],
   exports: [OkrReportTaskService],
 })
 export class OkrReportTaskModule {}

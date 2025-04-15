@@ -8,6 +8,7 @@ import {
   Delete,
   Req,
   Query,
+  Headers,
 } from '@nestjs/common';
 import { PlanTasksService } from './plan-tasks.service';
 import { Plan } from '../plan/entities/plan.entity';
@@ -26,28 +27,39 @@ export class PlanTasksController {
   async create(
     @Req() req: Request,
     @Body() createPlanTaskDto: CreatePlanTasksDto,
+    @Headers('sessionId') sessionId?: string,
   ): Promise<Plan> {
     const tenantId = req['tenantId'];
     return await this.planTasksService.create(
       createPlanTaskDto.tasks,
       tenantId,
+      sessionId,
     );
   }
 
   @Get()
-  async findAll(@Req() req: Request): Promise<Plan[]> {
+  async findAll(
+    @Req() req: Request,
+    @Headers('sessionId') sessionId?: string,
+  ): Promise<Plan[]> {
     const tenantId = req['tenantId'];
-    return await this.planTasksService.findAll(tenantId);
+    return await this.planTasksService.findAll(tenantId, sessionId);
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string): Promise<Plan> {
-    return await this.planTasksService.findOne(id);
+  async findOne(
+    @Param('id') id: string,
+    @Headers('sessionId') sessionId?: string,
+  ): Promise<Plan> {
+    return await this.planTasksService.findOne(id, sessionId);
   }
 
   @Get('get-reported-plan-tasks/by-plan-id/:id')
-  async findReportedPlanTasks(@Param('id') id: string): Promise<PlanTask[]> {
-    return await this.planTasksService.findReportedPlanTasks(id);
+  async findReportedPlanTasks(
+    @Param('id') id: string,
+    @Headers('sessionId') sessionId?: string,
+  ): Promise<PlanTask[]> {
+    return await this.planTasksService.findReportedPlanTasks(id, sessionId);
   }
 
   // url: `${OKR_URL}/plan-tasks/un-reported-plan-tasks/${userId}/planning-period/${planningPeriodId}`,
@@ -56,8 +68,9 @@ export class PlanTasksController {
   async findByUser(
     @Param('id') id: string,
     @Param('planningId') planningId: string,
+    @Headers('sessionId') sessionId?: string,
   ): Promise<Plan[]> {
-    return await this.planTasksService.findByUser(id, planningId);
+    return await this.planTasksService.findByUser(id, planningId, sessionId);
   }
 
   @Get(
@@ -67,12 +80,14 @@ export class PlanTasksController {
     @Param('userId') userId: string,
     @Param('planningPeriodId') planningPeriodId: string,
     @Req() req: Request,
+    @Headers('sessionId') sessionId?: string,
   ): Promise<PlanTask[]> {
     const tenantId = req['tenantId'];
     return await this.planTasksService.findAllUnreportedTasks(
       userId,
       planningPeriodId,
       tenantId,
+      sessionId,
     );
   }
   @Post('/users/:planningId')
@@ -80,8 +95,9 @@ export class PlanTasksController {
     @Query() options: IPaginationOptions,
     @Param('planningId') id: string,
     @Body() arrayOfUserId: string[],
+    @Headers('sessionId') sessionId?: string,
   ) {
-    return await this.planTasksService.findByUsers(id, arrayOfUserId, options);
+    return await this.planTasksService.findByUsers(id, arrayOfUserId, options, sessionId);
   }
   // @Post('/users-plan/:planningId')
   // async findByUserIds(
@@ -95,13 +111,17 @@ export class PlanTasksController {
   async update(
     @Body() updatePlanTaskDto: UpdatePlanTasksDto,
     @Req() req: Request,
+    @Headers('sessionId') sessionId?: string,
   ): Promise<any> {
     const tenantId = req['tenantId'];
-    return this.planTasksService.updateTasks(updatePlanTaskDto.tasks, tenantId);
+    return this.planTasksService.updateTasks(updatePlanTaskDto.tasks, tenantId, sessionId);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.planTasksService.remove(id);
+  remove(
+    @Param('id') id: string,
+    @Headers('sessionId') sessionId?: string,
+  ) {
+    return this.planTasksService.remove(id, sessionId);
   }
 }
