@@ -95,9 +95,10 @@ export class PlanTasksController {
     @Query() options: IPaginationOptions,
     @Param('planningId') id: string,
     @Body() arrayOfUserId: string[],
+    @Headers('tenantId') tenantId: string,
     @Headers('sessionId') sessionId?: string,
   ) {
-    return await this.planTasksService.findByUsers(id, arrayOfUserId, options, sessionId);
+    return await this.planTasksService.findByUsers(tenantId,id, arrayOfUserId, options, sessionId);
   }
   // @Post('/users-plan/:planningId')
   // async findByUserIds(
