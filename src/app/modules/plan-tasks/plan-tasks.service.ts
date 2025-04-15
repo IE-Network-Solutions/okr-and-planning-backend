@@ -420,6 +420,7 @@ export class PlanTasksService {
   ////////////////////////////////   ahmed changes //////////////////////////
 
   async findByUsers(
+    tenantId:string,
     planningPeriodId: string,
     arrayOfUserId: string[],
     options: IPaginationOptions,
@@ -432,7 +433,7 @@ export class PlanTasksService {
         try {
           const activeSession =
             await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(
-              arrayOfUserId[0],
+              tenantId,
             );
           activeSessionId = activeSession.id;
         } catch (error) {
