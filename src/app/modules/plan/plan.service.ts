@@ -128,6 +128,7 @@ export class PlanService {
     }
   }
   async findAllUsersPlans(
+    tenantId: string,
     userId: string,
     planningPeriodId: string,
     forPlan: string,
@@ -140,8 +141,8 @@ export class PlanService {
         try {
           const activeSession =
             await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(
-              userId,
-            );
+              tenantId,
+            );     
           activeSessionId = activeSession.id;
         } catch (error) {
           throw new NotFoundException(

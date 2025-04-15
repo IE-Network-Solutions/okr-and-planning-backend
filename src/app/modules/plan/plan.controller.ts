@@ -55,9 +55,12 @@ export class PlanController {
     @Param('userId') userId: string,
     @Param('planningPeriodId') planningPeriodId: string,
     @Query('forPlan') forPlan: string,
+    @Headers('tenantId') tenantId: string,
     @Headers('sessionId') sessionId?: string,
+   
   ): Promise<Plan[]> {
     return await this.planService.findAllUsersPlans(
+      tenantId,
       userId,
       planningPeriodId,
       forPlan,
