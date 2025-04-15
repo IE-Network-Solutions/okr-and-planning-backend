@@ -25,6 +25,7 @@ export class OkrReportTaskController {
     @Param('userId') userId: string,
     @Param('planningPeriodId') planningPeriodId: string,
     @Headers('tenantId') tenantId: string,
+    @Headers('sessionId') sessionId?: string,
     @Query('planningId') planningId?: string,
   ) {
     return this.okrReportTaskService.create(
@@ -33,6 +34,7 @@ export class OkrReportTaskController {
       planningPeriodId,
       userId,
       planningId,
+      sessionId,
     );
   }
 
@@ -42,12 +44,14 @@ export class OkrReportTaskController {
     @Param('userId') userId: string,
     @Headers('tenantId') tenantId: string,
     @Query('forPlan') forPlan: string,
+    @Headers('sessionId') sessionId?: string,
   ) {
     return this.okrReportTaskService.getUnReportedPlanTasks(
       userId,
       planningPeriodId,
       tenantId,
       forPlan,
+      sessionId,
     );
   }
 
@@ -56,6 +60,7 @@ export class OkrReportTaskController {
     @Body() userIds: string[], // Expecting userIds to be an array of strings
     @Headers('tenantId') tenantId: UUID, // Expecting tenantId from headers
     @Param('planningPeriodId') planningPeriodId: string, // Extract the planningPeriodId from the route
+    @Headers('sessionId') sessionId?: string, // Optional sessionId from headers
   ): Promise<any> {
     if (!userIds || userIds.length === 0) {
       return [];
@@ -65,6 +70,7 @@ export class OkrReportTaskController {
       tenantId,
       userIds,
       planningPeriodId,
+      sessionId,
     );
   }
 

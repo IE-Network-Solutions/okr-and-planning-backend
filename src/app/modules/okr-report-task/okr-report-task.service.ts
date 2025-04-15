@@ -21,6 +21,8 @@ import { Status } from '../milestones/enum/milestone.status.enum';
 import { UserVpScoringService } from '../variable_pay/services/user-vp-scoring.service';
 import { CreateReportDTO } from '../okr-report/dto/create-report.dto';
 import { PlanTasksService } from '../plan-tasks/plan-tasks.service';
+import { GetFromOrganizatiAndEmployeInfoService } from '../objective/services/get-data-from-org.service';
+import { In } from 'typeorm';
 
 @Injectable()
 export class OkrReportTaskService {
@@ -47,6 +49,7 @@ export class OkrReportTaskService {
 
     private okrProgressService: OkrProgressService,
     private userVpScoringService: UserVpScoringService,
+    private getFromOrganizatiAndEmployeInfoService: GetFromOrganizatiAndEmployeInfoService,
   ) {}
   async findMilestoneById(id: string): Promise<Milestone | null> {
     try {
@@ -78,6 +81,7 @@ export class OkrReportTaskService {
     planningPeriodId: string,
     userId: string,
     planningId?: string,
+    sessionId?: string,
   ): Promise<ReportTask[]> {
     const queryRunner = this.dataSource.createQueryRunner();
 
@@ -109,6 +113,7 @@ export class OkrReportTaskService {
       const returnedReportData = await this.reportService.createReportWithTasks(
         reportData,
         tenantId,
+        sessionId,
       );
       const reportTasks = this.mapDtoToReportTasks(
         createReportDto,
@@ -394,9 +399,14 @@ export class OkrReportTaskService {
     planningPeriodId: string,
     tenantId: string,
     forPlan: string,
+    sessionId?: string,
   ): Promise<any> {
     try {
       const isForPlan = forPlan === '1' ? true : forPlan === '2' ? false : true;
+      if (!sessionId) {
+        const activeSession = await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(tenantId);
+        sessionId = activeSession?.id;
+      }
 
       const queryBuilder = this.planTaskRepository
         .createQueryBuilder('planTask')
@@ -407,6 +417,7 @@ export class OkrReportTaskService {
         .leftJoinAndSelect('keyResult.metricType', 'metricType') // Add join with metricType
         .leftJoinAndSelect('planTask.parentTask', 'parentTask')
         .leftJoinAndSelect('plan.planningUser', 'planningUser') // Add relation to planningUser from the Plan entity
+        .leftJoinAndSelect('plan.sessionId', sessionId)
 
         // Apply filtering conditions
         .where('plan.tenantId = :tenantId', { tenantId })
@@ -440,8 +451,14 @@ export class OkrReportTaskService {
     tenantId: UUID,
     userIds: string[],
     planningPeriodId: string,
+    sessionId?: string,
   ) {
     try {
+
+      if (!sessionId) {
+        const activeSession = await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(tenantId);
+        sessionId = activeSession?.id;
+      }
       // Fetch all report tasks that match the given tenantId, userIds, and planningPeriodId
       const reportTasks = await this.reportTaskRepo
         .createQueryBuilder('reportTask') // Start from reportTask
@@ -450,6 +467,7 @@ export class OkrReportTaskService {
         .leftJoinAndSelect('plan.planningUser', 'planningUser') // Join planningUser
         .leftJoinAndSelect('planTask.keyResult', 'keyResult') // Join KeyResult for details
         .leftJoinAndSelect('planTask.milestone', 'milestone') // Join milestone
+        .leftJoinAndSelect('plan.sessionId', sessionId)
         .where('reportTask.tenantId = :tenantId', { tenantId }) // Filter by tenantId
         // Conditionally filter by userIds if 'all' is not present
         .andWhere(

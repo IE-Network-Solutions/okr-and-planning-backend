@@ -39,47 +39,73 @@ export class OkrReportService {
   async createReportWithTasks(
     reportData: CreateReportDTO,
     tenantId: string,
-    // Data for the Report entity
+    sessionId?: string,
   ): Promise<Report> {
     try {
-      const activeSession =
-        await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(
-          tenantId,
-        );
-      reportData.sessionId = activeSession.id;
-    } catch (error) {
-      throw new NotFoundException('There is no active Session for this tenant');
-    }
-    // Step 1: Create the Report entity
-    const report = this.reportRepository.create({
-      status: ReportStatusEnum.Reported,
-      reportScore: reportData.reportScore,
-      reportTitle: reportData.reportTitle,
-      tenantId: tenantId,
-      userId: reportData?.userId,
-      planId: reportData.planId,
-      createdBy: reportData?.userId,
-      sessionId: reportData.sessionId,
-    });
+      let activeSessionId = sessionId;
+      
+      if (!activeSessionId) {
+        try {
+          const activeSession =
+            await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(
+              tenantId,
+            );
+          activeSessionId = activeSession.id;
+        } catch (error) {
+          throw new NotFoundException('There is no active Session for this tenant');
+        }
+      }
+      
+      reportData.sessionId = activeSessionId;
+      // Step 1: Create the Report entity
+      const report = this.reportRepository.create({
+        status: ReportStatusEnum.Reported,
+        reportScore: reportData.reportScore,
+        reportTitle: reportData.reportTitle,
+        tenantId: tenantId,
+        userId: reportData?.userId,
+        planId: reportData.planId,
+        createdBy: reportData?.userId,
+        sessionId: reportData.sessionId,
+      });
 
-    // Step 2: Save the Report entity
-    const savedReport = await this.reportRepository.save(report);
-    if (!savedReport) {
-      throw new Error('Report not Saved');
+      // Step 2: Save the Report entity
+      const savedReport = await this.reportRepository.save(report);
+      if (!savedReport) {
+        throw new Error('Report not Saved');
+      }
+      // Step 5: Return the saved report and its associated tasks
+      return savedReport;
+    } catch (error) {
+      throw error;
     }
-    // Step 5: Return the saved report and its associated tasks
-    return savedReport;
   }
   async getAllReportsByTenantAndPeriod(
     tenantId: UUID,
     userIds: string[],
     planningPeriodId: string,
     paginationOptions?: PaginationDto,
+    sessionId?: string,
   ): Promise<Pagination<Report>> {
     const options: IPaginationOptions = {
       page: paginationOptions?.page,
       limit: paginationOptions?.limit,
     };
+    
+    let activeSessionId = sessionId;
+    
+    if (!activeSessionId) {
+      try {
+        const activeSession =
+          await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(
+            tenantId,
+          );
+        activeSessionId = activeSession.id;
+      } catch (error) {
+        throw new NotFoundException('There is no active Session for this tenant');
+      }
+    }
+    
     // Use queryBuilder to fetch reports with complex filtering
     const reports = await this.reportRepository
       .createQueryBuilder('report') // Start from the 'report' entity
@@ -96,6 +122,7 @@ export class OkrReportService {
 
       // Apply filtering conditions
       .where('report.tenantId = :tenantId', { tenantId }) // Filter by tenantId
+      .andWhere('report.sessionId = :sessionId', { sessionId: activeSessionId }) // Filter by sessionId
       .andWhere(
         userIds.includes('all') ? '1=1' : 'report.userId IN (:...userIds)',
         userIds.includes('all') ? {} : { userIds },

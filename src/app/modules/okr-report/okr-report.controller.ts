@@ -27,9 +27,9 @@ export class OkrReportController {
   async createReport(
     @Body() reportData: CreateReportDTO,
     @Headers('tenantId') tenantId: UUID, // Expecting tenantId from headers
-    @Param('userId') userId: string, // Extract the planningPeriodId from the route
+    @Headers('sessionId') sessionId?: string, // Optional sessionId from headers
   ): Promise<any> {
-    return await this.reportService.createReportWithTasks(reportData, tenantId);
+    return await this.reportService.createReportWithTasks(reportData, tenantId, sessionId);
   }
 
   @Post('/by-planning-period/:planningPeriodId') // Expecting planningPeriodId from the URL
@@ -37,6 +37,8 @@ export class OkrReportController {
     @Body() userIds: (string | 'all')[], // Expecting userIds to be an array of strings or 'all'
     @Headers('tenantId') tenantId: UUID, // Expecting tenantId from headers
     @Param('planningPeriodId') planningPeriodId: string, // Extract the planningPeriodId from the route
+    @Headers('sessionId') sessionId?: string, // Optional sessionId from headers
+  
     @Query() paginationOptions?: PaginationDto,
   ): Promise<Pagination<Report>> {
     const report = {
@@ -57,17 +59,23 @@ export class OkrReportController {
       userIds,
       planningPeriodId,
       paginationOptions,
+      sessionId,
     );
   }
   @Delete(':id')
   async deleteReport(
     @Param('id') id: string,
     @Headers('tenantId') tenantId: UUID,
+    @Headers('sessionId') sessionId?: string,
   ): Promise<void> {
     return this.reportService.deleteReport(id, tenantId);
   }
   @Get('/rock-star/user')
-  async rockStart(@Req() req: Request, @Query() rockStarDto?: RockStarDto) {
+  async rockStart(
+    @Req() req: Request, 
+    @Query() rockStarDto?: RockStarDto,
+    @Headers('sessionId') sessionId?: string,
+  ) {
     const tenantId = req['tenantId'];
     return await this.reportService.rockStart(rockStarDto, tenantId);
   }
@@ -76,6 +84,7 @@ export class OkrReportController {
   async userPerformance(
     @Req() req: Request,
     @Query() rockStarDto?: RockStarDto,
+    @Headers('sessionId') sessionId?: string,
   ) {
     const tenantId = req['tenantId'];
     return await this.reportService.userPerformance(rockStarDto, tenantId);
@@ -84,6 +93,7 @@ export class OkrReportController {
   async getReportDataById(
     @Req() req: Request,
     @Param('reportId') reportId: string,
+    @Headers('sessionId') sessionId?: string,
   ): Promise<Report> {
     const tenantId = req['tenantId'];
     return await this.reportService.getById(reportId);
@@ -94,6 +104,7 @@ export class OkrReportController {
     @Req() req: Request,
     @Param('reportId') reportId: string,
     @Query('value') value: string,
+    @Headers('sessionId') sessionId?: string,
   ): Promise<Report> {
     const tenantId = req['tenantId'];
     return await this.reportService.validate(reportId, tenantId, value);

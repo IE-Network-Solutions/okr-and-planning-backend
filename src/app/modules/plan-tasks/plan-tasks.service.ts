@@ -35,26 +35,30 @@ export class PlanTasksService {
   async create(
     createPlanTasksDto: CreatePlanTaskDto[],
     tenantId: string,
-    level = 0,
-  ): Promise<any> {
+    sessionId?: string,
+  ): Promise<Plan> {
     const queryRunner = this.dataSource.createQueryRunner();
     // Establish the transaction
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
     try {
-      let sessionId: string | null = null;
-      try {
-        const activeSession =
-          await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(
-            tenantId,
+      let activeSessionId = sessionId;
+      
+      if (!activeSessionId) {
+        try {
+          const activeSession =
+            await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(
+              tenantId,
+            );
+          activeSessionId = activeSession.id;
+        } catch (error) {
+          throw new NotFoundException(
+            'There is no active Session for this tenant',
           );
-        sessionId = activeSession.id;
-      } catch (error) {
-        throw new NotFoundException(
-          'There is no active Session for this tenant',
-        );
+        }
       }
+      
       const result: any = [];
       if (!createPlanTasksDto || createPlanTasksDto.length === 0) {
         throw new BadRequestException('No tasks provided');
@@ -77,14 +81,14 @@ export class PlanTasksService {
       if (createPlanTasksDto[0].planId) {
         // Attempt to find an existing plan
         plan = await this.planRepository.findOne({
-          where: { id: createPlanTasksDto[0].planId },
+          where: { id: createPlanTasksDto[0].planId, sessionId: activeSessionId },
         });
       } else {
         // Handle the case where planId is not provided
         const newPlan = this.planRepository.create({
           tenantId,
           createdBy: createPlanTasksDto[0].userId,
-          level,
+          level: 0,
           isReported: false,
           isValidated: false,
           planningUser,
@@ -133,7 +137,7 @@ export class PlanTasksService {
           keyResult,
           milestone: getMilestone || null,
           achieveMK: createPlanTaskDto.achieveMK ?? false,
-          level,
+          level: parentTask ? parentTask.level + 1 : 0,
           weight: createPlanTaskDto.weight,
         });
 
@@ -148,14 +152,14 @@ export class PlanTasksService {
             subTask.parentTaskId = newTask.id; // Set the parent task ID for subtasks
             subTask.planId = plan.id; // Set the plan ID for subtasks
           }
-          await this.create(createPlanTaskDto.subTasks, tenantId, level + 1);
+          await this.create(createPlanTaskDto.subTasks, tenantId, sessionId);
         }
 
         result.push(plan); // Collect the result for the return value
       }
       // Commit transaction if all operations succeed
       await queryRunner.commitTransaction();
-      return await this.findOne(result[0].id); // Assuming you want to return the first created plan
+      return await this.findOne(result[0].id, sessionId); // Assuming you want to return the first created plan
     } catch (error) {
       await queryRunner.rollbackTransaction();
 
@@ -168,18 +172,29 @@ export class PlanTasksService {
       await queryRunner.release();
     }
   }
-  async findAll(tenantId: string): Promise<Plan[]> {
+  async findAll(tenantId: string, sessionId?: string): Promise<Plan[]> {
     try {
-      const planWithTasksAndDescendants = await this.planRepository
-        .createQueryBuilder('plan')
-        .leftJoinAndSelect('plan.tasks', 'task') // Load tasks related to the plan
-        .leftJoinAndSelect('task.planTask', 'descendants') // Load descendants of the tasks
-        .leftJoinAndSelect('plan.planningUser', 'planningUser') // Load the planning period assignment
-        .leftJoinAndSelect('planningUser.planningPeriod', 'planningPeriod') // Load the planning period definition
-        .where('plan.tenantId = :tenantId', { tenantId })
-        .getMany();
+      let activeSessionId = sessionId;
+      
+      if (!activeSessionId) {
+        try {
+          const activeSession =
+            await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(
+              tenantId,
+            );
+          activeSessionId = activeSession.id;
+        } catch (error) {
+          throw new NotFoundException(
+            'There is no active Session for this tenant',
+          );
+        }
+      }
+      
+      const plans = await this.planRepository.find({
+        where: { tenantId, sessionId: activeSessionId },
+      });
 
-      return planWithTasksAndDescendants;
+      return plans;
     } catch (error) {
       if (error.name === 'NotFoundException') {
         throw new NotFoundException('Error fetching all plans');
@@ -188,52 +203,77 @@ export class PlanTasksService {
     }
   }
 
-  async findOne(id: string): Promise<Plan> {
+  async findOne(id: string, sessionId?: string): Promise<Plan> {
     try {
-      return await this.planRepository
-        .createQueryBuilder('plan')
-        .leftJoinAndSelect('plan.tasks', 'task', 'task.parentTaskId IS NULL') // Load tasks related to the plan
-        .leftJoinAndSelect('task.planTask', 'descendants') // Load descendants of the tasks
-        .leftJoinAndSelect('plan.planningUser', 'planningUser') // Load the planning period assignment
-        .leftJoinAndSelect('planningUser.planningPeriod', 'planningPeriod') // Load the planning period definition
-        .leftJoinAndSelect('task.keyResult', 'keyResult') // Load the key result belonging to the parent task
-        .leftJoinAndSelect('keyResult.metricType', 'metricType') //Load the metric type for the keyResult
-        .leftJoinAndSelect('task.milestone', 'milestone') // Load the key result belonging to the parent task
-        .leftJoinAndSelect('plan.comments', 'comments') // Load comments related to the plan
-        .where('plan.id = :id', { id }) // Filter by plan ID
-        .getOne();
+      let query = this.planRepository.createQueryBuilder('plan')
+        .where('plan.id = :id', { id });
+      
+      if (sessionId) {
+        query = query.andWhere('plan.sessionId = :sessionId', { sessionId });
+      }
+      
+      const plan = await query.getOne();
+      
+      if (!plan) {
+        throw new NotFoundException(`Plan with ID ${id} not found`);
+      }
+      
+      return plan;
     } catch (error) {
       if (error.name === 'EntityNotFoundError') {
-        throw new NotFoundException('Error fetching the specified tasks');
+        throw new NotFoundException('Error fetching the specified plan');
       }
       throw error;
     }
   }
-  async findReportedPlanTasks(planId: string): Promise<PlanTask[]> {
-    const queryBuilder = this.taskRepository
-      .createQueryBuilder('planTask')
-      .leftJoinAndSelect('planTask.plan', 'plan')
-      .leftJoinAndSelect('planTask.milestone', 'milestone')
-      .leftJoinAndSelect('planTask.keyResult', 'keyResult')
-      .leftJoinAndSelect('keyResult.objective', 'objective') // Add join with objective
-      .leftJoinAndSelect('keyResult.metricType', 'metricType') // Add join with metricType
-      .leftJoinAndSelect('planTask.parentTask', 'parentTask')
-      .leftJoinAndSelect('plan.planningUser', 'planningUser') // Add relation to planningUser from the Plan entity
-      .leftJoinAndSelect('plan.report', 'report') // Ensure that plan.report is joined
-
-      // Apply filtering conditions
-      .where('planTask.planId = :planId', { planId }); // Filter by validated plans only
-
-    const unreportedTasks = await queryBuilder.getMany();
-    return unreportedTasks;
+  async findReportedPlanTasks(id: string, sessionId?: string): Promise<PlanTask[]> {
+    try {
+      let query = this.taskRepository.createQueryBuilder('planTask')
+        .leftJoinAndSelect('planTask.plan', 'plan')
+        .where('plan.id = :id', { id });
+      
+      if (sessionId) {
+        query = query.andWhere('plan.sessionId = :sessionId', { sessionId });
+      }
+      
+      const planTasks = await query.getMany();
+      
+      if (!planTasks) {
+        throw new NotFoundException(`Plan tasks with plan ID ${id} not found`);
+      }
+      
+      return planTasks;
+    } catch (error) {
+      if (error.name === 'EntityNotFoundError') {
+        throw new NotFoundException('Error fetching the specified plan tasks');
+      }
+      throw error;
+    }
   }
 
   async findAllUnreportedTasks(
     userId: string,
     planningPeriodId: string,
     tenantId: string,
+    sessionId?: string,
   ): Promise<PlanTask[]> {
     try {
+      let activeSessionId = sessionId;
+      
+      if (!activeSessionId) {
+        try {
+          const activeSession =
+            await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(
+              tenantId,
+            );
+          activeSessionId = activeSession.id;
+        } catch (error) {
+          throw new NotFoundException(
+            'There is no active Session for this tenant',
+          );
+        }
+      }
+      
       const planningUser = await this.planningUserRepository.findOne({
         where: { planningPeriodId, userId },
       });
@@ -248,6 +288,7 @@ export class PlanTasksService {
           userId,
           isReported: false,
           tenantId,
+          sessionId: activeSessionId,
         },
         order: {
           createdAt: 'DESC',
@@ -281,30 +322,31 @@ export class PlanTasksService {
     }
   }
 
-  async findByUser(id: string, planningId: string): Promise<Plan[]> {
+  async findByUser(
+    id: string,
+    planningId: string,
+    sessionId?: string,
+  ): Promise<Plan[]> {
     try {
-      const planWithTasksAndDescendants = await this.planRepository
-        .createQueryBuilder('plan')
-        .leftJoinAndSelect('plan.tasks', 'task', 'task.parentTaskId IS NULL') // Load tasks related to the plan
-        .leftJoinAndSelect('task.planTask', 'descendants') // Load descendants of the tasks
-        .leftJoinAndSelect('plan.planningUser', 'planningUser') // Load the planning period assignment
-        .leftJoinAndSelect('planningUser.planningPeriod', 'planningPeriod') // Load the planning period definition
-        .leftJoinAndSelect('task.keyResult', 'keyResult') // Load the key result belonging to the parent task
-        .leftJoinAndSelect('keyResult.metricType', 'metricType') //Load the metric type for the keyResult
-        .leftJoinAndSelect('task.milestone', 'milestone') // Load the key result belonging to the parent task
-        .leftJoinAndSelect('plan.comments', 'comments') // Load comments related to the plan
-        .where('plan.createdBy = :id', { id }) // Filter by plan ID
-        .andWhere('planningPeriod.id = :planningId', {
-          planningId,
-        })
-        .getMany();
-
-      return planWithTasksAndDescendants;
+      let query = this.planRepository.createQueryBuilder('plan')
+        .leftJoinAndSelect('plan.planningUser', 'planningUser')
+        .where('planningUser.userId = :id', { id })
+        .andWhere('planningUser.planningPeriodId = :planningId', { planningId });
+      
+      if (sessionId) {
+        query = query.andWhere('plan.sessionId = :sessionId', { sessionId });
+      }
+      
+      const plans = await query.getMany();
+      
+      if (!plans) {
+        throw new NotFoundException(`Plans for user ${id} not found`);
+      }
+      
+      return plans;
     } catch (error) {
       if (error.name === 'EntityNotFoundError') {
-        throw new NotFoundException(
-          'Error fetching the plan for the specified user',
-        );
+        throw new NotFoundException('Error fetching the specified plans');
       }
       throw error;
     }
@@ -378,15 +420,32 @@ export class PlanTasksService {
   ////////////////////////////////   ahmed changes //////////////////////////
 
   async findByUsers(
-    id: string,
+    planningPeriodId: string,
     arrayOfUserId: string[],
-    paginationOptions: IPaginationOptions,
-  ) {
+    options: IPaginationOptions,
+    sessionId?: string,
+  ): Promise<any> {
     try {
-      const options: IPaginationOptions = {
-        page: paginationOptions.page,
-        limit: paginationOptions.limit,
-      };
+      let activeSessionId = sessionId;
+      
+      if (!activeSessionId && arrayOfUserId.length > 0) {
+        try {
+          const activeSession =
+            await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(
+              arrayOfUserId[0],
+            );
+          activeSessionId = activeSession.id;
+        } catch (error) {
+          throw new NotFoundException(
+            'There is no active Session for this tenant',
+          );
+        }
+      }
+      
+      const planningUsers = await this.planningUserRepository.find({
+        where: { planningPeriodId, userId: In(arrayOfUserId) },
+      });
+
       const queryBuilder = this.planRepository
         .createQueryBuilder('plan')
         .leftJoinAndSelect('plan.tasks', 'task') // Load all tasks related to the plan
@@ -399,7 +458,7 @@ export class PlanTasksService {
         .leftJoinAndSelect('keyResult.metricType', 'metricType') // Load the metricType for the key result
         .leftJoinAndSelect('task.milestone', 'milestone') // Load milestones related to tasks
         .leftJoinAndSelect('plan.comments', 'comments') // Load comments related to the plan
-        .andWhere('planningPeriod.id = :id', { id })
+        .andWhere('planningPeriod.id = :id', { id: planningPeriodId })
         .orderBy('plan.createdAt', 'DESC');
 
       if (!arrayOfUserId.includes('all')) {
@@ -420,9 +479,28 @@ export class PlanTasksService {
   async updateTasks(
     updatePlanTasksDto: UpdatePlanTaskDto[],
     tenantId: string,
+    sessionId?: string,
   ): Promise<PlanTask[]> {
     try {
-      // Extract the planId (assuming all tasks are associated with the same plan)
+      let activeSessionId = sessionId;
+      
+      if (!activeSessionId) {
+        try {
+          const activeSession =
+            await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(
+              tenantId,
+            );
+          activeSessionId = activeSession.id;
+        } catch (error) {
+          throw new NotFoundException(
+            'There is no active Session for this tenant',
+          );
+        }
+      }
+      
+      const plan = await this.planRepository.findOne({
+        where: { id: updatePlanTasksDto[0]?.planId, sessionId: activeSessionId },
+      });
 
       let existingTasks: PlanTask[];
 
@@ -574,17 +652,27 @@ export class PlanTasksService {
   }
 
   ////////////////////////////////   ahmed changes //////////////////////////
-  async remove(id: string) {
-    const planTask = await this.taskRepository.findOne({ where: { id } });
-
-    if (!planTask?.id) {
-      throw new NotFoundException(`PlanTask with ID ${id} not found`);
-    }
-
+  async remove(id: string, sessionId?: string): Promise<void> {
     try {
-      await this.taskRepository.softRemove(planTask);
+      let query = this.taskRepository.createQueryBuilder('planTask')
+        .where('planTask.id = :id', { id });
+      
+      if (sessionId) {
+        query = query.andWhere('planTask.plan.sessionId = :sessionId', { sessionId });
+      }
+      
+      const planTask = await query.getOne();
+      
+      if (!planTask) {
+        throw new NotFoundException(`Plan task with ID ${id} not found`);
+      }
+      
+      await this.taskRepository.remove(planTask);
     } catch (error) {
-      return error;
+      if (error.name === 'EntityNotFoundError') {
+        throw new NotFoundException('Error removing the specified plan task');
+      }
+      throw error;
     }
   }
 
