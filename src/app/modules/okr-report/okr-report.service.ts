@@ -56,7 +56,6 @@ export class OkrReportService {
         }
       }
       
-      reportData.sessionId = activeSessionId;
       // Step 1: Create the Report entity
       const report = this.reportRepository.create({
         status: ReportStatusEnum.Reported,
@@ -66,7 +65,7 @@ export class OkrReportService {
         userId: reportData?.userId,
         planId: reportData.planId,
         createdBy: reportData?.userId,
-        sessionId: reportData.sessionId,
+        sessionId: activeSessionId,
       });
 
       // Step 2: Save the Report entity
@@ -74,8 +73,12 @@ export class OkrReportService {
       if (!savedReport) {
         throw new Error('Report not Saved');
       }
-      // Step 5: Return the saved report and its associated tasks
-      return savedReport;
+      
+      // Step 3: Return the saved report with its relations
+      return await this.reportRepository.findOne({
+        where: { id: savedReport.id },
+        relations: ['reportTask', 'comments', 'plan'],
+      });
     } catch (error) {
       throw error;
     }
@@ -92,49 +95,35 @@ export class OkrReportService {
       limit: paginationOptions?.limit,
     };
     
-    // let activeSessionId = sessionId;
+    let activeSessionId = sessionId;
     
- 
-
-    // if (!activeSessionId) {
-    //   console.log('activeSessionId',  
-    //     tenantId,
-    //     userIds,
-    //     planningPeriodId,
-    //     paginationOptions,
-    //     sessionId);
-    //   try {
-    //     const activeSession =
-    //       await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(
-    //         tenantId,
-    //       );
-    //       console.log('activeSessionId 2', activeSession,tenantId);
-
-    //     activeSessionId = activeSession.id;
-    //   } catch (error) {
-    //     throw new NotFoundException('There is no active Session for this tenant');
-    //   }
-    // }
-
-
+    if (!activeSessionId) {
+      try {
+        const activeSession =
+          await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(
+            tenantId,
+          );
+        activeSessionId = activeSession.id;
+      } catch (error) {
+        throw new NotFoundException('There is no active Session for this tenant');
+      }
+    }
     
     // Use queryBuilder to fetch reports with complex filtering
-    const reports = await this.reportRepository
+    const queryBuilder = this.reportRepository
       .createQueryBuilder('report') // Start from the 'report' entity
       .leftJoinAndSelect('report.reportTask', 'reportTask') // Join 'reportTask'
-      .leftJoinAndSelect('report.comments', 'ReportComment') // Join 'ReportComment' (adjust alias here)
+      .leftJoinAndSelect('report.comments', 'ReportComment') // Join 'ReportComment'
       .leftJoinAndSelect('reportTask.planTask', 'planTask') // Join 'planTask'
-      // .leftJoinAndSelect('planTask.plan', 'plan') // Join 'plan'
-      .leftJoinAndSelect('report.plan', 'plan') // Join 'reportTask'
+      .leftJoinAndSelect('report.plan', 'plan') // Join 'plan'
       .leftJoinAndSelect('plan.planningUser', 'planningUser') // Join 'planningUser'
       .leftJoinAndSelect('planTask.keyResult', 'keyResult') // Join 'keyResult'
-      .leftJoinAndSelect('keyResult.metricType', 'metricType') // Join 'keyResult'
-
+      .leftJoinAndSelect('keyResult.metricType', 'metricType') // Join 'metricType'
       .leftJoinAndSelect('planTask.milestone', 'milestone') // Join 'milestone'
 
       // Apply filtering conditions
       .where('report.tenantId = :tenantId', { tenantId }) // Filter by tenantId
-      // .andWhere('report.sessionId = :sessionId', { sessionId: activeSessionId }) // Filter by sessionId
+      .andWhere('report.sessionId = :sessionId', { sessionId: activeSessionId }) // Filter by sessionId
       .andWhere(
         userIds.includes('all') ? '1=1' : 'report.userId IN (:...userIds)',
         userIds.includes('all') ? {} : { userIds },
@@ -142,10 +131,11 @@ export class OkrReportService {
       .andWhere('planningUser.planningPeriodId = :planningPeriodId', {
         planningPeriodId,
       })
-      .orderBy('report.createdAt', 'DESC'); // Filter by planningPeriodId
+      .orderBy('report.createdAt', 'DESC'); // Order by creation date
 
+    // Use the pagination service to paginate the results
     const paginatedData = await this.paginationService.paginate<Report>(
-      reports,
+      queryBuilder,
       options,
     );
 

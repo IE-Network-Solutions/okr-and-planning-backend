@@ -508,6 +508,7 @@ export class PlanningPeriodsService {
       await this.planService.getAllPlansByPlanningPeriodAndUser(
         planningPeriodId,
         userId,
+        tenantId,
       );
 
     // Step 2: Recursive Function to Find Parent Plan
@@ -531,6 +532,7 @@ export class PlanningPeriodsService {
             await this.planService.getAllPlansByPlanningPeriodAndUser(
               parentPlan.id,
               userId,
+              tenantId,
             );
 
           return {
@@ -605,6 +607,7 @@ export class PlanningPeriodsService {
             await this.planService.getAllPlansByPlanningPeriodAndUser(
               childPlan.id,
               userId,
+              tenantId,
             );
           return {
             id: childPlan.id,
@@ -678,6 +681,7 @@ export class PlanningPeriodsService {
             await this.planService.getAllPlansByPlanningPeriodAndUser(
               childPlan.id,
               userId,
+              tenantId,
             );
           return {
             id: childPlan.id,

@@ -65,7 +65,6 @@ export class PlanController {
       userId,
       planningPeriodId,
       forPlan,
-      tenantId,
       sessionId,
     );
   }

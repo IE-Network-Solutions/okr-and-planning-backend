@@ -263,20 +263,22 @@ export class PlanTasksService {
     sessionId?: string,
   ): Promise<PlanTask[]> {
     try {
-      if (!sessionId) {
+      let activeSessionId = sessionId;
+      
+      if (!activeSessionId) {
         try {
           const activeSession =
             await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(
               tenantId,
             );
-          sessionId = activeSession.id;
+          activeSessionId = activeSession.id;
         } catch (error) {
           throw new NotFoundException(
             'There is no active Session for this tenant',
           );
         }
       }
-
+      
       const planningUser = await this.planningUserRepository.findOne({
         where: { planningPeriodId, userId },
       });
@@ -289,9 +291,9 @@ export class PlanTasksService {
         where: {
           planningUserId: planningUser.id,
           userId,
-          sessionId,
           isReported: false,
           tenantId,
+          sessionId: activeSessionId,
         },
         order: {
           createdAt: 'DESC',
@@ -302,31 +304,28 @@ export class PlanTasksService {
         return [];
       }
 
-
-      // console.log('sessionId', planningUser,plan,sessionId);
       const queryBuilder = this.taskRepository
         .createQueryBuilder('planTask')
         .leftJoinAndSelect('planTask.plan', 'plan')
         .leftJoinAndSelect('planTask.milestone', 'milestone')
         .leftJoinAndSelect('planTask.keyResult', 'keyResult')
-        .leftJoinAndSelect('keyResult.objective', 'objective')
-        .leftJoinAndSelect('keyResult.metricType', 'metricType')
+        .leftJoinAndSelect('keyResult.objective', 'objective') // Add join with objective
+        .leftJoinAndSelect('keyResult.metricType', 'metricType') // Add join with metricType
         .leftJoinAndSelect('planTask.parentTask', 'parentTask')
-        .leftJoinAndSelect('plan.planningUser', 'planningUser')
-        .andWhere('planTask.planId IS NOT NULL')
-        .andWhere('plan.sessionId = :sessionId', { sessionId });
+        .leftJoinAndSelect('plan.planningUser', 'planningUser') // Add relation to planningUser from the Plan entity
+        .andWhere('planTask.planId IS NOT NULL');
 
       if (plan.id) {
         queryBuilder.andWhere('plan.id = :planId', { planId: plan.id });
       }
 
       const unreportedTasks = await queryBuilder.getMany();
+
       return unreportedTasks;
     } catch (error) {
       throw new Error(`Failed to update PlanningPeriodUser: ${error.message}`);
     }
   }
-
   async findByUser(id: string, planningId: string, tenantId: string, sessionId?: string): Promise<Plan[]> {
     try {
       if (!sessionId) {
@@ -457,53 +456,27 @@ export class PlanTasksService {
 
   async findByUsers(
     id: string,
-    planningPeriodId: string,
-    arrayOfUserId: string[],
+    arrayOfUserId: string[] | 'all',
     paginationOptions: IPaginationOptions,
     tenantId: string,
     sessionId?: string,
-
-  ): Promise<any> {
+  ): Promise<Pagination<Plan>> {
     try {
       let activeSessionId = sessionId;
-      
-      if (!activeSessionId && arrayOfUserId.length > 0) {
-        try {
-          const activeSession =
-            await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(
-              tenantId,
-            );
-          activeSessionId = activeSession.id;
-        } catch (error) {
-          throw new NotFoundException(
-            'There is no active Session for this tenant',
-          );
+  
+      if (!activeSessionId) {
+        const activeSession = await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(tenantId);
+        if (!activeSession) {
+          throw new NotFoundException('No active session found for this tenant');
         }
+        activeSessionId = activeSession.id;
       }
-      
-      const planningUsers = await this.planningUserRepository.find({
-        where: { planningPeriodId, userId: In(arrayOfUserId) },
-      });
-
-    console.log('sessionId', tenantId,sessionId);
-    if (!sessionId) {
-      try {
-        const activeSession =
-          await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(
-            tenantId,
-          );
-        sessionId = activeSession.id;
-      } catch (error) {
-        throw new NotFoundException(
-          'There is no active Session for this tenant',
-        );
-      }
-    }
-    try {
+  
       const options: IPaginationOptions = {
-        page: paginationOptions.page,
-        limit: paginationOptions.limit,
+        page: paginationOptions.page || 1,
+        limit: paginationOptions.limit || 10,
       };
+  
       const queryBuilder = this.planRepository
         .createQueryBuilder('plan')
         .leftJoinAndSelect('plan.tasks', 'task')
@@ -516,24 +489,19 @@ export class PlanTasksService {
         .leftJoinAndSelect('keyResult.metricType', 'metricType')
         .leftJoinAndSelect('task.milestone', 'milestone')
         .leftJoinAndSelect('plan.comments', 'comments')
-        .andWhere('planningPeriod.id = :id', { id })
-        .andWhere('plan.sessionId = :sessionId', { sessionId })
+        .where('planningPeriod.id = :id', { id })
+        .andWhere('plan.sessionId = :activeSessionId', { activeSessionId })
         .orderBy('plan.createdAt', 'DESC');
-
+  
       if (!arrayOfUserId.includes('all')) {
         queryBuilder.andWhere('plan.createdBy IN (:...arrayOfUserId)', {
           arrayOfUserId,
         });
       }
-
-      const paginatedData = await this.paginationService.paginate<Plan>(
-        queryBuilder,
-        options,
-      );
-
-      return paginatedData;
+  
+      return await this.paginationService.paginate<Plan>(queryBuilder, options);
     } catch (error) {
-      throw new Error(`Error fetching plans: ${error.message}`);
+      throw new Error(`Failed to fetch plans: ${error.message}`);
     }
   }
 
