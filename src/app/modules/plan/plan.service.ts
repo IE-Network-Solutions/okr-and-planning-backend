@@ -39,6 +39,9 @@ export class PlanService {
               tenantId,
             );
           activeSessionId = activeSession.id;
+
+
+          console.log('activeSessionIdResponse', activeSessionId);
         } catch (error) {
           throw new NotFoundException(
             'There is no active Session for this tenant',
@@ -131,8 +134,10 @@ export class PlanService {
     userId: string,
     planningPeriodId: string,
     forPlan: string,
+    tenantId: string,
     sessionId?: string,
   ): Promise<Plan[]> {
+
     try {
       let activeSessionId = sessionId;
       
@@ -140,15 +145,19 @@ export class PlanService {
         try {
           const activeSession =
             await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(
-              userId,
+              tenantId,
             );
           activeSessionId = activeSession.id;
+
+          console.log('activeSessionIdResponse', activeSessionId);
+
         } catch (error) {
           throw new NotFoundException(
             'There is no active Session for this tenant',
           );
         }
       }
+
       
       const boolValue = forPlan === '1' ? false : true;
       const planningUser = await this.planningUserRepository.findOne({
@@ -358,6 +367,9 @@ export class PlanService {
               tenantId,
             );
           activeSessionId = activeSession.id;
+
+          console.log('activeSessionIdResponse', activeSessionId);
+
         } catch (error) {
           throw new NotFoundException(
             'There is no active Session for this tenant',

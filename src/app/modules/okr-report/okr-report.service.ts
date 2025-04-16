@@ -15,7 +15,6 @@ import { UUID } from 'crypto';
 import { RockStarDto } from './dto/report-rock-star.dto';
 import { PlanningPeriodsService } from '../planningPeriods/planning-periods/planning-periods.service';
 import { startOfWeek, endOfWeek } from 'date-fns';
-import { GetFromOrganizatiAndEmployeInfoService } from '../objective/services/get-data-from-org.service';
 
 import { ReportStatusEnum } from '@root/src/core/interfaces/reportStatus.type';
 import { OkrReportTaskService } from '../okr-report-task/okr-report-task.service';
@@ -23,6 +22,7 @@ import { PlanService } from '../plan/plan.service';
 import { PaginationDto } from '@root/src/core/commonDto/pagination-dto';
 import { IPaginationOptions, Pagination } from 'nestjs-typeorm-paginate';
 import { PaginationService } from '@root/src/core/pagination/pagination.service';
+import { GetFromOrganizatiAndEmployeInfoService } from '../objective/services/get-data-from-org.service';
 
 @Injectable()
 export class OkrReportService {
@@ -92,19 +92,31 @@ export class OkrReportService {
       limit: paginationOptions?.limit,
     };
     
-    let activeSessionId = sessionId;
+    // let activeSessionId = sessionId;
     
-    if (!activeSessionId) {
-      try {
-        const activeSession =
-          await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(
-            tenantId,
-          );
-        activeSessionId = activeSession.id;
-      } catch (error) {
-        throw new NotFoundException('There is no active Session for this tenant');
-      }
-    }
+ 
+
+    // if (!activeSessionId) {
+    //   console.log('activeSessionId',  
+    //     tenantId,
+    //     userIds,
+    //     planningPeriodId,
+    //     paginationOptions,
+    //     sessionId);
+    //   try {
+    //     const activeSession =
+    //       await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(
+    //         tenantId,
+    //       );
+    //       console.log('activeSessionId 2', activeSession,tenantId);
+
+    //     activeSessionId = activeSession.id;
+    //   } catch (error) {
+    //     throw new NotFoundException('There is no active Session for this tenant');
+    //   }
+    // }
+
+
     
     // Use queryBuilder to fetch reports with complex filtering
     const reports = await this.reportRepository
@@ -122,7 +134,7 @@ export class OkrReportService {
 
       // Apply filtering conditions
       .where('report.tenantId = :tenantId', { tenantId }) // Filter by tenantId
-      .andWhere('report.sessionId = :sessionId', { sessionId: activeSessionId }) // Filter by sessionId
+      // .andWhere('report.sessionId = :sessionId', { sessionId: activeSessionId }) // Filter by sessionId
       .andWhere(
         userIds.includes('all') ? '1=1' : 'report.userId IN (:...userIds)',
         userIds.includes('all') ? {} : { userIds },

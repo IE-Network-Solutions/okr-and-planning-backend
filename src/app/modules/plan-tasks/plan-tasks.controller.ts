@@ -47,11 +47,8 @@ export class PlanTasksController {
   }
 
   @Get(':id')
-  async findOne(
-    @Param('id') id: string,
-    @Headers('sessionId') sessionId?: string,
-  ): Promise<Plan> {
-    return await this.planTasksService.findOne(id, sessionId);
+  async findOne(@Param('id') id: string): Promise<Plan> {
+    return await this.planTasksService.findOne(id);
   }
 
   @Get('get-reported-plan-tasks/by-plan-id/:id')
@@ -61,8 +58,6 @@ export class PlanTasksController {
   ): Promise<PlanTask[]> {
     return await this.planTasksService.findReportedPlanTasks(id, sessionId);
   }
-
-  // url: `${OKR_URL}/plan-tasks/un-reported-plan-tasks/${userId}/planning-period/${planningPeriodId}`,
 
   @Get('/user/:id/:planningId')
   async findByUser(
@@ -90,38 +85,30 @@ export class PlanTasksController {
       sessionId,
     );
   }
+
   @Post('/users/:planningId')
   async findByUsers(
     @Query() options: IPaginationOptions,
     @Param('planningId') id: string,
     @Body() arrayOfUserId: string[],
+    @Req() req: Request,
     @Headers('sessionId') sessionId?: string,
   ) {
-    return await this.planTasksService.findByUsers(id, arrayOfUserId, options, sessionId);
+    const tenantId = req['tenantId'];
+    return await this.planTasksService.findByUsers(id, arrayOfUserId, options,tenantId, sessionId);
   }
-  // @Post('/users-plan/:planningId')
-  // async findByUserIds(
-  //   @Query() options: IPaginationOptions,
-  //   @Param('planningId') id: string,
-  //   @Body() arrayOfUserId: string[],
-  // ) {
-  //   return await this.planTasksService.findByUserIds(id, arrayOfUserId, options);
-  // }
+
   @Patch()
   async update(
     @Body() updatePlanTaskDto: UpdatePlanTasksDto,
     @Req() req: Request,
-    @Headers('sessionId') sessionId?: string,
   ): Promise<any> {
     const tenantId = req['tenantId'];
-    return this.planTasksService.updateTasks(updatePlanTaskDto.tasks, tenantId, sessionId);
+    return this.planTasksService.updateTasks(updatePlanTaskDto.tasks, tenantId);
   }
 
   @Delete(':id')
-  remove(
-    @Param('id') id: string,
-    @Headers('sessionId') sessionId?: string,
-  ) {
-    return this.planTasksService.remove(id, sessionId);
+  remove(@Param('id') id: string) {
+    return this.planTasksService.remove(id);
   }
 }

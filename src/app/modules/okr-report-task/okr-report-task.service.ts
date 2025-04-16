@@ -3,6 +3,7 @@ import {
   forwardRef,
   Inject,
   Injectable,
+  NotFoundException,
 } from '@nestjs/common';
 import { ReportTask } from './entities/okr-report-task.entity';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
@@ -404,8 +405,12 @@ export class OkrReportTaskService {
     try {
       const isForPlan = forPlan === '1' ? true : forPlan === '2' ? false : true;
       if (!sessionId) {
-        const activeSession = await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(tenantId);
-        sessionId = activeSession?.id;
+        try {
+          const activeSession = await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(tenantId);
+          sessionId = activeSession.id;
+        } catch (error) {
+          throw new NotFoundException('There is no active Session for this tenant');
+        }
       }
 
       const queryBuilder = this.planTaskRepository
@@ -454,10 +459,14 @@ export class OkrReportTaskService {
     sessionId?: string,
   ) {
     try {
-
+      console.log('sessionId', tenantId, sessionId);
       if (!sessionId) {
-        const activeSession = await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(tenantId);
-        sessionId = activeSession?.id;
+        try {
+          const activeSession = await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(tenantId);
+          sessionId = activeSession.id;
+        } catch (error) {
+          throw new NotFoundException('There is no active Session for this tenant');
+        }
       }
       // Fetch all report tasks that match the given tenantId, userIds, and planningPeriodId
       const reportTasks = await this.reportTaskRepo
