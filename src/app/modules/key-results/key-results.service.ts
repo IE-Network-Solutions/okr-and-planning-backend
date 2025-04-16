@@ -188,7 +188,7 @@ export class KeyResultsService {
         );
       }
       if (
-        oldKeyResultMetricsType !== newKeyResultMetricsType &&
+        oldKeyResultMetricsType.id !== newKeyResultMetricsType.id &&
         oldKeyResultMetricsType?.name === NAME.MILESTONE
       ) {
         await this.milestonesService.removeMilestoneByKeyresultId(id);
