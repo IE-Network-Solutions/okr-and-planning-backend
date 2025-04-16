@@ -96,7 +96,7 @@ export class PlanTasksController {
   ) {
     const tenantId = req['tenantId'];
     return await this.planTasksService.findByUsers(id, arrayOfUserId, options,tenantId, sessionId);
-  }
+ }
 
   @Patch()
   async update(

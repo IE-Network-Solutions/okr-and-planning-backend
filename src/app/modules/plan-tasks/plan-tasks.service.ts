@@ -457,11 +457,33 @@ export class PlanTasksService {
 
   async findByUsers(
     id: string,
+    planningPeriodId: string,
     arrayOfUserId: string[],
     paginationOptions: IPaginationOptions,
     tenantId: string,
     sessionId?: string,
-  ) {
+
+  ): Promise<any> {
+    try {
+      let activeSessionId = sessionId;
+      
+      if (!activeSessionId && arrayOfUserId.length > 0) {
+        try {
+          const activeSession =
+            await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(
+              tenantId,
+            );
+          activeSessionId = activeSession.id;
+        } catch (error) {
+          throw new NotFoundException(
+            'There is no active Session for this tenant',
+          );
+        }
+      }
+      
+      const planningUsers = await this.planningUserRepository.find({
+        where: { planningPeriodId, userId: In(arrayOfUserId) },
+      });
 
     console.log('sessionId', tenantId,sessionId);
     if (!sessionId) {

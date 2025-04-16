@@ -131,10 +131,10 @@ export class PlanService {
     }
   }
   async findAllUsersPlans(
+    tenantId: string,
     userId: string,
     planningPeriodId: string,
     forPlan: string,
-    tenantId: string,
     sessionId?: string,
   ): Promise<Plan[]> {
 
@@ -147,7 +147,7 @@ export class PlanService {
             await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(
               tenantId,
             );
-          activeSessionId = activeSession.id;
+         activeSessionId = activeSession.id;
 
           console.log('activeSessionIdResponse', activeSessionId);
 
