@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   forwardRef,
   Inject,
@@ -44,7 +45,7 @@ export class OkrReportTaskService {
     @InjectRepository(PlanTask)
     private planTaskRepository: Repository<PlanTask>,
 
-    @Inject(forwardRef(() => OkrReportService)) // Use forwardRef here
+  //  @Inject(forwardRef(() => OkrReportService)) // Use forwardRef here
     private reportService: OkrReportService,
 
     private okrProgressService: OkrProgressService,
@@ -136,7 +137,7 @@ export class OkrReportTaskService {
       return savedReportTasks;
     } catch (error) {
       await queryRunner.rollbackTransaction();
-      throw error;
+      throw new BadRequestException(error.message);
     } finally {
       await queryRunner.release();
     }

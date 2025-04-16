@@ -31,7 +31,7 @@ export class OkrReportService {
     private planningPeriodService: PlanningPeriodsService,
 
   //  @Inject(forwardRef(() => OkrReportTaskService))
-    private okrReportTaskService: OkrReportTaskService,
+  //  private okrReportTaskService: OkrReportTaskService,
     private planService: PlanService,
     private readonly getFromOrganizatiAndEmployeInfoService: GetFromOrganizatiAndEmployeInfoService,
     private readonly paginationService: PaginationService,
