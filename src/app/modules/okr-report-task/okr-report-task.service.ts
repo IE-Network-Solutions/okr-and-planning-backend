@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   forwardRef,
   Inject,
@@ -135,9 +136,8 @@ export class OkrReportTaskService {
       }
       return savedReportTasks;
     } catch (error) {
-      console.log(error.message,"hhhhhhhhhhhhhhhhhhhhhhhh")
       await queryRunner.rollbackTransaction();
-      throw error;
+      throw new BadRequestException(error.message);
     } finally {
       await queryRunner.release();
     }
