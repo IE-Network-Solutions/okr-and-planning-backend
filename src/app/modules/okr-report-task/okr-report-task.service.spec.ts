@@ -12,6 +12,7 @@ import { OkrProgressService } from '../okr-progress/okr-progress.service';
 import { Milestone } from '../milestones/entities/milestone.entity';
 import { Report } from '../okr-report/entities/okr-report.entity';
 import { UserVpScoringService } from '../variable_pay/services/user-vp-scoring.service';
+import { GetFromOrganizatiAndEmployeInfoService } from '../objective/services/get-data-from-org.service';
 
 describe('OkrReportTaskService', () => {
   let okrReportTaskService: OkrReportTaskService;
@@ -23,6 +24,10 @@ describe('OkrReportTaskService', () => {
         {
           provide: getRepositoryToken(ReportTask),
           useValue: mock<Repository<ReportTask>>(),
+        },
+        {
+          provide: GetFromOrganizatiAndEmployeInfoService,
+          useValue: mock<GetFromOrganizatiAndEmployeInfoService>(),
         },
         {
           provide: getRepositoryToken(PlanningPeriodUser),

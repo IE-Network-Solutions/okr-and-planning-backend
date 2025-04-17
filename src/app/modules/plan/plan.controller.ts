@@ -7,6 +7,7 @@ import {
   Delete,
   Req,
   Query,
+  Headers,
 } from '@nestjs/common';
 import { PlanService } from './plan.service';
 import { CreatePlanDto } from './dto/create-plan.dto';
@@ -24,9 +25,10 @@ export class PlanController {
   async create(
     @Req() req: Request,
     @Body() createPlanDto: CreatePlanDto,
+    @Headers('sessionId') sessionId?: string,
   ): Promise<Plan> {
     const tenantId = req['tenantId'];
-    return await this.planService.create(createPlanDto, tenantId);
+    return await this.planService.create(createPlanDto, tenantId, sessionId);
   }
 
   @Post('validate/:planId')
@@ -53,21 +55,29 @@ export class PlanController {
     @Param('userId') userId: string,
     @Param('planningPeriodId') planningPeriodId: string,
     @Query('forPlan') forPlan: string,
+    @Req() req: Request,
+    @Headers('sessionId') sessionId?: string,
   ): Promise<Plan[]> {
+    const tenantId = req['tenantId'];
     return await this.planService.findAllUsersPlans(
+      tenantId,
       userId,
       planningPeriodId,
       forPlan,
+      sessionId,
     );
   }
 
   @Get()
-  async findAllPlansByUserId() {
-    return await this.planService.findAll();
+  async findAllPlansByUserId(@Headers('sessionId') sessionId?: string) {
+    return await this.planService.findAll(sessionId);
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string): Promise<Plan> {
+  async findOne(
+    @Param('id') id: string,
+    @Headers('sessionId') sessionId?: string,
+  ): Promise<Plan> {
     return await this.planService.findOne(id);
   }
 
@@ -77,6 +87,7 @@ export class PlanController {
     @Param('planningPeriodId') id: string,
     @Body() arrayOfUserId: string[],
     @Req() req: Request,
+    @Headers('sessionId') sessionId?: string,
   ) {
     const tenantId = req['tenantId'];
     return await this.planService.findPlansByUsersAndPlanningPeriodId(
@@ -84,6 +95,7 @@ export class PlanController {
       arrayOfUserId,
       options,
       tenantId,
+      sessionId,
     );
   }
   // @Patch(':id')

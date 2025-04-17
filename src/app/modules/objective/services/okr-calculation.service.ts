@@ -20,7 +20,9 @@ import { ObjectiveService } from './objective.service';
 import { paginationOptions } from '@root/src/core/commonTestData/commonTest.data';
 import { UpdateObjectiveStatusDto } from '../dto/update-objective-status.dto';
 import { FilterObjectiveOfAllEmployeesDto } from '../dto/filter-objective-byemployees.dto';
+
 import { ExportExcelService } from '@root/src/core/export/export-excel.service';
+
 
 @Injectable()
 export class OKRCalculationService {
@@ -242,6 +244,7 @@ export class OKRCalculationService {
                   this.averageOkrCalculation.calculateAverageOkr(
                     objectives.items,
                   ),
+
                   this.calculateRecursiveOKRBySession(
                     jobInfo.departmentId,
                     tenantId,
@@ -249,6 +252,7 @@ export class OKRCalculationService {
                     departments,
                   ),
                 ]);
+
                 okrScore =
                   (myOkr.okr * (okrRule?.myOkrPercentage ?? 20)) / 100 +
                   (teamOkr * (okrRule?.teamOkrPercentage ?? 80)) / 100;

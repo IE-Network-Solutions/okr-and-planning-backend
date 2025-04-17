@@ -10,10 +10,11 @@ import { MilestonesModule } from '../milestones/milestones.module';
 import { PlanningPeriodUser } from '../planningPeriods/planning-periods/entities/planningPeriodUser.entity';
 import { GetFromOrganizatiAndEmployeInfoService } from '../objective/services/get-data-from-org.service';
 import { HttpModule } from '@nestjs/axios';
+import { ReportTask } from '../okr-report-task/entities/okr-report-task.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([PlanTask, Plan, PlanningPeriodUser]),
+    TypeOrmModule.forFeature([PlanTask, Plan, PlanningPeriodUser, ReportTask]),
     KeyResultsModule,
     MilestonesModule,
     HttpModule,

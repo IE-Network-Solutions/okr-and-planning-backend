@@ -155,6 +155,19 @@ export class MilestonesService {
     await this.milestoneRepository.softRemove({ id });
     return Milestone;
   }
+  async removeMilestoneByKeyresultId(id: string): Promise<Milestone[]> {
+    const milestones = await this.milestoneRepository.find({
+      where: { keyResultId: id },
+    });
+
+
+    if (milestones.length === 0) {
+      throw new NotFoundException(`No milestones found for keyResultId ${id}`);
+    }
+
+    return await this.milestoneRepository.softRemove(milestones);
+  }
+
 
   async updateMilestoneStatusForAllUsers(
     keyResults: KeyResult[],

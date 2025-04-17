@@ -16,6 +16,8 @@ import { MetricTypesService } from '../metric-types/metric-types.service';
 import { UpdateMilestoneDto } from '../milestones/dto/update-milestone.dto';
 import { GetFromOrganizatiAndEmployeInfoService } from '../objective/services/get-data-from-org.service';
 import { Objective } from '../objective/entities/objective.entity';
+import { DeleteAndUpdateKeyResultDto } from './dto/delete-update-key-result.dto';
+import { NAME } from '../metric-types/enum/metric-type.enum';
 
 @Injectable()
 export class KeyResultsService {
@@ -145,9 +147,17 @@ export class KeyResultsService {
   ): Promise<KeyResult> {
     try {
       const keyResult = await this.findOnekeyResult(id);
+      const oldKeyResultMetricsType =
+        await this.metricTypeService.findOneMetricType(keyResult?.metricTypeId);
+      const newKeyResultMetricsType =
+        await this.metricTypeService.findOneMetricType(
+          updatekeyResultDto?.metricTypeId,
+        );
+
       if (!keyResult) {
         throw new NotFoundException(`keyResult Not Found`);
       }
+
       const keyResultTobeUpdated = new UpdateKeyResultDto();
       keyResultTobeUpdated.title = updatekeyResultDto.title;
       keyResultTobeUpdated.deadline = updatekeyResultDto.deadline;
@@ -157,6 +167,7 @@ export class KeyResultsService {
       keyResultTobeUpdated.weight = updatekeyResultDto.weight;
       keyResultTobeUpdated.progress = updatekeyResultDto.progress;
       keyResultTobeUpdated.currentValue = updatekeyResultDto.currentValue;
+      keyResultTobeUpdated.metricTypeId = updatekeyResultDto.metricTypeId;
 
       //  keyResultTobeUpdated['lastUpdateValue'] = updatekeyResultDto['lastUpdateValue'];
 
@@ -165,6 +176,7 @@ export class KeyResultsService {
 
         keyResultTobeUpdated,
       );
+
       if (
         updatekeyResultDto.milestones &&
         updatekeyResultDto.milestones.length > 0
@@ -174,6 +186,12 @@ export class KeyResultsService {
           tenantId,
           updatekeyResultDto.id,
         );
+      }
+      if (
+        oldKeyResultMetricsType.id !== newKeyResultMetricsType.id &&
+        oldKeyResultMetricsType?.name === NAME.MILESTONE
+      ) {
+        await this.milestonesService.removeMilestoneByKeyresultId(id);
       }
       return await this.findOnekeyResult(id);
     } catch (error) {
@@ -214,6 +232,51 @@ export class KeyResultsService {
     );
     return keyResults;
   }
+  async deleteAndUpdateKeyResults(
+    deleteAndUpdateKeyResultDto: DeleteAndUpdateKeyResultDto,
+    tenantId: string,
+    objectiveId: string,
+  ): Promise<KeyResult[]> {
+    const queryRunner =
+      this.keyResultRepository.manager.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const { toBeUpdated, toBeDeleted } = deleteAndUpdateKeyResultDto;
+      for (const keyResult of toBeUpdated) {
+        await queryRunner.manager.update(KeyResult, keyResult.id, {
+          ...keyResult,
+        });
+      }
+
+      if (toBeDeleted) {
+        const entityToDelete = await queryRunner.manager.findOne(KeyResult, {
+          where: { id: toBeDeleted },
+        });
+
+        if (entityToDelete) {
+          await queryRunner.manager.softRemove(entityToDelete);
+        } else {
+          throw new NotFoundException('KeyResult Not Found');
+        }
+      }
+
+      await queryRunner.commitTransaction();
+      return await queryRunner.manager.find(KeyResult, {
+        where: { objectiveId: objectiveId },
+      });
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new BadRequestException(`${error.message}`);
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
   async removekeyResult(id: string): Promise<KeyResult> {
     const keyResult = await this.findOnekeyResult(id);
     if (!keyResult) {
