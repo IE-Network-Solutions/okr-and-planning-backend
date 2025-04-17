@@ -489,7 +489,7 @@ export class OkrReportTaskService {
         .leftJoinAndSelect('planTask.keyResult', 'keyResult') // Join KeyResult for details
         .leftJoinAndSelect('planTask.milestone', 'milestone') // Join milestone
         .where('reportTask.tenantId = :tenantId', { tenantId }) // Filter by tenantId
-        // .andWhere('report.sessionId = :sessionId', { sessionId:activeSessionId })
+        .andWhere('report.sessionId = :sessionId', { sessionId:activeSessionId })
         // Conditionally filter by userIds if 'all' is not present
         .andWhere(
           userIds.includes('all') ? '1=1' : 'plan.userId IN (:...userIds)',
