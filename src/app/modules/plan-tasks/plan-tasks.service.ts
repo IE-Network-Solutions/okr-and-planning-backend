@@ -15,6 +15,8 @@ import { CreatePlanTaskDto } from './dto/create-plan-task.dto';
 import { UpdatePlanTaskDto } from './dto/update-plan-task.dto';
 import { GetFromOrganizatiAndEmployeInfoService } from '../objective/services/get-data-from-org.service';
 import { IPaginationOptions, Pagination } from 'nestjs-typeorm-paginate';
+import { ReportTask } from '../okr-report-task/entities/okr-report-task.entity';
+import { ReportStatusEnum } from '@root/src/core/interfaces/reportStatus.type';
 
 @Injectable()
 export class PlanTasksService {
@@ -29,6 +31,8 @@ export class PlanTasksService {
     private readonly keyResultService: KeyResultsService,
     private readonly getFromOrganizatiAndEmployeInfoService: GetFromOrganizatiAndEmployeInfoService,
     private readonly milestoneService: MilestonesService,
+    @InjectRepository(ReportTask)
+    private reportTaskRepository: Repository<ReportTask>,
     @InjectDataSource() private readonly dataSource: DataSource,
   ) {}
 
@@ -670,5 +674,50 @@ export class PlanTasksService {
 
   async findPlanTaskById(id: string): Promise<PlanTask> {
     return await this.taskRepository.findOneByOrFail({ id });
+  }
+  async findAllFailedPlannedTasksByPlanningPeriod(
+    planningPeriodId: string,
+    tenantId: string,
+    userId: string,
+    sessionId?: string,
+  ): Promise<PlanTask[]> {
+
+    if(!sessionId){
+      const activeSession =
+        await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(
+          tenantId,
+        );
+        sessionId = activeSession.id;
+    }
+    const planningUser = await this.planningUserRepository.findOne({
+      where: { planningPeriodId, tenantId, userId },
+  });
+  
+  const planData = await this.planRepository.findOne({
+      where: { planningUserId: planningUser.id, tenantId, sessionId },
+  });
+  const planTasks = await this.taskRepository.find({ 
+      where: { planId: planData.id, tenantId },
+  });
+  const planTaskIds = planTasks.map(task => task.id);
+
+  
+  const failedReportTasks = await this.reportTaskRepository.find({
+      where: {
+          planTaskId: In(planTaskIds), 
+          status: ReportStatusEnum.Not,     
+          tenantId,
+      },
+  });
+
+  const failedPlanTaskIds = failedReportTasks.map(report => report.planTaskId);
+  
+  const failedPlanTasks = await this.taskRepository.find({
+      where: {
+          id: In(failedPlanTaskIds),
+          tenantId,
+      },
+  });
+    return failedPlanTasks;
   }
 }

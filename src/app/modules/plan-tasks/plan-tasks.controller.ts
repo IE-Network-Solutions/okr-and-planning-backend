@@ -69,6 +69,23 @@ export class PlanTasksController {
   }
 
   @Get(
+    'failed-plan-of-planning-period/:planningPeriodId/:userId',
+  )
+  async findAllFailedPlannedTasksByPlanningPeriod(
+    @Param('planningPeriodId') planningPeriodId: string,
+    @Param('userId') userId: string,
+    @Req() req: Request,
+    @Headers('sessionId') sessionId?: string,
+  ): Promise<PlanTask[]> {
+    const tenantId = req['tenantId'];
+    return await this.planTasksService.findAllFailedPlannedTasksByPlanningPeriod(
+      planningPeriodId,
+      tenantId,
+      userId,
+      sessionId,
+    );
+  }
+  @Get(
     'planned-data/un-reported-plan-tasks/:userId/planning-period/:planningPeriodId',
   )
   async findAllUnreportedTasks(
