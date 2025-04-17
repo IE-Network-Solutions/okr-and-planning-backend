@@ -54,9 +54,11 @@ export class PlanTasksController {
   @Get('get-reported-plan-tasks/by-plan-id/:id')
   async findReportedPlanTasks(
     @Param('id') id: string,
+    @Req() req: Request,
     @Headers('sessionId') sessionId?: string,
   ): Promise<PlanTask[]> {
-    return await this.planTasksService.findReportedPlanTasks(id, sessionId);
+    const tenantId = req['tenantId'];
+    return await this.planTasksService.findReportedPlanTasks(id, tenantId,sessionId);
   }
 
   @Get('/user/:id/:planningId')
