@@ -10,6 +10,7 @@ import { MilestonesService } from '../milestones/milestones.service';
 import { KeyResultsService } from '../key-results/key-results.service';
 import { Plan } from '../plan/entities/plan.entity';
 import { GetFromOrganizatiAndEmployeInfoService } from '../objective/services/get-data-from-org.service';
+import { ReportTask } from '../okr-report-task/entities/okr-report-task.entity';
 
 describe('PlanTasksService', () => {
   let planTasksService: PlanTasksService;
@@ -29,6 +30,10 @@ describe('PlanTasksService', () => {
         {
           provide: getRepositoryToken(Plan),
           useValue: mock<Repository<Plan>>(),
+        },
+        {
+          provide: getRepositoryToken(ReportTask),
+          useValue: mock<Repository<ReportTask>>(),
         },
         {
           provide: PaginationService,
