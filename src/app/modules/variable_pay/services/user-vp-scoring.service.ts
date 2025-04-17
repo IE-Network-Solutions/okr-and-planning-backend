@@ -266,7 +266,7 @@ export class UserVpScoringService {
   }
   async refreshVP(refreshVPDto: RefreshVPDto, tenantId: string): Promise<any> {
 
-    console.log(refreshVPDto?.users?.length,"***************** REFRESH VP *****************");
+
 
     try {
       if (refreshVPDto.users && refreshVPDto.users.length > 0) {
