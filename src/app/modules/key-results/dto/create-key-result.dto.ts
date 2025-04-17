@@ -26,26 +26,31 @@ export class CreateKeyResultDto {
   @IsString()
   sessionId?: string;
   @IsOptional()
-  @Transform(({ value }) => parseFloat(value))
+  @Transform(({ value }) => value === null ? null : parseFloat(value))
+
   @IsNumber({ maxDecimalPlaces: 2 })
   @IsNumber()
   initialValue?: number;
   @IsOptional()
-  @Transform(({ value }) => parseFloat(value))
+  @Transform(({ value }) => value === null ? null : parseFloat(value))
+
   @IsNumber({ maxDecimalPlaces: 2 })
   @IsNumber()
   targetValue?: number;
-  @Transform(({ value }) => parseFloat(value))
+  @Transform(({ value }) => value === null ? null : parseFloat(value))
+
   @IsNumber({ maxDecimalPlaces: 2 })
   @IsNumber()
   weight: number;
   @IsOptional()
-  @Transform(({ value }) => parseFloat(value))
+  @Transform(({ value }) => value === null ? null : parseFloat(value))
+
   @IsNumber({ maxDecimalPlaces: 2 })
   @IsNumber()
   currentValue?: number;
   @IsOptional()
-  @Transform(({ value }) => parseFloat(value))
+  @Transform(({ value }) => value === null ? null : parseFloat(value))
+
   @IsNumber({ maxDecimalPlaces: 2 })
   @IsNumber()
   progress?: number;

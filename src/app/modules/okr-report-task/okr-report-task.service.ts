@@ -1,8 +1,10 @@
 import {
+  BadRequestException,
   ConflictException,
   forwardRef,
   Inject,
   Injectable,
+  NotFoundException,
 } from '@nestjs/common';
 import { ReportTask } from './entities/okr-report-task.entity';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
@@ -21,6 +23,8 @@ import { Status } from '../milestones/enum/milestone.status.enum';
 import { UserVpScoringService } from '../variable_pay/services/user-vp-scoring.service';
 import { CreateReportDTO } from '../okr-report/dto/create-report.dto';
 import { PlanTasksService } from '../plan-tasks/plan-tasks.service';
+import { GetFromOrganizatiAndEmployeInfoService } from '../objective/services/get-data-from-org.service';
+import { In } from 'typeorm';
 
 @Injectable()
 export class OkrReportTaskService {
@@ -42,11 +46,12 @@ export class OkrReportTaskService {
     @InjectRepository(PlanTask)
     private planTaskRepository: Repository<PlanTask>,
 
-    @Inject(forwardRef(() => OkrReportService)) // Use forwardRef here
+    //  @Inject(forwardRef(() => OkrReportService)) // Use forwardRef here
     private reportService: OkrReportService,
 
     private okrProgressService: OkrProgressService,
     private userVpScoringService: UserVpScoringService,
+    private getFromOrganizatiAndEmployeInfoService: GetFromOrganizatiAndEmployeInfoService,
   ) {}
   async findMilestoneById(id: string): Promise<Milestone | null> {
     try {
@@ -78,6 +83,7 @@ export class OkrReportTaskService {
     planningPeriodId: string,
     userId: string,
     planningId?: string,
+    sessionId?: string,
   ): Promise<ReportTask[]> {
     const queryRunner = this.dataSource.createQueryRunner();
 
@@ -109,6 +115,7 @@ export class OkrReportTaskService {
       const returnedReportData = await this.reportService.createReportWithTasks(
         reportData,
         tenantId,
+        sessionId,
       );
       const reportTasks = this.mapDtoToReportTasks(
         createReportDto,
@@ -131,7 +138,7 @@ export class OkrReportTaskService {
       return savedReportTasks;
     } catch (error) {
       await queryRunner.rollbackTransaction();
-      throw error;
+      throw new BadRequestException(error.message);
     } finally {
       await queryRunner.release();
     }
@@ -394,27 +401,45 @@ export class OkrReportTaskService {
     planningPeriodId: string,
     tenantId: string,
     forPlan: string,
-  ): Promise<any> {
+    sessionId?: string,
+  ): Promise<PlanTask[]> {
     try {
+      // Convert forPlan to boolean: '1' -> true, '2' -> false, default -> true
       const isForPlan = forPlan === '1' ? true : forPlan === '2' ? false : true;
+
+      // Resolve sessionId if not provided
+      let activeSessionId = sessionId;
+      if (!activeSessionId) {
+        const activeSession =
+          await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(
+            tenantId,
+          );
+        if (!activeSession) {
+          throw new NotFoundException(
+            'No active session found for this tenant',
+          );
+        }
+        activeSessionId = activeSession.id;
+      }
 
       const queryBuilder = this.planTaskRepository
         .createQueryBuilder('planTask')
         .leftJoinAndSelect('planTask.plan', 'plan')
         .leftJoinAndSelect('planTask.milestone', 'milestone')
         .leftJoinAndSelect('planTask.keyResult', 'keyResult')
-        .leftJoinAndSelect('keyResult.objective', 'objective') // Add join with objective
-        .leftJoinAndSelect('keyResult.metricType', 'metricType') // Add join with metricType
+        .leftJoinAndSelect('keyResult.objective', 'objective')
+        .leftJoinAndSelect('keyResult.metricType', 'metricType')
         .leftJoinAndSelect('planTask.parentTask', 'parentTask')
-        .leftJoinAndSelect('plan.planningUser', 'planningUser') // Add relation to planningUser from the Plan entity
-
-        // Apply filtering conditions
+        .leftJoinAndSelect('plan.planningUser', 'planningUser')
         .where('plan.tenantId = :tenantId', { tenantId })
-        .andWhere('plan.userId = :userId', { userId })
+        .andWhere('plan.createdBy = :userId', { userId })
         .andWhere('planningUser.planningPeriodId = :planningPeriodId', {
           planningPeriodId,
-        }); // Use relation to access planningPeriod ID
-      // .andWhere('plan.isValidated = :isValidated', { isValidated: true }); // Filter by validated plans only
+        })
+        .andWhere('plan.sessionId = :activeSessionId', { activeSessionId })
+        .andWhere('planTask.planId IS NOT NULL');
+
+      // Apply reporting filters based on isForPlan
       if (!isForPlan) {
         queryBuilder.andWhere('plan.isReported = :isReported', {
           isReported: false,
@@ -426,13 +451,11 @@ export class OkrReportTaskService {
           })
           .andWhere('plan.isReported = :isReported', { isReported: true });
       }
-      queryBuilder.andWhere('planTask.planId IS NOT NULL'); // Ensure the task has an associated plan ID
-      const unreportedTasks = await queryBuilder.getMany();
 
-      return unreportedTasks;
+      return await queryBuilder.getMany();
     } catch (error) {
-      throw new ConflictException(
-        `Error fetching unreported tasks: ${error.message}`,
+      throw new NotFoundException(
+        `Failed to fetch unreported tasks: ${error.message}`,
       );
     }
   }
@@ -440,17 +463,33 @@ export class OkrReportTaskService {
     tenantId: UUID,
     userIds: string[],
     planningPeriodId: string,
+    sessionId?: string,
   ) {
     try {
+      let activeSessionId = sessionId;
+      if (!activeSessionId) {
+        const activeSession =
+          await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(
+            tenantId,
+          );
+        activeSessionId = activeSession.id;
+        if (!activeSession) {
+          throw new NotFoundException(
+            'No active session found for this tenant',
+          );
+        }
+      }
       // Fetch all report tasks that match the given tenantId, userIds, and planningPeriodId
       const reportTasks = await this.reportTaskRepo
         .createQueryBuilder('reportTask') // Start from reportTask
         .leftJoinAndSelect('reportTask.planTask', 'planTask') // Join planTask
+        .leftJoinAndSelect('reportTask.report', 'report')
         .leftJoinAndSelect('planTask.plan', 'plan') // Join plan
         .leftJoinAndSelect('plan.planningUser', 'planningUser') // Join planningUser
         .leftJoinAndSelect('planTask.keyResult', 'keyResult') // Join KeyResult for details
         .leftJoinAndSelect('planTask.milestone', 'milestone') // Join milestone
         .where('reportTask.tenantId = :tenantId', { tenantId }) // Filter by tenantId
+        .andWhere('report.sessionId = :sessionId', { sessionId:activeSessionId })
         // Conditionally filter by userIds if 'all' is not present
         .andWhere(
           userIds.includes('all') ? '1=1' : 'plan.userId IN (:...userIds)',

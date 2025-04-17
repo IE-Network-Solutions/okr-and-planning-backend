@@ -8,6 +8,7 @@ import {
   Delete,
   Req,
   Query,
+  Headers,
 } from '@nestjs/common';
 import { PlanTasksService } from './plan-tasks.service';
 import { Plan } from '../plan/entities/plan.entity';
@@ -26,18 +27,23 @@ export class PlanTasksController {
   async create(
     @Req() req: Request,
     @Body() createPlanTaskDto: CreatePlanTasksDto,
+    @Headers('sessionId') sessionId?: string,
   ): Promise<Plan> {
     const tenantId = req['tenantId'];
     return await this.planTasksService.create(
       createPlanTaskDto.tasks,
       tenantId,
+      sessionId,
     );
   }
 
   @Get()
-  async findAll(@Req() req: Request): Promise<Plan[]> {
+  async findAll(
+    @Req() req: Request,
+    @Headers('sessionId') sessionId?: string,
+  ): Promise<Plan[]> {
     const tenantId = req['tenantId'];
-    return await this.planTasksService.findAll(tenantId);
+    return await this.planTasksService.findAll(tenantId, sessionId);
   }
 
   @Get(':id')
@@ -46,20 +52,39 @@ export class PlanTasksController {
   }
 
   @Get('get-reported-plan-tasks/by-plan-id/:id')
-  async findReportedPlanTasks(@Param('id') id: string): Promise<PlanTask[]> {
-    return await this.planTasksService.findReportedPlanTasks(id);
+  async findReportedPlanTasks(
+    @Param('id') id: string,
+    @Headers('sessionId') sessionId?: string,
+  ): Promise<PlanTask[]> {
+    return await this.planTasksService.findReportedPlanTasks(id, sessionId);
   }
-
-  // url: `${OKR_URL}/plan-tasks/un-reported-plan-tasks/${userId}/planning-period/${planningPeriodId}`,
 
   @Get('/user/:id/:planningId')
   async findByUser(
     @Param('id') id: string,
     @Param('planningId') planningId: string,
+    @Headers('sessionId') sessionId?: string,
   ): Promise<Plan[]> {
-    return await this.planTasksService.findByUser(id, planningId);
+    return await this.planTasksService.findByUser(id, planningId, sessionId);
   }
 
+  @Get(
+    'failed-plan-of-planning-period/:planningPeriodId/:userId',
+  )
+  async findAllFailedPlannedTasksByPlanningPeriod(
+    @Param('planningPeriodId') planningPeriodId: string,
+    @Param('userId') userId: string,
+    @Req() req: Request,
+    @Headers('sessionId') sessionId?: string,
+  ): Promise<PlanTask[]> {
+    const tenantId = req['tenantId'];
+    return await this.planTasksService.findAllFailedPlannedTasksByPlanningPeriod(
+      planningPeriodId,
+      tenantId,
+      userId,
+      sessionId,
+    );
+  }
   @Get(
     'planned-data/un-reported-plan-tasks/:userId/planning-period/:planningPeriodId',
   )
@@ -67,30 +92,35 @@ export class PlanTasksController {
     @Param('userId') userId: string,
     @Param('planningPeriodId') planningPeriodId: string,
     @Req() req: Request,
+    @Headers('sessionId') sessionId?: string,
   ): Promise<PlanTask[]> {
     const tenantId = req['tenantId'];
     return await this.planTasksService.findAllUnreportedTasks(
       userId,
       planningPeriodId,
       tenantId,
+      sessionId,
     );
   }
+
   @Post('/users/:planningId')
   async findByUsers(
     @Query() options: IPaginationOptions,
     @Param('planningId') id: string,
     @Body() arrayOfUserId: string[],
+    @Req() req: Request,
+    @Headers('sessionId') sessionId?: string,
   ) {
-    return await this.planTasksService.findByUsers(id, arrayOfUserId, options);
+    const tenantId = req['tenantId'];
+    return await this.planTasksService.findByUsers(
+      id,
+      arrayOfUserId,
+      options,
+      tenantId,
+      sessionId,
+    );
   }
-  // @Post('/users-plan/:planningId')
-  // async findByUserIds(
-  //   @Query() options: IPaginationOptions,
-  //   @Param('planningId') id: string,
-  //   @Body() arrayOfUserId: string[],
-  // ) {
-  //   return await this.planTasksService.findByUserIds(id, arrayOfUserId, options);
-  // }
+
   @Patch()
   async update(
     @Body() updatePlanTaskDto: UpdatePlanTasksDto,

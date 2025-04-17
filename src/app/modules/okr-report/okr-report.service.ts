@@ -15,7 +15,6 @@ import { UUID } from 'crypto';
 import { RockStarDto } from './dto/report-rock-star.dto';
 import { PlanningPeriodsService } from '../planningPeriods/planning-periods/planning-periods.service';
 import { startOfWeek, endOfWeek } from 'date-fns';
-import { GetFromOrganizatiAndEmployeInfoService } from '../objective/services/get-data-from-org.service';
 
 import { ReportStatusEnum } from '@root/src/core/interfaces/reportStatus.type';
 import { OkrReportTaskService } from '../okr-report-task/okr-report-task.service';
@@ -23,6 +22,7 @@ import { PlanService } from '../plan/plan.service';
 import { PaginationDto } from '@root/src/core/commonDto/pagination-dto';
 import { IPaginationOptions, Pagination } from 'nestjs-typeorm-paginate';
 import { PaginationService } from '@root/src/core/pagination/pagination.service';
+import { GetFromOrganizatiAndEmployeInfoService } from '../objective/services/get-data-from-org.service';
 
 @Injectable()
 export class OkrReportService {
@@ -30,8 +30,8 @@ export class OkrReportService {
     @InjectRepository(Report) private reportRepository: Repository<Report>,
     private planningPeriodService: PlanningPeriodsService,
 
-    @Inject(forwardRef(() => OkrReportTaskService))
-    private okrReportTaskService: OkrReportTaskService,
+    //  @Inject(forwardRef(() => OkrReportTaskService))
+    //  private okrReportTaskService: OkrReportTaskService,
     private planService: PlanService,
     private readonly getFromOrganizatiAndEmployeInfoService: GetFromOrganizatiAndEmployeInfoService,
     private readonly paginationService: PaginationService,
@@ -39,63 +39,95 @@ export class OkrReportService {
   async createReportWithTasks(
     reportData: CreateReportDTO,
     tenantId: string,
-    // Data for the Report entity
+    sessionId?: string,
   ): Promise<Report> {
     try {
-      const activeSession =
-        await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(
-          tenantId,
-        );
-      reportData.sessionId = activeSession.id;
-    } catch (error) {
-      throw new NotFoundException('There is no active Session for this tenant');
-    }
-    // Step 1: Create the Report entity
-    const report = this.reportRepository.create({
-      status: ReportStatusEnum.Reported,
-      reportScore: reportData.reportScore,
-      reportTitle: reportData.reportTitle,
-      tenantId: tenantId,
-      userId: reportData?.userId,
-      planId: reportData.planId,
-      createdBy: reportData?.userId,
-      sessionId: reportData.sessionId,
-    });
+      let activeSessionId = sessionId;
 
-    // Step 2: Save the Report entity
-    const savedReport = await this.reportRepository.save(report);
-    if (!savedReport) {
-      throw new Error('Report not Saved');
+      if (!activeSessionId) {
+        try {
+          const activeSession =
+            await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(
+              tenantId,
+            );
+          activeSessionId = activeSession.id;
+        } catch (error) {
+          throw new NotFoundException(
+            'There is no active Session for this tenant',
+          );
+        }
+      }
+
+      // Step 1: Create the Report entity
+      const report = this.reportRepository.create({
+        status: ReportStatusEnum.Reported,
+        reportScore: reportData.reportScore,
+        reportTitle: reportData.reportTitle,
+        tenantId: tenantId,
+        userId: reportData?.userId,
+        planId: reportData.planId,
+        createdBy: reportData?.userId,
+        sessionId: activeSessionId,
+      });
+
+      // Step 2: Save the Report entity
+      const savedReport = await this.reportRepository.save(report);
+      if (!savedReport) {
+        throw new Error('Report not Saved');
+      }
+
+      // Step 3: Return the saved report with its relations
+      return await this.reportRepository.findOne({
+        where: { id: savedReport.id },
+        relations: ['reportTask', 'comments', 'plan'],
+      });
+    } catch (error) {
+      throw error;
     }
-    // Step 5: Return the saved report and its associated tasks
-    return savedReport;
   }
   async getAllReportsByTenantAndPeriod(
     tenantId: UUID,
     userIds: string[],
     planningPeriodId: string,
     paginationOptions?: PaginationDto,
+    sessionId?: string,
   ): Promise<Pagination<Report>> {
     const options: IPaginationOptions = {
       page: paginationOptions?.page,
       limit: paginationOptions?.limit,
     };
+
+    let activeSessionId = sessionId;
+
+    if (!activeSessionId) {
+      try {
+        const activeSession =
+          await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(
+            tenantId,
+          );
+        activeSessionId = activeSession.id;
+      } catch (error) {
+        throw new NotFoundException(
+          'There is no active Session for this tenant',
+        );
+      }
+    }
+
     // Use queryBuilder to fetch reports with complex filtering
-    const reports = await this.reportRepository
+    const queryBuilder = this.reportRepository
       .createQueryBuilder('report') // Start from the 'report' entity
       .leftJoinAndSelect('report.reportTask', 'reportTask') // Join 'reportTask'
-      .leftJoinAndSelect('report.comments', 'ReportComment') // Join 'ReportComment' (adjust alias here)
+      .leftJoinAndSelect('report.comments', 'ReportComment') // Join 'ReportComment'
       .leftJoinAndSelect('reportTask.planTask', 'planTask') // Join 'planTask'
-      // .leftJoinAndSelect('planTask.plan', 'plan') // Join 'plan'
-      .leftJoinAndSelect('report.plan', 'plan') // Join 'reportTask'
+      .leftJoinAndSelect('report.plan', 'plan') // Join 'plan'
       .leftJoinAndSelect('plan.planningUser', 'planningUser') // Join 'planningUser'
       .leftJoinAndSelect('planTask.keyResult', 'keyResult') // Join 'keyResult'
-      .leftJoinAndSelect('keyResult.metricType', 'metricType') // Join 'keyResult'
-
+      .leftJoinAndSelect('keyResult.metricType', 'metricType') // Join 'metricType'
       .leftJoinAndSelect('planTask.milestone', 'milestone') // Join 'milestone'
 
       // Apply filtering conditions
       .where('report.tenantId = :tenantId', { tenantId }) // Filter by tenantId
+      .andWhere('report.sessionId = :sessionId', { sessionId: activeSessionId }) // Filter by sessionId
       .andWhere(
         userIds.includes('all') ? '1=1' : 'report.userId IN (:...userIds)',
         userIds.includes('all') ? {} : { userIds },
@@ -103,10 +135,11 @@ export class OkrReportService {
       .andWhere('planningUser.planningPeriodId = :planningPeriodId', {
         planningPeriodId,
       })
-      .orderBy('report.createdAt', 'DESC'); // Filter by planningPeriodId
+      .orderBy('report.createdAt', 'DESC'); // Order by creation date
 
+    // Use the pagination service to paginate the results
     const paginatedData = await this.paginationService.paginate<Report>(
-      reports,
+      queryBuilder,
       options,
     );
 
