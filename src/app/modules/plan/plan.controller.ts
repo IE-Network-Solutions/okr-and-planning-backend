@@ -55,10 +55,10 @@ export class PlanController {
     @Param('userId') userId: string,
     @Param('planningPeriodId') planningPeriodId: string,
     @Query('forPlan') forPlan: string,
-    @Headers('tenantId') tenantId: string,
+    @Req() req: Request,
     @Headers('sessionId') sessionId?: string,
-   
   ): Promise<Plan[]> {
+    const tenantId = req['tenantId'];
     return await this.planService.findAllUsersPlans(
       tenantId,
       userId,
@@ -69,9 +69,7 @@ export class PlanController {
   }
 
   @Get()
-  async findAllPlansByUserId(
-    @Headers('sessionId') sessionId?: string,
-  ) {
+  async findAllPlansByUserId(@Headers('sessionId') sessionId?: string) {
     return await this.planService.findAll(sessionId);
   }
 

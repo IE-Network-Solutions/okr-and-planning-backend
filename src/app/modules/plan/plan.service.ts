@@ -28,10 +28,14 @@ export class PlanService {
 
     private readonly getFromOrganizatiAndEmployeInfoService: GetFromOrganizatiAndEmployeInfoService,
   ) {}
-  async create(createPlanDto: CreatePlanDto, tenantId: string, sessionId?: string): Promise<Plan> {
+  async create(
+    createPlanDto: CreatePlanDto,
+    tenantId: string,
+    sessionId?: string,
+  ): Promise<Plan> {
     try {
       let activeSessionId = sessionId;
-      
+
       if (!activeSessionId) {
         try {
           const activeSession =
@@ -45,7 +49,7 @@ export class PlanService {
           );
         }
       }
-      
+
       createPlanDto.sessionId = activeSessionId;
       const planningUser = await this.planningUserRepository.findOne({
         where: { id: createPlanDto.planningUserId },
@@ -136,13 +140,13 @@ export class PlanService {
   ): Promise<Plan[]> {
     try {
       let activeSessionId = sessionId;
-      
+
       if (!activeSessionId) {
         try {
           const activeSession =
             await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(
               tenantId,
-            );     
+            );
           activeSessionId = activeSession.id;
         } catch (error) {
           throw new NotFoundException(
@@ -150,7 +154,7 @@ export class PlanService {
           );
         }
       }
-      
+
       const boolValue = forPlan === '1' ? false : true;
       const planningUser = await this.planningUserRepository.findOne({
         where: { userId, planningPeriodId },
@@ -218,11 +222,11 @@ export class PlanService {
   }
   findAll(sessionId?: string) {
     let query = this.planRepository.createQueryBuilder('plan');
-    
+
     if (sessionId) {
       query = query.where('plan.sessionId = :sessionId', { sessionId });
     }
-    
+
     return query.getMany();
   }
 
@@ -272,8 +276,26 @@ export class PlanService {
   async getAllPlansByPlanningPeriodAndUser(
     planningPeriodId: string,
     userId: string,
+    tenantId: string,
+    sessionId?: string,
   ): Promise<any> {
     try {
+      let activeSessionId = sessionId;
+
+      if (!activeSessionId) {
+        try {
+          const activeSession =
+            await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(
+              tenantId,
+            );
+          activeSessionId = activeSession.id;
+        } catch (error) {
+          throw new NotFoundException(
+            'There is no active Session for this tenant',
+          );
+        }
+      }
+
       // const getObjective=(objectiveId:string)=>{
       //      return await this.objectiveService.findOneObjective(objectiveId)
       // }
@@ -290,7 +312,7 @@ export class PlanService {
 
       // Step 2: Fetch All Plans for the User
       const plans = await this.planRepository.find({
-        where: { planningUserId: planningUser.id },
+        where: { planningUserId: planningUser.id, sessionId: activeSessionId },
         relations: [
           'plan', // Child plans
           'parentPlan', // Parent plans
@@ -351,7 +373,7 @@ export class PlanService {
   ): Promise<any> {
     try {
       let activeSessionId = sessionId;
-      
+
       if (!activeSessionId) {
         try {
           const activeSession =
@@ -365,19 +387,16 @@ export class PlanService {
           );
         }
       }
-      
-      const queryBuilder = this.planRepository
-        .createQueryBuilder('plan')
-        .leftJoinAndSelect('plan.planningUser', 'planningUser')
-        .leftJoinAndSelect('planningUser.planningPeriod', 'planningPeriod')
-        .where('plan.tenantId = :tenantId', { tenantId })
-        .andWhere('plan.sessionId = :sessionId', { sessionId: activeSessionId });
 
       const allPlanningUser = await this.planningUserRepository.find({
         where: { planningPeriodId, tenantId },
       });
       const usersPlanData = await this.planRepository.find({
-        where: { userId: In(arrayOfUserId), tenantId },
+        where: {
+          userId: In(arrayOfUserId),
+          tenantId,
+          sessionId: activeSessionId,
+        },
         relations: [
           'tasks', // Load tasks related to the plan
           'tasks.planTask', // Load descendants of the tasks

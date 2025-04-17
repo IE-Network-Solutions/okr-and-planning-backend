@@ -15,7 +15,6 @@ import { UUID } from 'crypto';
 import { RockStarDto } from './dto/report-rock-star.dto';
 import { PlanningPeriodsService } from '../planningPeriods/planning-periods/planning-periods.service';
 import { startOfWeek, endOfWeek } from 'date-fns';
-import { GetFromOrganizatiAndEmployeInfoService } from '../objective/services/get-data-from-org.service';
 
 import { ReportStatusEnum } from '@root/src/core/interfaces/reportStatus.type';
 import { OkrReportTaskService } from '../okr-report-task/okr-report-task.service';
@@ -23,6 +22,7 @@ import { PlanService } from '../plan/plan.service';
 import { PaginationDto } from '@root/src/core/commonDto/pagination-dto';
 import { IPaginationOptions, Pagination } from 'nestjs-typeorm-paginate';
 import { PaginationService } from '@root/src/core/pagination/pagination.service';
+import { GetFromOrganizatiAndEmployeInfoService } from '../objective/services/get-data-from-org.service';
 
 @Injectable()
 export class OkrReportService {
@@ -30,8 +30,8 @@ export class OkrReportService {
     @InjectRepository(Report) private reportRepository: Repository<Report>,
     private planningPeriodService: PlanningPeriodsService,
 
-  //  @Inject(forwardRef(() => OkrReportTaskService))
-  //  private okrReportTaskService: OkrReportTaskService,
+    //  @Inject(forwardRef(() => OkrReportTaskService))
+    //  private okrReportTaskService: OkrReportTaskService,
     private planService: PlanService,
     private readonly getFromOrganizatiAndEmployeInfoService: GetFromOrganizatiAndEmployeInfoService,
     private readonly paginationService: PaginationService,
@@ -43,7 +43,7 @@ export class OkrReportService {
   ): Promise<Report> {
     try {
       let activeSessionId = sessionId;
-      
+
       if (!activeSessionId) {
         try {
           const activeSession =
@@ -52,11 +52,12 @@ export class OkrReportService {
             );
           activeSessionId = activeSession.id;
         } catch (error) {
-          throw new NotFoundException('There is no active Session for this tenant');
+          throw new NotFoundException(
+            'There is no active Session for this tenant',
+          );
         }
       }
-      
-      reportData.sessionId = activeSessionId;
+
       // Step 1: Create the Report entity
       const report = this.reportRepository.create({
         status: ReportStatusEnum.Reported,
@@ -66,7 +67,7 @@ export class OkrReportService {
         userId: reportData?.userId,
         planId: reportData.planId,
         createdBy: reportData?.userId,
-        sessionId: reportData.sessionId,
+        sessionId: activeSessionId,
       });
 
       // Step 2: Save the Report entity
@@ -74,8 +75,12 @@ export class OkrReportService {
       if (!savedReport) {
         throw new Error('Report not Saved');
       }
-      // Step 5: Return the saved report and its associated tasks
-      return savedReport;
+
+      // Step 3: Return the saved report with its relations
+      return await this.reportRepository.findOne({
+        where: { id: savedReport.id },
+        relations: ['reportTask', 'comments', 'plan'],
+      });
     } catch (error) {
       throw error;
     }
@@ -91,9 +96,9 @@ export class OkrReportService {
       page: paginationOptions?.page,
       limit: paginationOptions?.limit,
     };
-    
+
     let activeSessionId = sessionId;
-    
+
     if (!activeSessionId) {
       try {
         const activeSession =
@@ -102,22 +107,22 @@ export class OkrReportService {
           );
         activeSessionId = activeSession.id;
       } catch (error) {
-        throw new NotFoundException('There is no active Session for this tenant');
+        throw new NotFoundException(
+          'There is no active Session for this tenant',
+        );
       }
     }
-    
+
     // Use queryBuilder to fetch reports with complex filtering
-    const reports = await this.reportRepository
+    const queryBuilder = this.reportRepository
       .createQueryBuilder('report') // Start from the 'report' entity
       .leftJoinAndSelect('report.reportTask', 'reportTask') // Join 'reportTask'
-      .leftJoinAndSelect('report.comments', 'ReportComment') // Join 'ReportComment' (adjust alias here)
+      .leftJoinAndSelect('report.comments', 'ReportComment') // Join 'ReportComment'
       .leftJoinAndSelect('reportTask.planTask', 'planTask') // Join 'planTask'
-      // .leftJoinAndSelect('planTask.plan', 'plan') // Join 'plan'
-      .leftJoinAndSelect('report.plan', 'plan') // Join 'reportTask'
+      .leftJoinAndSelect('report.plan', 'plan') // Join 'plan'
       .leftJoinAndSelect('plan.planningUser', 'planningUser') // Join 'planningUser'
       .leftJoinAndSelect('planTask.keyResult', 'keyResult') // Join 'keyResult'
-      .leftJoinAndSelect('keyResult.metricType', 'metricType') // Join 'keyResult'
-
+      .leftJoinAndSelect('keyResult.metricType', 'metricType') // Join 'metricType'
       .leftJoinAndSelect('planTask.milestone', 'milestone') // Join 'milestone'
 
       // Apply filtering conditions
@@ -130,10 +135,11 @@ export class OkrReportService {
       .andWhere('planningUser.planningPeriodId = :planningPeriodId', {
         planningPeriodId,
       })
-      .orderBy('report.createdAt', 'DESC'); // Filter by planningPeriodId
+      .orderBy('report.createdAt', 'DESC'); // Order by creation date
 
+    // Use the pagination service to paginate the results
     const paginatedData = await this.paginationService.paginate<Report>(
-      reports,
+      queryBuilder,
       options,
     );
 

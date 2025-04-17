@@ -29,18 +29,22 @@ export class OkrReportController {
     @Headers('tenantId') tenantId: UUID, // Expecting tenantId from headers
     @Headers('sessionId') sessionId?: string, // Optional sessionId from headers
   ): Promise<any> {
-    return await this.reportService.createReportWithTasks(reportData, tenantId, sessionId);
+    return await this.reportService.createReportWithTasks(
+      reportData,
+      tenantId,
+      sessionId,
+    );
   }
 
   @Post('/by-planning-period/:planningPeriodId') // Expecting planningPeriodId from the URL
   async getAllReports(
     @Body() userIds: (string | 'all')[], // Expecting userIds to be an array of strings or 'all'
-    @Headers('tenantId') tenantId: UUID, // Expecting tenantId from headers
     @Param('planningPeriodId') planningPeriodId: string, // Extract the planningPeriodId from the route
-    @Headers('sessionId') sessionId?: string, // Optional sessionId from headers
-  
+    @Req() req: Request,
+    @Headers('sessionId') sessionId?: string,
     @Query() paginationOptions?: PaginationDto,
   ): Promise<Pagination<Report>> {
+    const tenantId = req['tenantId'];
     const report = {
       items: [],
       meta: {
@@ -54,6 +58,7 @@ export class OkrReportController {
     if (!userIds || userIds.length === 0) {
       return report;
     }
+
     return this.reportService.getAllReportsByTenantAndPeriod(
       tenantId,
       userIds,
@@ -72,7 +77,7 @@ export class OkrReportController {
   }
   @Get('/rock-star/user')
   async rockStart(
-    @Req() req: Request, 
+    @Req() req: Request,
     @Query() rockStarDto?: RockStarDto,
     @Headers('sessionId') sessionId?: string,
   ) {

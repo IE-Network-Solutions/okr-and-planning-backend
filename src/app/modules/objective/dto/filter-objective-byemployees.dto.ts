@@ -16,8 +16,7 @@ export class FilterObjectiveOfAllEmployeesDto {
   @IsOptional()
   departmentId?: string;
 
-
-//   @Transform(({ value }) => parseFloat(value))
-//   @IsNumber({ maxDecimalPlaces: 2 })
-//   @IsNumber()
+  //   @Transform(({ value }) => parseFloat(value))
+  //   @IsNumber({ maxDecimalPlaces: 2 })
+  //   @IsNumber()
 }

@@ -11,6 +11,7 @@ import { MilestonesService } from '../milestones/milestones.service';
 import { KeyResultsService } from '../key-results/key-results.service';
 import { mock } from 'jest-mock-extended';
 import { GetFromOrganizatiAndEmployeInfoService } from '../objective/services/get-data-from-org.service';
+import { ReportTask } from '../okr-report-task/entities/okr-report-task.entity';
 
 describe('PlanTasksController', () => {
   let planTasksController: PlanTasksController;
@@ -32,6 +33,10 @@ describe('PlanTasksController', () => {
         },
         {
           provide: getRepositoryToken(Plan),
+          useClass: Repository,
+        },
+        {
+          provide: getRepositoryToken(ReportTask),
           useClass: Repository,
         },
         {

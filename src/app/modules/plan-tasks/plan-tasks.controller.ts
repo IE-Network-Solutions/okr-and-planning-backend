@@ -47,11 +47,8 @@ export class PlanTasksController {
   }
 
   @Get(':id')
-  async findOne(
-    @Param('id') id: string,
-    @Headers('sessionId') sessionId?: string,
-  ): Promise<Plan> {
-    return await this.planTasksService.findOne(id, sessionId);
+  async findOne(@Param('id') id: string): Promise<Plan> {
+    return await this.planTasksService.findOne(id);
   }
 
   @Get('get-reported-plan-tasks/by-plan-id/:id')
@@ -62,8 +59,6 @@ export class PlanTasksController {
     return await this.planTasksService.findReportedPlanTasks(id, sessionId);
   }
 
-  // url: `${OKR_URL}/plan-tasks/un-reported-plan-tasks/${userId}/planning-period/${planningPeriodId}`,
-
   @Get('/user/:id/:planningId')
   async findByUser(
     @Param('id') id: string,
@@ -73,6 +68,23 @@ export class PlanTasksController {
     return await this.planTasksService.findByUser(id, planningId, sessionId);
   }
 
+  @Get(
+    'failed-plan-of-planning-period/:planningPeriodId/:userId',
+  )
+  async findAllFailedPlannedTasksByPlanningPeriod(
+    @Param('planningPeriodId') planningPeriodId: string,
+    @Param('userId') userId: string,
+    @Req() req: Request,
+    @Headers('sessionId') sessionId?: string,
+  ): Promise<PlanTask[]> {
+    const tenantId = req['tenantId'];
+    return await this.planTasksService.findAllFailedPlannedTasksByPlanningPeriod(
+      planningPeriodId,
+      tenantId,
+      userId,
+      sessionId,
+    );
+  }
   @Get(
     'planned-data/un-reported-plan-tasks/:userId/planning-period/:planningPeriodId',
   )
@@ -90,39 +102,36 @@ export class PlanTasksController {
       sessionId,
     );
   }
+
   @Post('/users/:planningId')
   async findByUsers(
     @Query() options: IPaginationOptions,
     @Param('planningId') id: string,
     @Body() arrayOfUserId: string[],
-    @Headers('tenantId') tenantId: string,
+    @Req() req: Request,
     @Headers('sessionId') sessionId?: string,
   ) {
-    return await this.planTasksService.findByUsers(tenantId,id, arrayOfUserId, options, sessionId);
+    const tenantId = req['tenantId'];
+    return await this.planTasksService.findByUsers(
+      id,
+      arrayOfUserId,
+      options,
+      tenantId,
+      sessionId,
+    );
   }
-  // @Post('/users-plan/:planningId')
-  // async findByUserIds(
-  //   @Query() options: IPaginationOptions,
-  //   @Param('planningId') id: string,
-  //   @Body() arrayOfUserId: string[],
-  // ) {
-  //   return await this.planTasksService.findByUserIds(id, arrayOfUserId, options);
-  // }
+
   @Patch()
   async update(
     @Body() updatePlanTaskDto: UpdatePlanTasksDto,
     @Req() req: Request,
-    @Headers('sessionId') sessionId?: string,
   ): Promise<any> {
     const tenantId = req['tenantId'];
-    return this.planTasksService.updateTasks(updatePlanTaskDto.tasks, tenantId, sessionId);
+    return this.planTasksService.updateTasks(updatePlanTaskDto.tasks, tenantId);
   }
 
   @Delete(':id')
-  remove(
-    @Param('id') id: string,
-    @Headers('sessionId') sessionId?: string,
-  ) {
-    return this.planTasksService.remove(id, sessionId);
+  remove(@Param('id') id: string) {
+    return this.planTasksService.remove(id);
   }
 }
