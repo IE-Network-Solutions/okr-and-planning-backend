@@ -46,7 +46,7 @@ export class OkrReportTaskService {
     @InjectRepository(PlanTask)
     private planTaskRepository: Repository<PlanTask>,
 
-  //  @Inject(forwardRef(() => OkrReportService)) // Use forwardRef here
+    //  @Inject(forwardRef(() => OkrReportService)) // Use forwardRef here
     private reportService: OkrReportService,
 
     private okrProgressService: OkrProgressService,
@@ -406,17 +406,22 @@ export class OkrReportTaskService {
     try {
       // Convert forPlan to boolean: '1' -> true, '2' -> false, default -> true
       const isForPlan = forPlan === '1' ? true : forPlan === '2' ? false : true;
-  
+
       // Resolve sessionId if not provided
       let activeSessionId = sessionId;
       if (!activeSessionId) {
-        const activeSession = await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(tenantId);
+        const activeSession =
+          await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(
+            tenantId,
+          );
         if (!activeSession) {
-          throw new NotFoundException('No active session found for this tenant');
+          throw new NotFoundException(
+            'No active session found for this tenant',
+          );
         }
         activeSessionId = activeSession.id;
       }
-  
+
       const queryBuilder = this.planTaskRepository
         .createQueryBuilder('planTask')
         .leftJoinAndSelect('planTask.plan', 'plan')
@@ -428,22 +433,30 @@ export class OkrReportTaskService {
         .leftJoinAndSelect('plan.planningUser', 'planningUser')
         .where('plan.tenantId = :tenantId', { tenantId })
         .andWhere('plan.createdBy = :userId', { userId })
-        .andWhere('planningUser.planningPeriodId = :planningPeriodId', { planningPeriodId })
+        .andWhere('planningUser.planningPeriodId = :planningPeriodId', {
+          planningPeriodId,
+        })
         .andWhere('plan.sessionId = :activeSessionId', { activeSessionId })
         .andWhere('planTask.planId IS NOT NULL');
-  
+
       // Apply reporting filters based on isForPlan
       if (!isForPlan) {
-        queryBuilder.andWhere('plan.isReported = :isReported', { isReported: false });
+        queryBuilder.andWhere('plan.isReported = :isReported', {
+          isReported: false,
+        });
       } else {
         queryBuilder
-          .andWhere('plan.isReportValidated = :isReportValidated', { isReportValidated: false })
+          .andWhere('plan.isReportValidated = :isReportValidated', {
+            isReportValidated: false,
+          })
           .andWhere('plan.isReported = :isReported', { isReported: true });
       }
-  
+
       return await queryBuilder.getMany();
     } catch (error) {
-      throw new NotFoundException(`Failed to fetch unreported tasks: ${error.message}`);
+      throw new NotFoundException(
+        `Failed to fetch unreported tasks: ${error.message}`,
+      );
     }
   }
   async findAllReportTasks(
@@ -455,10 +468,15 @@ export class OkrReportTaskService {
     try {
       let activeSessionId = sessionId;
       if (!activeSessionId) {
-        const activeSession = await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(tenantId);
+        const activeSession =
+          await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(
+            tenantId,
+          );
         activeSessionId = activeSession.id;
         if (!activeSession) {
-          throw new NotFoundException('No active session found for this tenant');
+          throw new NotFoundException(
+            'No active session found for this tenant',
+          );
         }
       }
       // Fetch all report tasks that match the given tenantId, userIds, and planningPeriodId

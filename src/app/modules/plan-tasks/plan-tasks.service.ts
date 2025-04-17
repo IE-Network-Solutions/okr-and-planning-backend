@@ -150,7 +150,11 @@ export class PlanTasksService {
             subTask.parentTaskId = newTask.id;
             subTask.planId = plan.id;
           }
-          await this.create(createPlanTaskDto.subTasks, tenantId, String(level + 1));
+          await this.create(
+            createPlanTaskDto.subTasks,
+            tenantId,
+            String(level + 1),
+          );
         }
 
         result.push(plan);
@@ -225,7 +229,11 @@ export class PlanTasksService {
     }
   }
 
-  async findReportedPlanTasks(planId: string, tenantId: string, sessionId?: string): Promise<PlanTask[]> {
+  async findReportedPlanTasks(
+    planId: string,
+    tenantId: string,
+    sessionId?: string,
+  ): Promise<PlanTask[]> {
     if (!sessionId) {
       try {
         const activeSession =
@@ -264,7 +272,7 @@ export class PlanTasksService {
   ): Promise<PlanTask[]> {
     try {
       let activeSessionId = sessionId;
-      
+
       if (!activeSessionId) {
         try {
           const activeSession =
@@ -278,7 +286,7 @@ export class PlanTasksService {
           );
         }
       }
-      
+
       const planningUser = await this.planningUserRepository.findOne({
         where: { planningPeriodId, userId },
       });
@@ -326,7 +334,12 @@ export class PlanTasksService {
       throw new Error(`Failed to update PlanningPeriodUser: ${error.message}`);
     }
   }
-  async findByUser(id: string, planningId: string, tenantId: string, sessionId?: string): Promise<Plan[]> {
+  async findByUser(
+    id: string,
+    planningId: string,
+    tenantId: string,
+    sessionId?: string,
+  ): Promise<Plan[]> {
     try {
       if (!sessionId) {
         try {
@@ -403,25 +416,23 @@ export class PlanTasksService {
   async findByUserIds(
     arrayOfUserId: string[],
     paginationOptions: IPaginationOptions,
-    tenantId: string, 
+    tenantId: string,
     sessionId?: string,
   ): Promise<Pagination<Plan>> {
     try {
-
-      console.log('sessionId', tenantId,sessionId);
-          if (!sessionId) {
-            try {
-              const activeSession =
-                await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(
-                  tenantId,
-                );
-              sessionId = activeSession.id;
-            } catch (error) {
-              throw new NotFoundException(
-                'There is no active Session for this tenant',
-              );
-            }
-          }
+      if (!sessionId) {
+        try {
+          const activeSession =
+            await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(
+              tenantId,
+            );
+          sessionId = activeSession.id;
+        } catch (error) {
+          throw new NotFoundException(
+            'There is no active Session for this tenant',
+          );
+        }
+      }
       const options: IPaginationOptions = {
         page: paginationOptions.page,
         limit: paginationOptions.limit,
@@ -433,7 +444,6 @@ export class PlanTasksService {
         .leftJoinAndSelect('plan.tasks', 'tasks') // Fetch tasks
         .leftJoinAndSelect('plan.sessionId', 'tasks') // Fetch tasks
         .andWhere('plan.sessionId = :sessionId', { sessionId });
-
 
       if (!arrayOfUserId.includes('all')) {
         queryBuilder.where('plan.userId IN (:...userIds)', {
@@ -463,20 +473,25 @@ export class PlanTasksService {
   ): Promise<Pagination<Plan>> {
     try {
       let activeSessionId = sessionId;
-  
+
       if (!activeSessionId) {
-        const activeSession = await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(tenantId);
+        const activeSession =
+          await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(
+            tenantId,
+          );
         if (!activeSession) {
-          throw new NotFoundException('No active session found for this tenant');
+          throw new NotFoundException(
+            'No active session found for this tenant',
+          );
         }
         activeSessionId = activeSession.id;
       }
-  
+
       const options: IPaginationOptions = {
         page: paginationOptions.page || 1,
         limit: paginationOptions.limit || 10,
       };
-  
+
       const queryBuilder = this.planRepository
         .createQueryBuilder('plan')
         .leftJoinAndSelect('plan.tasks', 'task')
@@ -492,13 +507,13 @@ export class PlanTasksService {
         .where('planningPeriod.id = :id', { id })
         .andWhere('plan.sessionId = :activeSessionId', { activeSessionId })
         .orderBy('plan.createdAt', 'DESC');
-  
+
       if (!arrayOfUserId.includes('all')) {
         queryBuilder.andWhere('plan.createdBy IN (:...arrayOfUserId)', {
           arrayOfUserId,
         });
       }
-  
+
       return await this.paginationService.paginate<Plan>(queryBuilder, options);
     } catch (error) {
       throw new Error(`Failed to fetch plans: ${error.message}`);

@@ -95,8 +95,14 @@ export class PlanTasksController {
     @Headers('sessionId') sessionId?: string,
   ) {
     const tenantId = req['tenantId'];
-    return await this.planTasksService.findByUsers(id, arrayOfUserId, options,tenantId, sessionId);
- }
+    return await this.planTasksService.findByUsers(
+      id,
+      arrayOfUserId,
+      options,
+      tenantId,
+      sessionId,
+    );
+  }
 
   @Patch()
   async update(

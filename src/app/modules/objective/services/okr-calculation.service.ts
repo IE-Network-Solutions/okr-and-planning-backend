@@ -162,14 +162,15 @@ export class OKRCalculationService {
     filterDto: FilterObjectiveOfAllEmployeesDto,
     paginationOptions?: PaginationDto,
   ) {
-    const users = await this.getFromOrganizatiAndEmployeInfoService.getAllActiveUsers(
-      tenantId,
-    );
+    const users =
+      await this.getFromOrganizatiAndEmployeInfoService.getAllActiveUsers(
+        tenantId,
+      );
     const sessions =
       await this.getFromOrganizatiAndEmployeInfoService.getAllSessions(
         tenantId,
       );
-     const data = await this.getAllEmployeesOkrProgress(
+    const data = await this.getAllEmployeesOkrProgress(
       tenantId,
       filterDto,
       paginationOptions,

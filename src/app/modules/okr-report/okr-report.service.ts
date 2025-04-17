@@ -30,8 +30,8 @@ export class OkrReportService {
     @InjectRepository(Report) private reportRepository: Repository<Report>,
     private planningPeriodService: PlanningPeriodsService,
 
-  //  @Inject(forwardRef(() => OkrReportTaskService))
-  //  private okrReportTaskService: OkrReportTaskService,
+    //  @Inject(forwardRef(() => OkrReportTaskService))
+    //  private okrReportTaskService: OkrReportTaskService,
     private planService: PlanService,
     private readonly getFromOrganizatiAndEmployeInfoService: GetFromOrganizatiAndEmployeInfoService,
     private readonly paginationService: PaginationService,
@@ -43,7 +43,7 @@ export class OkrReportService {
   ): Promise<Report> {
     try {
       let activeSessionId = sessionId;
-      
+
       if (!activeSessionId) {
         try {
           const activeSession =
@@ -52,10 +52,12 @@ export class OkrReportService {
             );
           activeSessionId = activeSession.id;
         } catch (error) {
-          throw new NotFoundException('There is no active Session for this tenant');
+          throw new NotFoundException(
+            'There is no active Session for this tenant',
+          );
         }
       }
-      
+
       // Step 1: Create the Report entity
       const report = this.reportRepository.create({
         status: ReportStatusEnum.Reported,
@@ -73,7 +75,7 @@ export class OkrReportService {
       if (!savedReport) {
         throw new Error('Report not Saved');
       }
-      
+
       // Step 3: Return the saved report with its relations
       return await this.reportRepository.findOne({
         where: { id: savedReport.id },
@@ -94,9 +96,9 @@ export class OkrReportService {
       page: paginationOptions?.page,
       limit: paginationOptions?.limit,
     };
-    
+
     let activeSessionId = sessionId;
-    
+
     if (!activeSessionId) {
       try {
         const activeSession =
@@ -105,10 +107,12 @@ export class OkrReportService {
           );
         activeSessionId = activeSession.id;
       } catch (error) {
-        throw new NotFoundException('There is no active Session for this tenant');
+        throw new NotFoundException(
+          'There is no active Session for this tenant',
+        );
       }
     }
-    
+
     // Use queryBuilder to fetch reports with complex filtering
     const queryBuilder = this.reportRepository
       .createQueryBuilder('report') // Start from the 'report' entity

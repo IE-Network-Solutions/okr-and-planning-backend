@@ -28,10 +28,14 @@ export class PlanService {
 
     private readonly getFromOrganizatiAndEmployeInfoService: GetFromOrganizatiAndEmployeInfoService,
   ) {}
-  async create(createPlanDto: CreatePlanDto, tenantId: string, sessionId?: string): Promise<Plan> {
+  async create(
+    createPlanDto: CreatePlanDto,
+    tenantId: string,
+    sessionId?: string,
+  ): Promise<Plan> {
     try {
       let activeSessionId = sessionId;
-      
+
       if (!activeSessionId) {
         try {
           const activeSession =
@@ -45,7 +49,7 @@ export class PlanService {
           );
         }
       }
-      
+
       createPlanDto.sessionId = activeSessionId;
       const planningUser = await this.planningUserRepository.findOne({
         where: { id: createPlanDto.planningUserId },
@@ -134,18 +138,16 @@ export class PlanService {
     forPlan: string,
     sessionId?: string,
   ): Promise<Plan[]> {
-
-
     try {
       let activeSessionId = sessionId;
-      
+
       if (!activeSessionId) {
         try {
           const activeSession =
             await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(
               tenantId,
             );
-         activeSessionId = activeSession.id;
+          activeSessionId = activeSession.id;
         } catch (error) {
           throw new NotFoundException(
             'There is no active Session for this tenant',
@@ -153,13 +155,6 @@ export class PlanService {
         }
       }
 
-      console.log('sessionId', 
-        tenantId,
-        userId,
-        planningPeriodId,
-        forPlan,
-        sessionId,
-      );
       const boolValue = forPlan === '1' ? false : true;
       const planningUser = await this.planningUserRepository.findOne({
         where: { userId, planningPeriodId },
@@ -204,8 +199,6 @@ export class PlanService {
     }
   }
 
-
-  
   async open(planId: string, tenantId: string): Promise<Plan> {
     try {
       const plan = await this.planRepository.findOne({
@@ -229,11 +222,11 @@ export class PlanService {
   }
   findAll(sessionId?: string) {
     let query = this.planRepository.createQueryBuilder('plan');
-    
+
     if (sessionId) {
       query = query.where('plan.sessionId = :sessionId', { sessionId });
     }
-    
+
     return query.getMany();
   }
 
@@ -287,15 +280,14 @@ export class PlanService {
     sessionId?: string,
   ): Promise<any> {
     try {
-
       let activeSessionId = sessionId;
-      
+
       if (!activeSessionId) {
         try {
           const activeSession =
             await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(
               tenantId,
-            );  
+            );
           activeSessionId = activeSession.id;
         } catch (error) {
           throw new NotFoundException(
@@ -381,7 +373,7 @@ export class PlanService {
   ): Promise<any> {
     try {
       let activeSessionId = sessionId;
-      
+
       if (!activeSessionId) {
         try {
           const activeSession =
@@ -389,22 +381,22 @@ export class PlanService {
               tenantId,
             );
           activeSessionId = activeSession.id;
-
-          console.log('activeSessionIdResponse', activeSessionId);
-
         } catch (error) {
           throw new NotFoundException(
             'There is no active Session for this tenant',
           );
         }
       }
-      
 
       const allPlanningUser = await this.planningUserRepository.find({
         where: { planningPeriodId, tenantId },
       });
       const usersPlanData = await this.planRepository.find({
-        where: { userId: In(arrayOfUserId), tenantId ,sessionId:activeSessionId},
+        where: {
+          userId: In(arrayOfUserId),
+          tenantId,
+          sessionId: activeSessionId,
+        },
         relations: [
           'tasks', // Load tasks related to the plan
           'tasks.planTask', // Load descendants of the tasks
