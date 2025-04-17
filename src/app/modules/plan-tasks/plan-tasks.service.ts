@@ -529,12 +529,14 @@ export class PlanTasksService {
     tenantId: string,
   ): Promise<PlanTask[]> {
     try {
+
       let existingTasks: PlanTask[];
 
       const planId = updatePlanTasksDto[0]?.planId;
       if (!planId) {
         return;
       }
+
 
       const existingPlan = await this.planRepository.findOne({
         where: { id: planId },
@@ -561,6 +563,7 @@ export class PlanTasksService {
           }
         },
       );
+
 
       for (const updatePlanTaskDto of updatePlanTasksDto) {
         if (!updatePlanTaskDto.id) {
@@ -616,6 +619,7 @@ export class PlanTasksService {
       throw new Error('Error updating records');
     }
   }
+
 
   async createTasks(createTaskDtos: UpdatePlanTaskDto[], tenantId: string) {
     const newTasks = createTaskDtos.map((dto) => ({

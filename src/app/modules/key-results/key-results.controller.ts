@@ -70,11 +70,13 @@ export class KeyResultsController {
     @Body() deleteAndUpdateKeyResultDto: DeleteAndUpdateKeyResultDto,
   ) {
     const tenantId = req['tenantId'];
+
     return this.keyResultService.deleteAndUpdateKeyResults(
       deleteAndUpdateKeyResultDto,
       tenantId,
       objectiveId,
     );
+
   }
   @Delete(':id')
   removekeyResult(@Req() req: Request, @Param('id') id: string) {
