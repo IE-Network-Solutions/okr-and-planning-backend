@@ -32,6 +32,10 @@ describe('PlanTasksService', () => {
           useValue: mock<Repository<Plan>>(),
         },
         {
+          provide: getRepositoryToken(ReportTask),
+          useValue: mock<Repository<ReportTask>>(),
+        },
+        {
           provide: PaginationService,
           useValue: mock<PaginationService>(),
         },

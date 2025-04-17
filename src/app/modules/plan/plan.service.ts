@@ -154,6 +154,7 @@ export class PlanService {
           );
         }
       }
+      
 
       const boolValue = forPlan === '1' ? false : true;
       const planningUser = await this.planningUserRepository.findOne({

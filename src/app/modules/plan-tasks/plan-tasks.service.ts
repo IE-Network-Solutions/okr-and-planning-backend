@@ -62,6 +62,8 @@ export class PlanTasksService {
         }
       }
 
+      
+
       const result: any = [];
       if (!createPlanTasksDto || createPlanTasksDto.length === 0) {
         throw new BadRequestException('No tasks provided');
@@ -238,13 +240,15 @@ export class PlanTasksService {
     tenantId: string,
     sessionId?: string,
   ): Promise<PlanTask[]> {
-    if (!sessionId) {
+
+    let activeSessionId = sessionId;
+    if (!activeSessionId) {
       try {
         const activeSession =
           await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(
             tenantId,
           );
-        sessionId = activeSession.id;
+          activeSessionId = activeSession.id;
       } catch (error) {
         throw new NotFoundException(
           'There is no active Session for this tenant',
@@ -262,7 +266,7 @@ export class PlanTasksService {
       .leftJoinAndSelect('plan.planningUser', 'planningUser')
       .leftJoinAndSelect('plan.report', 'report')
       .where('planTask.planId = :planId', { planId })
-      .andWhere('plan.sessionId = :sessionId', { sessionId });
+      .andWhere('plan.sessionId = :sessionId', { sessionId:activeSessionId });
 
     const unreportedTasks = await queryBuilder.getMany();
     return unreportedTasks;
