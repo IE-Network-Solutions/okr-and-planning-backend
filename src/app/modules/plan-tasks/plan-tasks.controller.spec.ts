@@ -35,6 +35,10 @@ describe('PlanTasksController', () => {
           useClass: Repository,
         },
         {
+          provide: getRepositoryToken(ReportTask),
+          useClass: Repository,
+        },
+        {
           provide: PaginationService,
           useValue: {
             paginate: jest.fn(),
