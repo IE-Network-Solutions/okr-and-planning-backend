@@ -208,7 +208,7 @@ pipeline {
                         ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} '
                             cd $REPO_DIR &&
                             npm run build &&
-                            sudo pm2 delete okr-backend &&
+                            sudo pm2 delete okr-backend || true &&
                             sudo npm run start:prod
                         '
                     """
@@ -226,7 +226,7 @@ pipeline {
                         ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} '
                             cd $REPO_DIR &&
                             npm run build &&
-                            sudo pm2 delete okr-backend-staging &&
+                            sudo pm2 delete okr-backend-staging || true &&
                             sudo npm run start:stage
                         '
                     """
@@ -244,7 +244,7 @@ pipeline {
                         sshpass -p '$SERVER_PASSWORD' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_2} '
                             cd $REPO_DIR &&
                             npm run build &&
-                            sudo pm2 delete okr-backend &&
+                            sudo pm2 delete okr-backend || true &&
                             sudo npm run start:prod
                         '
                     """
