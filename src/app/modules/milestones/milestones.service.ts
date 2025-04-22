@@ -160,12 +160,14 @@ export class MilestonesService {
       where: { keyResultId: id },
     });
 
+
     if (milestones.length === 0) {
       throw new NotFoundException(`No milestones found for keyResultId ${id}`);
     }
 
     return await this.milestoneRepository.softRemove(milestones);
   }
+
 
   async updateMilestoneStatusForAllUsers(
     keyResults: KeyResult[],

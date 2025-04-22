@@ -184,7 +184,6 @@ export class ObjectiveService {
         queryBuilder,
         options,
       );
-
       const calculatedObjectives =
         await this.averageOkrCalculation.calculateObjectiveProgress(
           paginatedData.items,
@@ -422,7 +421,29 @@ export class ObjectiveService {
       throw new BadRequestException(error.message);
     }
   }
+  async findUsersObjectivesBySession(
+    tenantId: string,
+    sessionId: string,
+    users: string[],
+  ): Promise<Objective[]> {
+    try {
+      const queryConditions: any = {
+        where: {
+          userId: In(users),
+          tenantId: tenantId,
+        },
+        relations: ['keyResults', 'keyResults.milestones'],
+      };
 
+      if (sessionId) {
+        queryConditions.where.sessionId = sessionId;
+      }
+      const objectives = await this.objectiveRepository.find(queryConditions);
+      const objectiveWithProgress =
+        await this.averageOkrCalculation.calculateObjectiveProgress(objectives);
+      return objectiveWithProgress;
+    } catch (error) {}
+  }
   async findUsersObjectives(
     tenantId: string,
     users: string[],

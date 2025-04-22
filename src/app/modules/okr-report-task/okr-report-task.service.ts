@@ -46,7 +46,7 @@ export class OkrReportTaskService {
     @InjectRepository(PlanTask)
     private planTaskRepository: Repository<PlanTask>,
 
-    //  @Inject(forwardRef(() => OkrReportService)) // Use forwardRef here
+
     private reportService: OkrReportService,
 
     private okrProgressService: OkrProgressService,
