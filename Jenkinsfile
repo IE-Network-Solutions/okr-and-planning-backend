@@ -196,41 +196,64 @@ pipeline {
             }
         }
 
-        stage('Run Nest.js App') {
-            parallel {
-                stage('Start App on Server 1') {
-                    when {
-                        expression { env.BRANCH_NAME == "'develop'" || env.BRANCH_NAME == "'production'" }
-                    }
-                    steps {
-                        sshagent([env.SSH_CREDENTIALS_ID_1]) {
-                            sh "ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} 'cd $REPO_DIR && npm run build && sudo npm run start:prod'"
-                        }
-                    }
-                }
-                stage('Start App on Server 1-staging') {
-                    when {
-                        expression { env.BRANCH_NAME == "'staging'" }
-                    }
-                    steps {
-                        sshagent([env.SSH_CREDENTIALS_ID_1]) {
-                            sh "ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} 'cd $REPO_DIR && npm run build && sudo npm run start:stage'"
-                        }
-                    }
-                }
-
-                stage('Start App on Server 2') {
-                    when {
-                        expression { env.REMOTE_SERVER_2 != null }
-                    }
-                    steps {
-                        withCredentials([string(credentialsId: 'pepproduction2', variable: 'SERVER_PASSWORD')]) {
-                            sh "sshpass -p '$SERVER_PASSWORD' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_2} 'cd $REPO_DIR && npm run build && sudo npm run start:prod'"
-                        }
-                    }
+      stage('Run Nest.js App') {
+    parallel {
+        stage('Start App on Server 1') {
+            when {
+                expression { env.BRANCH_NAME == "'develop'" || env.BRANCH_NAME == "'production'" }
+            }
+            steps {
+                sshagent([env.SSH_CREDENTIALS_ID_1]) {
+                    sh """
+                        ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} '
+                            cd $REPO_DIR &&
+                            npm run build &&
+                            sudo pm2 delete okr-backend &&
+                            sudo npm run start:prod
+                        '
+                    """
                 }
             }
         }
+
+        stage('Start App on Server 1-staging') {
+            when {
+                expression { env.BRANCH_NAME == "'staging'" }
+            }
+            steps {
+                sshagent([env.SSH_CREDENTIALS_ID_1]) {
+                    sh """
+                        ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} '
+                            cd $REPO_DIR &&
+                            npm run build &&
+                            sudo pm2 delete okr-backend-staging &&
+                            sudo npm run start:stage
+                        '
+                    """
+                }
+            }
+        }
+
+        stage('Start App on Server 2') {
+            when {
+                expression { env.REMOTE_SERVER_2 != null }
+            }
+            steps {
+                withCredentials([string(credentialsId: 'pepproduction2', variable: 'SERVER_PASSWORD')]) {
+                    sh """
+                        sshpass -p '$SERVER_PASSWORD' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_2} '
+                            cd $REPO_DIR &&
+                            npm run build &&
+                            sudo pm2 delete okr-backend &&
+                            sudo npm run start:prod
+                        '
+                    """
+                }
+            }
+        }
+    }
+}
+
     }
 
     post {
