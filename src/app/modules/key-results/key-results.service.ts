@@ -147,12 +147,16 @@ export class KeyResultsService {
   ): Promise<KeyResult> {
     try {
       const keyResult = await this.findOnekeyResult(id);
-      const oldKeyResultMetricsType =
-        await this.metricTypeService.findOneMetricType(keyResult?.metricTypeId);
-      const newKeyResultMetricsType =
-        await this.metricTypeService.findOneMetricType(
+      let  oldKeyResultMetricsType = null;
+      let newKeyResultMetricsType = null;
+
+      if(updatekeyResultDto?.metricTypeId){
+       oldKeyResultMetricsType=await this.metricTypeService.findOneMetricType(keyResult?.metricTypeId);
+
+      newKeyResultMetricsType=await this.metricTypeService.findOneMetricType(
           updatekeyResultDto?.metricTypeId,
         );
+      }
 
       if (!keyResult) {
         throw new NotFoundException(`keyResult Not Found`);
@@ -189,7 +193,9 @@ export class KeyResultsService {
       }
       if (
         oldKeyResultMetricsType.id !== newKeyResultMetricsType.id &&
-        oldKeyResultMetricsType?.name === NAME.MILESTONE
+        oldKeyResultMetricsType?.name === NAME.MILESTONE &&
+        newKeyResultMetricsType!==null &&
+        oldKeyResultMetricsType!==null
       ) {
         await this.milestonesService.removeMilestoneByKeyresultId(id);
       }

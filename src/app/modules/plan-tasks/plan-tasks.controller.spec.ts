@@ -32,6 +32,10 @@ describe('PlanTasksController', () => {
           useClass: Repository,
         },
         {
+          provide: getRepositoryToken(ReportTask),
+          useClass: Repository,
+        },
+        {
           provide: getRepositoryToken(Plan),
           useClass: Repository,
         },

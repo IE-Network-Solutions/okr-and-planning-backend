@@ -265,6 +265,9 @@ export class UserVpScoringService {
     }
   }
   async refreshVP(refreshVPDto: RefreshVPDto, tenantId: string): Promise<any> {
+
+
+
     try {
       if (refreshVPDto.users && refreshVPDto.users.length > 0) {
         const allUsersVP = await Promise.all(
