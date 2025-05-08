@@ -81,10 +81,13 @@ export class OKRDashboardService {
           tenantId,
         );
       const employeeJobInfo = response.employeeJobInformation[0];
+      
   const teamOk = await this.oKRCalculationService.calculateRecursiveOKR(
+
         employeeJobInfo.departmentId,
         tenantId,
         departments,
+        paginationOptions,
       );
       return teamOk || 0;
     } catch (error) {
