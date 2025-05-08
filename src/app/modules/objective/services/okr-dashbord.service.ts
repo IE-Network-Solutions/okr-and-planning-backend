@@ -87,7 +87,6 @@ export class OKRDashboardService {
         employeeJobInfo.departmentId,
         tenantId,
         departments,
-        paginationOptions,
       );
       return teamOk || 0;
     } catch (error) {
