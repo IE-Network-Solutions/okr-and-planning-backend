@@ -71,6 +71,11 @@ export class OKRCalculationService {
         companyOkr: 0,
         teamOkr: 0,
       };
+      const userTeamOkr = await this.calculateRecursiveOKR(
+        employeeJobInfo.departmentId,
+        tenantId,
+        departments,
+      );
 
       if (employeeJobInfo.departmentLeadOrNot) {
         const objectives = await this.objectiveService.findAllObjectives(
@@ -81,14 +86,10 @@ export class OKRCalculationService {
         const leadOKR = await this.averageOkrCalculation.calculateAverageOkr(
           objectives.items,
         );
-        const teamOkr = await this.calculateRecursiveOKR(
-          employeeJobInfo.departmentId,
-          tenantId,
-          departments,
-        );
+    
         const totalLeadOkr =
           (leadOKR.okr * (averageOKRRule?.myOkrPercentage ?? 20)) / 100 +
-          (teamOkr * (averageOKRRule?.teamOkrPercentage ?? 80)) / 100;
+          (userTeamOkr * (averageOKRRule?.teamOkrPercentage ?? 80)) / 100;
         Object.assign(result, {
           userOkr: totalLeadOkr,
           daysLeft: leadOKR.daysLeft,
@@ -135,14 +136,14 @@ export class OKRCalculationService {
       );
       result.companyOkr = companyOkr;
 
-      const teamOkr = await this.calculateTeamOkrOfUser(
-        userId,
-        employeeJobInfo.departmentId,
-        tenantId,
-        departments,
-        paginationOptions,
-      );
-      result.teamOkr = teamOkr;
+      // const teamOkr = await this.calculateTeamOkrOfUser(
+      //   userId,
+      //   employeeJobInfo.departmentId,
+      //   tenantId,
+      //   departments,
+      //   paginationOptions,
+      // );
+      result.teamOkr = userTeamOkr;
 
       return result;
     } catch (error) {
