@@ -332,7 +332,7 @@ sshagent (credentials: [SSH_CREDENTIALS_ID_1]) {
         }
         failure {
             echo 'Deployment failed.'
-            okrext(
+            emailext(
                 subject: "FAILED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
                 body: """
                     <html>
