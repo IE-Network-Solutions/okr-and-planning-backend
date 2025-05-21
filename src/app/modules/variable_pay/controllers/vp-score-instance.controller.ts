@@ -20,6 +20,7 @@ import { CreateVpScoreInstanceDto } from '../dtos/vp-score-instance-dto/create-v
 import { UpdateVpScoreInstanceDto } from '../dtos/vp-score-instance-dto/update-vp-score-instance.dto';
 import { VpScoreTargetFilterDto } from '../dtos/vp-score-instance-dto/vp-filter-dto';
 import { VpScoreFilterDto } from '../dtos/vp-score-instance-dto/vp-score-filter';
+import { FilterVPRecognitionDTo } from '../dtos/vp-score-instance-dto/filter-vp-recognition.dto';
 
 @Controller('vp-score-instance')
 @ApiTags('vp-score-instance')
@@ -109,5 +110,17 @@ export class VpScoreInstanceController {
     @Param('id') id: string,
   ) {
     return this.vpScoreInstanceService.removeVpScoreInstance(id);
+  }
+  
+  @Post('/get-vp-score/recognition')
+  getVpScoreForRecognition(
+  @Headers('tenantId') tenantId: string,
+    @Body() filterVpRecognitionDTo: FilterVPRecognitionDTo,
+  ) {
+    return this.vpScoreInstanceService.getVpScoreForRecognition(
+      filterVpRecognitionDTo,
+      tenantId,
+  
+    );
   }
 }
