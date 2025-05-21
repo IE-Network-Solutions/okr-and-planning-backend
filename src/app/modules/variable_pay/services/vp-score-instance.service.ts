@@ -21,6 +21,7 @@ import { VpCriteriaService } from './vp-criteria.service';
 import { VpScoreTargetFilterDto } from '../dtos/vp-score-instance-dto/vp-filter-dto';
 import { CriteriaTargetService } from './criteria-target.service';
 import { VpScoreFilterDto } from '../dtos/vp-score-instance-dto/vp-score-filter';
+import { FilterVPRecognitionDTo } from '../dtos/vp-score-instance-dto/filter-vp-recognition.dto';
 @Injectable()
 export class VpScoreInstanceService {
   constructor(
@@ -319,5 +320,37 @@ export class VpScoreInstanceService {
 
       return amount;
     } catch (error) {}
+  }
+
+    async getVpScoreForRecognition( filterVpRecognitionDTo: FilterVPRecognitionDTo,tenantId:string) {
+    try {
+      const getAllMonths = await this.getUsersService.getMonths(tenantId);
+      const data = { recipientId: null, totalPoints: 0 };
+      const returnedData=[]
+      const startDate = filterVpRecognitionDTo.startDate;
+      const endDate = filterVpRecognitionDTo.endDate;
+      const condition = filterVpRecognitionDTo.condition;
+      const value = filterVpRecognitionDTo.value;
+
+      const vpScores = await this.vpScoreInstanceRepository.find({    where: { tenantId: tenantId } })    
+      for (const vpScore of vpScores) {
+                const vpScoreDate = new Date(vpScore.createdAt);
+const score= parseFloat(vpScore.vpScore.toString())
+        const month = getAllMonths.items.find(
+          (month) => month.id === vpScore.monthId,    ) 
+         if (new Date(month.startDate) <=  new Date(startDate) && new Date(month.endDate) <= new Date(endDate)) {
+          if (eval(`${score} ${condition} ${value}`)) {
+            data.recipientId = vpScore.userId;
+            data.totalPoints = vpScore.vpScore;
+            returnedData.push(data);
+          } 
+        }
+
+      }
+   return   returnedData
+
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
   }
 }

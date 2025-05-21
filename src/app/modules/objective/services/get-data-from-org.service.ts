@@ -76,6 +76,17 @@ export class GetFromOrganizatiAndEmployeInfoService {
       .toPromise();
     return response.data;
   }
+    async getMonths(tenantId: string) {
+    const response = await this.httpService
+      .get(`${this.orgUrl}/month`, {
+        headers: {
+          tenantid: tenantId,
+            Authorization: this.request['authToken'],
+        },
+      })
+      .toPromise();
+    return response.data;
+  }
 
   async getActiveSession(tenantId: string) {
     const response = await this.httpService
