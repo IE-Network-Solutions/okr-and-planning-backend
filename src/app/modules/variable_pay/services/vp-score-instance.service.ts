@@ -330,19 +330,19 @@ export class VpScoreInstanceService {
       const startDate = filterVpRecognitionDTo.startDate;
       const endDate = filterVpRecognitionDTo.endDate;
       const condition = filterVpRecognitionDTo.condition;
-      const value = filterVpRecognitionDTo.value;
+      const value = parseFloat(filterVpRecognitionDTo.value.toString());
 
       const vpScores = await this.vpScoreInstanceRepository.find({    where: { tenantId: tenantId } })    
       for (const vpScore of vpScores) {
-                const vpScoreDate = new Date(vpScore.createdAt);
 const score= parseFloat(vpScore.vpScore.toString())
         const month = getAllMonths.items.find(
-          (month) => month.id === vpScore.monthId,    ) 
+          (month) => month.id === vpScore.monthId ) 
          if (new Date(month.startDate) <=  new Date(startDate) && new Date(month.endDate) <= new Date(endDate)) {
+
           if (eval(`${score} ${condition} ${value}`)) {
             data.recipientId = vpScore.userId;
             data.totalPoints = vpScore.vpScore;
-            returnedData.push(data);
+            returnedData.push({...data});
           } 
         }
 
