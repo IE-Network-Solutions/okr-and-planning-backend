@@ -27,6 +27,7 @@ import { ExcludeAuthGuard } from '@root/src/core/guards/exclud.guard';
 import { OKRCalculationService } from './services/okr-calculation.service';
 import { UpdateObjectiveStatusDto } from './dto/update-objective-status.dto';
 import { FilterObjectiveOfAllEmployeesDto } from './dto/filter-objective-byemployees.dto';
+import { FilterVPRecognitionDTo } from '../variable_pay/dtos/vp-score-instance-dto/filter-vp-recognition.dto';
 
 @Controller('objective')
 @ApiTags('Objective')
@@ -252,6 +253,19 @@ export class ObjectiveController {
       tenantId,
       filterObjectiveOfAllEmployeesDto,
       paginationOptions,
+    );
+  }
+
+    @Post('/get-okr-score/to-recognize/all-employees/score')
+  async getOkrScoreInTimeRange(
+  
+     @Headers('tenantId') tenantId: string,
+       @Body() filterVpRecognitionDTo: FilterVPRecognitionDTo,
+  ) {
+      return this.oKRCalculationService.getOkrScoreInTimeRange(
+      filterVpRecognitionDTo,
+      tenantId,
+  
     );
   }
 }
