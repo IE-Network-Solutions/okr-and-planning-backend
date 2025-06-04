@@ -310,18 +310,18 @@ export class PlanService {
           `The specified planning period or user does not exist.`,
         );
       }
-
       // Step 2: Fetch All Plans for the User
-      const plans = await this.planRepository.find({
-        where: { planningUserId: planningUser.id, sessionId: activeSessionId },
-        relations: [
-          'plan', // Child plans
-          'parentPlan', // Parent plans
-          'tasks', // Tasks related to the plan
-          'tasks.keyResult', // KeyResult related to tasks
-          'tasks.keyResult.objective', // Objective related to KeyResult
-        ],
-      });
+      const plans = await this.planRepository
+  .createQueryBuilder('plan')
+  .leftJoinAndSelect('plan.plan', 'childPlans') // Child plans
+  .leftJoinAndSelect('plan.parentPlan', 'parentPlan') // Parent plans
+  .leftJoinAndSelect('plan.tasks', 'tasks') // Tasks related to the plan
+  .leftJoinAndSelect('tasks.keyResult', 'keyResult') // KeyResult related to tasks
+  .leftJoinAndSelect('keyResult.objective', 'objective') // Objective related to KeyResult
+  .where('plan.planningUserId = :planningUserId', { planningUserId: planningUser.id })
+  .andWhere('plan.sessionId = :sessionId', { sessionId: activeSessionId })
+  .getMany();
+
 
       if (!plans || plans.length === 0) {
         return []; // Return an empty array if no plans exist
@@ -336,7 +336,7 @@ export class PlanService {
           isReported: plan.isReported,
           level: plan.level,
           parentPlan: plan.parentPlan ? buildHierarchy(plan.parentPlan) : null, // Recursively fetch parent plans
-          tasks: plan.tasks.map((task) => task),
+          tasks: plan.tasks?.map((task) => task),
         };
       };
 
