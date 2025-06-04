@@ -15,4 +15,5 @@ export const dataSourceOptions: DataSourceOptions = {
   migrationsRun: true,
 };
 const dataSource = new DataSource(dataSourceOptions);
+
 export default dataSource;

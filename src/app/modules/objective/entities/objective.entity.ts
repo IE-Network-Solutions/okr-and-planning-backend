@@ -3,6 +3,7 @@ import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
 import { KeyResult } from '../../key-results/entities/key-result.entity';
 @Entity()
 export class Objective extends BaseModel {
+  
   @Column({ type: 'varchar', length: '1000', nullable: false })
   title: string;
   @Column({ type: 'varchar', length: '255', nullable: true })

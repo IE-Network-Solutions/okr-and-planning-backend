@@ -50,6 +50,7 @@ export class ObjectiveController {
     );
   }
 
+ 
   @Get(':userId')
   async findAllObjectives(
     @Req() req: Request,
@@ -84,7 +85,6 @@ export class ObjectiveController {
       tenantId,
     );
   }
-
   @Delete(':id')
   removeObjective(@Req() req: Request, @Param('id') id: string) {
     return this.objectiveService.removeObjective(id);
@@ -104,6 +104,7 @@ export class ObjectiveController {
   }
 
   @Get('/objective-filter/all/objective')
+
   objectiveAll(
     @Req() req: Request,
     @Query() paginationOptions?: PaginationDto,

@@ -27,6 +27,7 @@ import { FilterVPRecognitionDTo } from '../../variable_pay/dtos/vp-score-instanc
 
 @Injectable()
 export class OKRCalculationService {
+ 
   constructor(
     private readonly averageOkrCalculation: AverageOkrCalculation,
     private readonly getFromOrganizatiAndEmployeInfoService: GetFromOrganizatiAndEmployeInfoService,

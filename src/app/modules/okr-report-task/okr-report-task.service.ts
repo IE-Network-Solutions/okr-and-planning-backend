@@ -28,6 +28,7 @@ import { In } from 'typeorm';
 
 @Injectable()
 export class OkrReportTaskService {
+  
   constructor(
     @InjectRepository(ReportTask)
     private reportTaskRepo: Repository<ReportTask>,

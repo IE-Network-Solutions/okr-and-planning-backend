@@ -38,6 +38,7 @@ export class ReportTask extends BaseModel {
     onDelete: 'SET NULL',
     onUpdate: 'CASCADE',
   })
+  
   @JoinColumn({ name: 'reportId' }) // Ensure column matches your DB schema
   report: Report;
 

@@ -8,6 +8,8 @@ import { GetFromOrganizatiAndEmployeInfoService } from './get-data-from-org.serv
 
 @Injectable()
 export class AverageOkrCalculation {
+
+  
   async calculateAverageOkr(objectives: Objective[]): Promise<OkrProgressDto> {
     // const completedOkr = objectives.filter(
     //   (objective) =>

@@ -40,6 +40,7 @@ configuration values obtained from a ConfigService. */
         database: configService.get<string>('db.name'),
         entities: [__dirname + '/../**/*.entity{.ts,.js}'],
         synchronize: configService.get<boolean>('db.synchronize'),
+        
         subscribers: [
           ObjectiveSubscriber,
           KeyResultsSubscriber,
@@ -49,15 +50,16 @@ configuration values obtained from a ConfigService. */
           PlanTaskSubscriber,
         ],
       }),
+      
       inject: [ConfigService],
     }),
+  
   ],
   providers: [
     {
       provide: APP_GUARD,
       useClass: TenantGuard,
     },
-
     {
       provide: APP_GUARD,
       useClass: AuthGuard,

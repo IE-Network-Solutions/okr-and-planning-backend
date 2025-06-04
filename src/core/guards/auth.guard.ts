@@ -8,6 +8,7 @@ import { Reflector } from '@nestjs/core';
 import * as admin from 'firebase-admin';
 
 @Injectable()
+
 export class AuthGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
 

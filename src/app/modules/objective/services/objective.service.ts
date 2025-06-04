@@ -102,6 +102,9 @@ export class ObjectiveService {
       await queryRunner.release();
     }
   }
+
+
+ 
   async findAllObjectives(
     userId: string,
     tenantId: string,
