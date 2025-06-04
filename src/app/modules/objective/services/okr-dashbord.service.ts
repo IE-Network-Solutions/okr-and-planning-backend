@@ -80,10 +80,8 @@ export class OKRDashboardService {
         await this.getFromOrganizatiAndEmployeInfoService.getDepartmentsWithUsers(
           tenantId,
         );
-
       const employeeJobInfo = response.employeeJobInformation[0];
-
-      const teamOk = await this.oKRCalculationService.calculateRecursiveOKR(
+  const teamOk = await this.oKRCalculationService.calculateRecursiveOKR(
         employeeJobInfo.departmentId,
         tenantId,
         departments,

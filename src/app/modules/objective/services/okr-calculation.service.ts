@@ -87,7 +87,6 @@ export class OKRCalculationService {
         const leadOKR = await this.averageOkrCalculation.calculateAverageOkr(
           objectives.items,
         );
- 
         const totalLeadOkr =
           (leadOKR.okr * (averageOKRRule?.myOkrPercentage ?? 20)) / 100 +
           (userTeamOkr * (averageOKRRule?.teamOkrPercentage ?? 80)) / 100;
