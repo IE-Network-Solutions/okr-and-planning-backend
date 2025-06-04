@@ -7,7 +7,7 @@
  </a>
 </p>
 
-## Description 
+## Description of
 
 [Nest](https://github.com/nestjs/nest) backend application written in typescript for mobile marketplace app
 
