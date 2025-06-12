@@ -311,7 +311,18 @@ export class PlanService {
         );
       }
       // Step 2: Fetch All Plans for the User
-      const plans = await this.planRepository
+  //     const plans = await this.planRepository
+  // .createQueryBuilder('plan')
+  // .leftJoinAndSelect('plan.plan', 'childPlans') // Child plans
+  // .leftJoinAndSelect('plan.parentPlan', 'parentPlan') // Parent plans
+  // .leftJoinAndSelect('plan.tasks', 'tasks') // Tasks related to the plan
+  // .leftJoinAndSelect('tasks.keyResult', 'keyResult') // KeyResult related to tasks
+  // .leftJoinAndSelect('keyResult.objective', 'objective') // Objective related to KeyResult
+  // .where('plan.planningUserId = :planningUserId', { planningUserId: planningUser.id })
+  // .andWhere('plan.sessionId = :sessionId', { sessionId: activeSessionId })
+  // .getMany();
+
+  const plans = await this.planRepository
   .createQueryBuilder('plan')
   .leftJoinAndSelect('plan.plan', 'childPlans') // Child plans
   .leftJoinAndSelect('plan.parentPlan', 'parentPlan') // Parent plans
