@@ -311,26 +311,26 @@ export class PlanService {
         );
       }
       // Step 2: Fetch All Plans for the User
-  //     const plans = await this.planRepository
-  // .createQueryBuilder('plan')
-  // .leftJoinAndSelect('plan.plan', 'childPlans') // Child plans
-  // .leftJoinAndSelect('plan.parentPlan', 'parentPlan') // Parent plans
-  // .leftJoinAndSelect('plan.tasks', 'tasks') // Tasks related to the plan
-  // .leftJoinAndSelect('tasks.keyResult', 'keyResult') // KeyResult related to tasks
-  // .leftJoinAndSelect('keyResult.objective', 'objective') // Objective related to KeyResult
-  // .where('plan.planningUserId = :planningUserId', { planningUserId: planningUser.id })
-  // .andWhere('plan.sessionId = :sessionId', { sessionId: activeSessionId })
-  // .getMany();
-      const plans = await this.planRepository.find({
-        where: { planningUserId: planningUser.id, sessionId: activeSessionId },
-        relations: [
-          'plan', // Child plans
-          'parentPlan', // Parent plans
-          'tasks', // Tasks related to the plan
-          'tasks.keyResult', // KeyResult related to tasks
-          'tasks.keyResult.objective', // Objective related to KeyResult
-        ],
-      });
+      const plans = await this.planRepository
+  .createQueryBuilder('plan')
+  .leftJoinAndSelect('plan.plan', 'childPlans') // Child plans
+  .leftJoinAndSelect('plan.parentPlan', 'parentPlan') // Parent plans
+  .leftJoinAndSelect('plan.tasks', 'tasks') // Tasks related to the plan
+  .leftJoinAndSelect('tasks.keyResult', 'keyResult') // KeyResult related to tasks
+  .leftJoinAndSelect('keyResult.objective', 'objective') // Objective related to KeyResult
+  .where('plan.planningUserId = :planningUserId', { planningUserId: planningUser.id })
+  .andWhere('plan.sessionId = :sessionId', { sessionId: activeSessionId })
+  .getMany();
+      // const plans = await this.planRepository.find({
+      //   where: { planningUserId: planningUser.id, sessionId: activeSessionId },
+      //   relations: [
+      //     'plan', // Child plans
+      //     'parentPlan', // Parent plans
+      //     'tasks', // Tasks related to the plan
+      //     'tasks.keyResult', // KeyResult related to tasks
+      //     'tasks.keyResult.objective', // Objective related to KeyResult
+      //   ],
+      // });
 
 
       if (!plans || plans.length === 0) {
