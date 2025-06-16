@@ -11,6 +11,12 @@ export class WeeklyPriorityTask extends BaseModel {
   @Column({ type: 'uuid' })
   departmentId: string;
 
+  @Column({ type: 'uuid' })
+  planId: string;
+
+  @Column({ type: 'uuid' })
+  taskId: string;
+
   @Column({ type: 'enum', enum: Status, default: Status.PENDING })
   status: Status;
 

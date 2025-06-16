@@ -86,6 +86,20 @@ export class WeeklyPrioritiesService {
             },
           );
         }
+
+        if (filterWeeklyPriorityDto.planId?.length) {
+          queryBuilder.andWhere(
+            'WeeklyPriorityTask.planId IN (:...planIds)',
+            { planIds: filterWeeklyPriorityDto.planId },
+          );
+        }
+
+        if (filterWeeklyPriorityDto.taskId?.length) {
+          queryBuilder.andWhere(
+            'WeeklyPriorityTask.taskId IN (:...taskIds)',
+            { taskIds: filterWeeklyPriorityDto.taskId },
+          );
+        }
       }
 
       const paginatedData =

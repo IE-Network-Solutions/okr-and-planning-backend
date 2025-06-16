@@ -8,6 +8,12 @@ export class CreateWeeklyPriorityDto {
   departmentId: string;
 
   @IsString()
+  planId: string;
+
+  @IsString()
+  taskId: string;
+
+  @IsString()
   status: Status;
 
   @IsString()
