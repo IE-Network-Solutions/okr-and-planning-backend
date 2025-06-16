@@ -67,7 +67,8 @@ export class WeeklyPrioritiesService {
           'WeeklyPriorityTask.weeklyPriorityWeek',
           'weeklyPriorityWeek',
         )
-        .where('WeeklyPriorityTask.tenantId = :tenantId', { tenantId });
+        .where('WeeklyPriorityTask.tenantId = :tenantId', { tenantId })
+        .orderBy('WeeklyPriorityTask.createdAt', 'DESC');
 
       if (filterWeeklyPriorityDto) {
         if (filterWeeklyPriorityDto.departmentId?.length) {
@@ -85,6 +86,18 @@ export class WeeklyPrioritiesService {
                 filterWeeklyPriorityDto.weeklyPriorityWeekId,
             },
           );
+        }
+
+        if (filterWeeklyPriorityDto.planId?.length) {
+          queryBuilder.andWhere('WeeklyPriorityTask.planId IN (:...planIds)', {
+            planIds: filterWeeklyPriorityDto.planId,
+          });
+        }
+
+        if (filterWeeklyPriorityDto.taskId?.length) {
+          queryBuilder.andWhere('WeeklyPriorityTask.taskId IN (:...taskIds)', {
+            taskIds: filterWeeklyPriorityDto.taskId,
+          });
         }
       }
 
