@@ -34,7 +34,7 @@ export class WeeklyPrioritiesController {
     );
   }
 
-  @Post('/bulk')
+  @Post('/create/bulk')
   async bulkCreate(
     @Body() bulkCreateWeeklyPriorityDto: BulkCreateWeeklyPriorityDto,
     @Headers('tenantId') tenantId: string,
