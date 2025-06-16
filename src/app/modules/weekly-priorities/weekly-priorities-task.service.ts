@@ -44,6 +44,35 @@ export class WeeklyPrioritiesService {
     }
   }
 
+  async bulkCreate(
+    bulkCreateWeeklyPriorityDto: { tasks: CreateWeeklyPriorityDto[] },
+    tenantId: string,
+  ) {
+    try {
+      const activeWeek =
+        await this.weeklyPrioritiesWeekService.findActiveWeek();
+
+      if (!activeWeek) {
+        throw new BadRequestException('No active week found');
+      }
+
+      const weeklyPriorityTasks = bulkCreateWeeklyPriorityDto.tasks.map(
+        (task) =>
+          this.weeklyPriorityTaskRepository.create({
+            ...task,
+            weeklyPriorityWeek: activeWeek,
+            tenantId,
+          }),
+      );
+
+      return await this.weeklyPriorityTaskRepository.save(weeklyPriorityTasks);
+    } catch (error) {
+      throw new BadRequestException(
+        `Failed to create WeeklyPriorityTasks: ${error.message}`,
+      );
+    }
+  }
+
   async findAll(
     tenantId: string,
     paginationOptions?: PaginationDto,
