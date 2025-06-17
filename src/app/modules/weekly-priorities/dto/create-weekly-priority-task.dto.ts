@@ -22,5 +22,6 @@ export class CreateWeeklyPriorityDto {
   session?: string;
 
   @IsString()
+  @IsOptional()
   failureReason?: string;
 }
