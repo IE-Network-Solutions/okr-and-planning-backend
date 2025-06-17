@@ -222,39 +222,46 @@ export class PlanningPeriodsService {
         const existingUsers = await manager.find(PlanningPeriodUser, {
           where: { userId },
         });
-
-        const existingPlanningPeriodIds = new Set(
-          existingUsers.map((user) => user.planningPeriodId),
+        const existingMap = new Map(
+          existingUsers.map((user) => [user.planningPeriodId, user]),
         );
-
+        // Delete those not in the new list
         const planningPeriodsToDelete = existingUsers.filter(
           (user) => !values.planningPeriods.includes(user.planningPeriodId),
         );
-
         if (planningPeriodsToDelete.length > 0) {
-          await manager.softRemove(planningPeriodsToDelete); // Use softRemove for soft deletes
+          await manager.softRemove(planningPeriodsToDelete);
         }
 
-        const newPlanningPeriodUsers = values.planningPeriods
-          .filter(
-            (planningPeriodId) =>
-              !existingPlanningPeriodIds.has(planningPeriodId),
-          )
-          .map((planningPeriodId) =>
-            manager.create(PlanningPeriodUser, {
+        const updatedOrCreatedUsers: PlanningPeriodUser[] = [];
+
+        for (const planningPeriodId of values.planningPeriods) {
+          const existing = existingMap.get(planningPeriodId);
+
+          if (existing) {
+            // Update existing record with any new values
+            const updated = await manager.save(PlanningPeriodUser, {
+              ...existing,
+              // Add any fields that need to be updated here
+              // For example, if you add new fields to PlanningPeriodUser in the future
+              // you can update them here
+            });
+            updatedOrCreatedUsers.push(updated);
+          } else {
+            // Create new record
+            const newUser = manager.create(PlanningPeriodUser, {
               userId,
               planningPeriodId,
               tenantId,
-            }),
-          );
+            });
+            const saved = await manager.save(newUser);
+            updatedOrCreatedUsers.push(saved);
+          }
+        }
 
-        const savedUsers = await manager.save(
-          PlanningPeriodUser,
-          newPlanningPeriodUsers,
-        );
-        return savedUsers;
+        return updatedOrCreatedUsers;
       } catch (error) {
-        return error;
+        throw error;
       }
     });
   }
