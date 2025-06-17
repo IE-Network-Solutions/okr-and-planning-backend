@@ -20,4 +20,7 @@ export class CreateWeeklyPriorityDto {
   month?: string;
   @IsString()
   session?: string;
+
+  @IsString()
+  failureReason?: string;
 }
