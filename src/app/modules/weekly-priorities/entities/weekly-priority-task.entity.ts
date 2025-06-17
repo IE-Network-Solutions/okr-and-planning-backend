@@ -26,6 +26,9 @@ export class WeeklyPriorityTask extends BaseModel {
   @Column({ type: 'varchar', nullable: true })
   session?: string;
 
+  @Column({ type: 'varchar', nullable: true })
+  failureReason?: string;
+
   @Column({ type: 'uuid' })
   tenantId: string;
 
