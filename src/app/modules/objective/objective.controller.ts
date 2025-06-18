@@ -38,6 +38,16 @@ export class ObjectiveController {
     private readonly oKRCalculationService: OKRCalculationService,
   ) {}
 
+  // @Post('test-encryption')
+  // async testEncryption(@Body() data: any) {
+  //   console.log('Received data in controller:', data);
+  //   return {
+  //     message: 'Data received successfully',
+  //     receivedData: data,
+  //     timestamp: new Date().toISOString()
+  //   };
+  // }
+
   @Post()
   async createObjective(
     @Req() req: Request,
