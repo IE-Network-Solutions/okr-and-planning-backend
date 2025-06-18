@@ -5,5 +5,11 @@ export class FilterWeeklyPriorityDto {
   departmentId: string[];
 
   @IsArray()
+  planId: string[];
+
+  @IsArray()
+  taskId: string[];
+
+  @IsArray()
   weeklyPriorityWeekId: string[];
 }

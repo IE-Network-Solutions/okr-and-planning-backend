@@ -11,6 +11,12 @@ export class WeeklyPriorityTask extends BaseModel {
   @Column({ type: 'uuid' })
   departmentId: string;
 
+  @Column({ type: 'uuid', nullable: true })
+  planId: string;
+
+  @Column({ type: 'uuid', nullable: true })
+  taskId: string;
+
   @Column({ type: 'enum', enum: Status, default: Status.PENDING })
   status: Status;
 
@@ -19,6 +25,9 @@ export class WeeklyPriorityTask extends BaseModel {
 
   @Column({ type: 'varchar', nullable: true })
   session?: string;
+
+  @Column({ type: 'varchar', nullable: true })
+  failureReason?: string;
 
   @Column({ type: 'uuid' })
   tenantId: string;
