@@ -55,12 +55,19 @@ export class OkrProgressService {
       let newValue = keyResultCurrentValue;
 
       if (actualValueToUpdate !== undefined) {
-        const diff =
-          parseFloat(keyResult.actualValue?.toString() || '0') -
-          parseFloat(actualValueToUpdate.toString());
+        const actual = parseFloat(keyResult.actualValue?.toString() || '0');
+        const oldActual = parseFloat(actualValueToUpdate?.toString() || '0');
 
-        if (diff !== 0) {
-          newValue = keyResultCurrentValue + diff;
+        const isFirstTime = keyResultCurrentValue === 0 && oldActual === 0;
+
+        if (isFirstTime) {
+          newValue =
+            parseFloat(keyResult.initialValue?.toString() || '0') + actual;
+        } else {
+          const diff = actual - oldActual;
+          if (diff !== 0) {
+            newValue = keyResultCurrentValue + diff;
+          }
         }
       }
 
