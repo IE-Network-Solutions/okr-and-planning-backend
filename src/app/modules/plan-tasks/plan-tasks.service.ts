@@ -12,7 +12,7 @@ import { MilestonesService } from '../milestones/milestones.service';
 import { PaginationService } from '@root/src/core/pagination/pagination.service';
 import { PlanningPeriodUser } from '../planningPeriods/planning-periods/entities/planningPeriodUser.entity';
 import { CreatePlanTaskDto } from './dto/create-plan-task.dto';
-import { UpdatePlanTaskDto } from './dto/update-plan-task.dto';
+import { UpdatePlanTaskDto, UpdateStatusDto } from './dto/update-plan-task.dto';
 import { GetFromOrganizatiAndEmployeInfoService } from '../objective/services/get-data-from-org.service';
 import { IPaginationOptions, Pagination } from 'nestjs-typeorm-paginate';
 import { ReportTask } from '../okr-report-task/entities/okr-report-task.entity';
@@ -61,8 +61,6 @@ export class PlanTasksService {
           );
         }
       }
-
-      
 
       const result: any = [];
       if (!createPlanTasksDto || createPlanTasksDto.length === 0) {
@@ -240,7 +238,6 @@ export class PlanTasksService {
     tenantId: string,
     sessionId?: string,
   ): Promise<PlanTask[]> {
-
     let activeSessionId = sessionId;
     if (!activeSessionId) {
       try {
@@ -248,7 +245,7 @@ export class PlanTasksService {
           await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(
             tenantId,
           );
-          activeSessionId = activeSession.id;
+        activeSessionId = activeSession.id;
       } catch (error) {
         throw new NotFoundException(
           'There is no active Session for this tenant',
@@ -266,7 +263,7 @@ export class PlanTasksService {
       .leftJoinAndSelect('plan.planningUser', 'planningUser')
       .leftJoinAndSelect('plan.report', 'report')
       .where('planTask.planId = :planId', { planId })
-      .andWhere('plan.sessionId = :sessionId', { sessionId:activeSessionId });
+      .andWhere('plan.sessionId = :sessionId', { sessionId: activeSessionId });
 
     const unreportedTasks = await queryBuilder.getMany();
     return unreportedTasks;
@@ -533,14 +530,12 @@ export class PlanTasksService {
     tenantId: string,
   ): Promise<PlanTask[]> {
     try {
-
       let existingTasks: PlanTask[];
 
       const planId = updatePlanTasksDto[0]?.planId;
       if (!planId) {
         return;
       }
-
 
       const existingPlan = await this.planRepository.findOne({
         where: { id: planId },
@@ -567,7 +562,6 @@ export class PlanTasksService {
           }
         },
       );
-
 
       for (const updatePlanTaskDto of updatePlanTasksDto) {
         if (!updatePlanTaskDto.id) {
@@ -624,6 +618,26 @@ export class PlanTasksService {
     }
   }
 
+  async updateStatus(
+    id: string,
+    updateStatusDto: UpdateStatusDto,
+  ): Promise<any> {
+    // ): Promise<Plan>
+    const planTask = await this.taskRepository.findOne({
+      where: { id },
+      relations: ['plan'],
+    });
+
+    if (!planTask) {
+      throw new NotFoundException(`PlanTask with ID ${id} not found`);
+    }
+
+    planTask.status = updateStatusDto.status;
+
+    const updatedPlanTask = await this.taskRepository.save(planTask);
+
+    return updatedPlanTask.plan;
+  }
 
   async createTasks(createTaskDtos: UpdatePlanTaskDto[], tenantId: string) {
     const newTasks = createTaskDtos.map((dto) => ({
@@ -689,43 +703,43 @@ export class PlanTasksService {
     userId: string,
     sessionId?: string,
   ): Promise<PlanTask[]> {
-
-    if(!sessionId){
+    if (!sessionId) {
       const activeSession =
         await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(
           tenantId,
         );
-        sessionId = activeSession.id;
+      sessionId = activeSession.id;
     }
     const planningUser = await this.planningUserRepository.findOne({
       where: { planningPeriodId, tenantId, userId },
-  });
-  
-  const planData = await this.planRepository.findOne({
+    });
+
+    const planData = await this.planRepository.findOne({
       where: { planningUserId: planningUser.id, tenantId, sessionId },
-  });
-  const planTasks = await this.taskRepository.find({ 
+    });
+    const planTasks = await this.taskRepository.find({
       where: { planId: planData.id, tenantId },
-  });
-  const planTaskIds = planTasks.map(task => task.id);
+    });
+    const planTaskIds = planTasks.map((task) => task.id);
 
-  
-  const failedReportTasks = await this.reportTaskRepository.find({
+    const failedReportTasks = await this.reportTaskRepository.find({
       where: {
-          planTaskId: In(planTaskIds), 
-          status: ReportStatusEnum.Not,     
-          tenantId,
+        planTaskId: In(planTaskIds),
+        status: ReportStatusEnum.Not,
+        tenantId,
       },
-  });
+    });
 
-  const failedPlanTaskIds = failedReportTasks.map(report => report.planTaskId);
-  
-  const failedPlanTasks = await this.taskRepository.find({
+    const failedPlanTaskIds = failedReportTasks.map(
+      (report) => report.planTaskId,
+    );
+
+    const failedPlanTasks = await this.taskRepository.find({
       where: {
-          id: In(failedPlanTaskIds),
-          tenantId,
+        id: In(failedPlanTaskIds),
+        tenantId,
       },
-  });
+    });
     return failedPlanTasks;
   }
 }
