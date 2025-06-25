@@ -25,6 +25,9 @@ export class PlanCommentsController {
     @Body() createPlanCommentDto: CreatePlanCommentDto,
   ): Promise<PlanComment> {
     const tenantId = req['tenantId'];
+    if (!createPlanCommentDto.createdBy && req.headers['requestedby']) {
+      createPlanCommentDto.createdBy = req.headers['requestedby'] as string;
+    }
     return await this.planCommentsService.create(
       createPlanCommentDto,
       tenantId,
@@ -44,8 +47,12 @@ export class PlanCommentsController {
   @Patch(':id')
   async update(
     @Param('id') id: string,
+    @Req() req: Request,
     @Body() updatePlanCommentDto: UpdatePlanCommentDto,
   ) {
+    if (!updatePlanCommentDto.updatedBy && req.headers['requestedby']) {
+      updatePlanCommentDto.updatedBy = req.headers['requestedby'] as string;
+    }
     return await this.planCommentsService.update(id, updatePlanCommentDto);
   }
 

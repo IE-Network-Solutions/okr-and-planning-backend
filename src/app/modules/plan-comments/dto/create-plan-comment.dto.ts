@@ -1,4 +1,4 @@
-import { IsString } from 'class-validator';
+import { IsString, IsOptional } from 'class-validator';
 
 export class CreatePlanCommentDto {
   @IsString()
@@ -9,4 +9,12 @@ export class CreatePlanCommentDto {
 
   @IsString()
   comment: string;
+
+  @IsOptional()
+  @IsString()
+  createdBy?: string;
+
+  @IsOptional()
+  @IsString()
+  updatedBy?: string;
 }

@@ -8,6 +8,14 @@ export class UpdatePlanTaskDto extends CreatePlanTaskDto {
   @IsString()
   @IsOptional()
   id: string;
+
+  @IsOptional()
+  @IsString()
+  createdBy?: string;
+
+  @IsOptional()
+  @IsString()
+  updatedBy?: string;
 }
 
 export class UpdateStatusDto {

@@ -35,5 +35,13 @@ export class CreateReportDTO {
   @IsString()
   tenantId: string;
 
+  @IsOptional()
+  @IsString()
+  createdBy?: string;
+
+  @IsOptional()
+  @IsString()
+  updatedBy?: string;
+
   tasks?: ReportTaskDTO[]; // An array of tasks for the report
 }

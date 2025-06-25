@@ -20,4 +20,12 @@ export class CreatePlanDto {
 
   @IsInt()
   level: number;
+
+  @IsOptional()
+  @IsString()
+  createdBy?: string;
+
+  @IsOptional()
+  @IsString()
+  updatedBy?: string;
 }

@@ -63,7 +63,11 @@ export class WeeklyPrioritiesController {
   update(
     @Param('id') id: string,
     @Body() updateWeeklyPriorityDto: UpdateWeeklyPriorityDto,
+    @Headers('requestedby') requestedBy?: string,
   ) {
+    if (!updateWeeklyPriorityDto.updatedBy && requestedBy) {
+      updateWeeklyPriorityDto.updatedBy = requestedBy;
+    }
     return this.weeklyPrioritiesService.update(id, updateWeeklyPriorityDto);
   }
 
@@ -76,6 +80,7 @@ export class WeeklyPrioritiesController {
   async bulkUpdate(
     @Body() bulkUpdateWeeklyPriorityDto: BulkUpdateWeeklyPriorityDto,
     @Headers('tenantId') tenantId: string,
+    @Headers('requestedby') requestedBy?: string,
   ) {
     return this.weeklyPrioritiesService.bulkUpdate(
       bulkUpdateWeeklyPriorityDto,

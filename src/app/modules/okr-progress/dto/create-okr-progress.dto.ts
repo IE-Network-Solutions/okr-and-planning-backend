@@ -17,4 +17,10 @@ export class CreateOkrProgressDto {
   @IsOptional()
   @IsString()
   achivedMilestoneId?: string;
+  @IsOptional()
+  @IsString()
+  createdBy?: string;
+  @IsOptional()
+  @IsString()
+  updatedBy?: string;
 }

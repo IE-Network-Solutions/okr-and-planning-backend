@@ -132,6 +132,9 @@ export class PlanTasksController {
     @Req() req: Request,
   ): Promise<any> {
     const tenantId = req['tenantId'];
+    if (!updatePlanTaskDto.updatedBy && req.headers['requestedby']) {
+      updatePlanTaskDto.updatedBy = req.headers['requestedby'] as string;
+    }
     return this.planTasksService.updateTasks(updatePlanTaskDto.tasks, tenantId);
   }
 

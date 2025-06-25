@@ -6,4 +6,12 @@ export class UpdateMilestoneDto extends PartialType(CreateMilestoneDto) {
   @IsOptional()
   @IsString()
   id?: string;
+
+  @IsOptional()
+  @IsString()
+  createdBy?: string;
+
+  @IsOptional()
+  @IsString()
+  updatedBy?: string;
 }

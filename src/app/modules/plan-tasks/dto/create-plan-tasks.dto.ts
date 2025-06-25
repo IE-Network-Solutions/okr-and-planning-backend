@@ -1,4 +1,4 @@
-import { IsArray, ValidateNested } from 'class-validator';
+import { IsArray, ValidateNested, IsOptional, IsString } from 'class-validator';
 import { CreatePlanTaskDto } from './create-plan-task.dto';
 import { Type } from 'class-transformer';
 
@@ -7,4 +7,12 @@ export class CreatePlanTasksDto {
   @ValidateNested({ each: true }) // Validate each item in the array
   @Type(() => CreatePlanTaskDto) // Transform each item into CreatePlanTaskDto
   tasks: CreatePlanTaskDto[];
+
+  @IsOptional()
+  @IsString()
+  createdBy?: string;
+
+  @IsOptional()
+  @IsString()
+  updatedBy?: string;
 }

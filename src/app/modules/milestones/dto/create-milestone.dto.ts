@@ -18,4 +18,12 @@ export class CreateMilestoneDto {
   @IsNumber({ maxDecimalPlaces: 2 })
   @IsNumber()
   weight: number;
+
+  @IsOptional()
+  @IsString()
+  createdBy?: string;
+
+  @IsOptional()
+  @IsString()
+  updatedBy?: string;
 }

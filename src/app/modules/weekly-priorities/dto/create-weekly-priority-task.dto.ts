@@ -29,4 +29,12 @@ export class CreateWeeklyPriorityDto {
   @IsString()
   @IsOptional()
   failureReason?: string;
+
+  @IsOptional()
+  @IsString()
+  createdBy?: string;
+
+  @IsOptional()
+  @IsString()
+  updatedBy?: string;
 }

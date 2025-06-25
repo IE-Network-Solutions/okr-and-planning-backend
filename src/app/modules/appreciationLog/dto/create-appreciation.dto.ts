@@ -31,4 +31,12 @@ export class CreateAppreciationDto {
   @IsArray()
   @IsUUID('4', { each: true })
   cc: string[];
+
+  @IsOptional()
+  @IsString()
+  createdBy?: string;
+
+  @IsOptional()
+  @IsString()
+  updatedBy?: string;
 }

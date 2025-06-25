@@ -26,7 +26,11 @@ export class FailureReasonController {
   create(
     @Body() createFailureReasonDto: CreateFailureReasonDto,
     @Headers('tenantId') tenantId: string, // Get tenantId from headers
+    @Headers('requestedby') requestedBy?: string,
   ): Promise<FailureReason> {
+    if (!createFailureReasonDto.createdBy && requestedBy) {
+      createFailureReasonDto.createdBy = requestedBy;
+    }
     return this.failureReasonService.createFailureReason(
       createFailureReasonDto,
       tenantId,
@@ -52,7 +56,11 @@ export class FailureReasonController {
     @Headers('tenantId') tenantId: string,
     @Param('id') failureReasonId: string, // Get failureReasonId from the URL
     @Body() updateFailureReasonDto: UpdateFailureReasonDto, // Get the updated data from the request body
+    @Headers('requestedby') requestedBy?: string,
   ): Promise<void> {
+    if (!updateFailureReasonDto.updatedBy && requestedBy) {
+      updateFailureReasonDto.updatedBy = requestedBy;
+    }
     return this.failureReasonService.updateFailureReason(
       failureReasonId,
       updateFailureReasonDto,

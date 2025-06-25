@@ -26,7 +26,11 @@ export class VpCriteriaController {
   async createVpCriteria(
     @Body() createVpCriteriaDto: CreateVpCriteriaDto,
     @Headers('tenantId') tenantId: string,
+    @Headers('requestedby') requestedBy?: string,
   ): Promise<VpCriteria> {
+    if (!createVpCriteriaDto.createdBy && requestedBy) {
+      createVpCriteriaDto.createdBy = requestedBy;
+    }
     return await this.vpCriteriaService.createVpCriteria(createVpCriteriaDto);
   }
 
@@ -48,7 +52,11 @@ export class VpCriteriaController {
     @Headers('tenantId') tenantId: string,
     @Param('id') id: string,
     @Body() updateVpCriteriaDto: UpdateVpCriteriaDto,
+    @Headers('requestedby') requestedBy?: string,
   ) {
+    if (!updateVpCriteriaDto.updatedBy && requestedBy) {
+      updateVpCriteriaDto.updatedBy = requestedBy;
+    }
     return this.vpCriteriaService.updateVpCriteria(id, updateVpCriteriaDto);
   }
   @Delete(':id')

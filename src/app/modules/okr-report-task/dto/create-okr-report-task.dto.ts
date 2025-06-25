@@ -20,5 +20,7 @@ export type ReportTaskInput = Record<
     isAchieved?: boolean; // Optional field
     actualValue?: number; // Optional field
     customReason?: string; // Optional field
+    createdBy?: string; // Optional field
+    updatedBy?: string; // Optional field
   }
 >;

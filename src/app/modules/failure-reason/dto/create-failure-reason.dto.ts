@@ -1,5 +1,5 @@
 import { ReportStatusEnum } from '@root/src/core/interfaces/reportStatus.type';
-import { IsEnum, IsString } from 'class-validator';
+import { IsEnum, IsString, IsOptional } from 'class-validator';
 
 export class CreateFailureReasonDto {
   @IsString()
@@ -7,4 +7,12 @@ export class CreateFailureReasonDto {
 
   @IsString()
   description: string;
+
+  @IsOptional()
+  @IsString()
+  createdBy?: string;
+
+  @IsOptional()
+  @IsString()
+  updatedBy?: string;
 }

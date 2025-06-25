@@ -29,6 +29,9 @@ export class MetricTypesController {
     @Body() createMetricTypeDto: CreateMetricTypeDto,
   ): Promise<MetricType> {
     const tenantId = req['tenantId'];
+    if (!createMetricTypeDto.createdBy && req.headers['requestedby']) {
+      createMetricTypeDto.createdBy = req.headers['requestedby'] as string;
+    }
     return await this.metricTypesService.createMetricType(
       createMetricTypeDto,
       tenantId,
@@ -58,6 +61,9 @@ export class MetricTypesController {
     @Param('id') id: string,
     @Body() updateMetricTypeDto: UpdateMetricTypeDto,
   ) {
+    if (!updateMetricTypeDto.updatedBy && req.headers['requestedby']) {
+      updateMetricTypeDto.updatedBy = req.headers['requestedby'] as string;
+    }
     return this.metricTypesService.updateMetricType(id, updateMetricTypeDto);
   }
 

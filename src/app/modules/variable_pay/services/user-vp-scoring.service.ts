@@ -191,7 +191,7 @@ export class UserVpScoringService {
 
         for (const criteria of vpScoringCriterions) {
           let eachScore = 0;
-          let achievedScore = await this.getResults(
+         let achievedScore = await this.getResults(
             tenantId,
             criteria.vpCriteria.sourceEndpoint,
             userId,

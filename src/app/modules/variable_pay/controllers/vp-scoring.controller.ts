@@ -26,7 +26,11 @@ export class VpScoringController {
   async createVpScoring(
     @Body() createVpScoringDto: CreateVpScoringDto,
     @Headers('tenantId') tenantId: string,
+    @Headers('requestedby') requestedBy?: string,
   ): Promise<VpScoring> {
+    if (!createVpScoringDto.createdBy && requestedBy) {
+      createVpScoringDto.createdBy = requestedBy;
+    }
     return await this.vpScoringService.createVpScoring(
       createVpScoringDto,
       tenantId,
@@ -51,7 +55,11 @@ export class VpScoringController {
     @Headers('tenantId') tenantId: string,
     @Param('id') id: string,
     @Body() updateVpScoringDto: UpdateVpScoringDto,
+    @Headers('requestedby') requestedBy?: string,
   ) {
+    if (!updateVpScoringDto.updatedBy && requestedBy) {
+      updateVpScoringDto.updatedBy = requestedBy;
+    }
     return this.vpScoringService.updateVpScoring(
       id,
       updateVpScoringDto,

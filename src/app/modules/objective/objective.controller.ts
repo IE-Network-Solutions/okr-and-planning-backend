@@ -78,6 +78,9 @@ export class ObjectiveController {
     @Body() updateObjectiveDto: UpdateObjectiveDto,
   ) {
     const tenantId = req['tenantId'];
+    if (!updateObjectiveDto.updatedBy && req.headers['requestedby']) {
+      updateObjectiveDto.updatedBy = req.headers['requestedby'] as string;
+    }
     return this.objectiveService.updateObjective(
       id,
       updateObjectiveDto,

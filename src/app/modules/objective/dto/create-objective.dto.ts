@@ -27,4 +27,10 @@ export class CreateObjectiveDto {
   @ValidateNested({ each: true })
   @Type(() => CreateKeyResultDto)
   keyResults: CreateKeyResultDto[];
+  @IsOptional()
+  @IsString()
+  createdBy?: string;
+  @IsOptional()
+  @IsString()
+  updatedBy?: string;
 }

@@ -17,4 +17,12 @@ export class CreatePlanningPeriodsDTO {
   @IsOptional()
   @IsString()
   submissionDeadline: string;
+
+  @IsOptional()
+  @IsString()
+  createdBy?: string;
+
+  @IsOptional()
+  @IsString()
+  updatedBy?: string;
 }
