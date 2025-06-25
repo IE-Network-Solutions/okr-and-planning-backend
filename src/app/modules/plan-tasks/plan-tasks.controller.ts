@@ -17,6 +17,7 @@ import { UpdatePlanTasksDto } from './dto/update-plan-tasks.dto';
 import { CreatePlanTasksDto } from './dto/create-plan-tasks.dto';
 import { IPaginationOptions } from 'nestjs-typeorm-paginate';
 import { PlanTask } from './entities/plan-task.entity';
+import { UpdateStatusDto } from './dto/update-plan-task.dto';
 
 @Controller('plan-tasks')
 @ApiTags('plan-tasks')
@@ -58,7 +59,11 @@ export class PlanTasksController {
     @Headers('sessionId') sessionId?: string,
   ): Promise<PlanTask[]> {
     const tenantId = req['tenantId'];
-    return await this.planTasksService.findReportedPlanTasks(id, tenantId,sessionId);
+    return await this.planTasksService.findReportedPlanTasks(
+      id,
+      tenantId,
+      sessionId,
+    );
   }
 
   @Get('/user/:id/:planningId')
@@ -70,9 +75,7 @@ export class PlanTasksController {
     return await this.planTasksService.findByUser(id, planningId, sessionId);
   }
 
-  @Get(
-    'failed-plan-of-planning-period/:planningPeriodId/:userId',
-  )
+  @Get('failed-plan-of-planning-period/:planningPeriodId/:userId')
   async findAllFailedPlannedTasksByPlanningPeriod(
     @Param('planningPeriodId') planningPeriodId: string,
     @Param('userId') userId: string,
@@ -130,6 +133,15 @@ export class PlanTasksController {
   ): Promise<any> {
     const tenantId = req['tenantId'];
     return this.planTasksService.updateTasks(updatePlanTaskDto.tasks, tenantId);
+  }
+
+  @Patch('update-status/:id')
+  async updateStatus(
+    @Param('id') id: string,
+    @Body() updateStatusDto: UpdateStatusDto,
+    @Req() req: Request,
+  ): Promise<any> {
+    return this.planTasksService.updateStatus(id, updateStatusDto);
   }
 
   @Delete(':id')
