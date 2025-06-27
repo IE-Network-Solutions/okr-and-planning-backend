@@ -622,12 +622,13 @@ export class PlanTasksService {
     id: string,
     updateStatusDto: UpdateStatusDto,
   ): Promise<any> {
-    // ): Promise<Plan>
     const planTask = await this.taskRepository.findOne({
       where: { id },
       relations: ['plan'],
     });
-
+    if (!updateStatusDto.status) {
+      throw new NotFoundException(`status not found in the body`);
+    }
     if (!planTask) {
       throw new NotFoundException(`PlanTask with ID ${id} not found`);
     }
@@ -636,7 +637,7 @@ export class PlanTasksService {
 
     const updatedPlanTask = await this.taskRepository.save(planTask);
 
-    return updatedPlanTask.plan;
+    return updatedPlanTask;
   }
 
   async createTasks(createTaskDtos: UpdatePlanTaskDto[], tenantId: string) {
