@@ -680,48 +680,160 @@ returnedData.push({...data})
         );
 
       const employeeJobInfo = userResponse.employeeJobInformation[0];
-      const result = {
-        userOkr: 0,
-      };
+      const isTeamLead = employeeJobInfo.departmentLeadOrNot;
 
-      if (employeeJobInfo.departmentLeadOrNot) {
-        const objectives = await this.objectiveService.findAllObjectives(
-          userId,
-          tenantId,
-          null,
-        );
-        const leadOKR = await this.averageOkrCalculation.calculateAverageOkr(
-          objectives.items,
-        );
+      // Get user's own OKR - optimized to use findUsersObjectives for consistency
+      const userObjectives = await this.objectiveService.findUsersObjectives(tenantId, [userId]);
+      const userOkr = await this.averageOkrCalculation.calculateAverageOkr(
+        userObjectives || [],
+      );
+
+      if (isTeamLead) {
+        // Team Lead Response Structure
         const teamOkr = await this.calculateRecursiveOKR(
           employeeJobInfo.departmentId,
           tenantId,
           departments,
         );
         const totalLeadOkr =
-          (leadOKR.okr * (averageOKRRule?.myOkrPercentage ?? 20)) / 100 +
+          (userOkr.okr * (averageOKRRule?.myOkrPercentage ?? 20)) / 100 +
           (teamOkr * (averageOKRRule?.teamOkrPercentage ?? 80)) / 100;
-        Object.assign(result, {
-          userOkr: totalLeadOkr,
-        });
-      } else {
-        const objectives = await this.objectiveService.findAllObjectives(
-          userId,
+
+        // Get team members' OKRs
+        const teamMembersPaginated = await this.getTeamMembersOkrData(
+          employeeJobInfo.departmentId,
           tenantId,
-          null,
+          departments,
+          paginationOptions,
         );
-        const individualOKR =
-          await this.averageOkrCalculation.calculateAverageOkr(
-            objectives.items,
-          );
-        Object.assign(result, {
-          userOkr: individualOKR.okr,
+
+        // Add team lead's own details
+        const teamLeadDetails = {
+          userId,
+          userName: userResponse.name || userResponse.email,
+          departmentId: employeeJobInfo.departmentId,
+          departmentName: departments.find(dept => dept.id === employeeJobInfo.departmentId)?.name || null,
+          isDirectTeamMember: false,
+          isTeamLead: true,
+          okrScore: userOkr.okr || 0,
+          daysLeft: userOkr.daysLeft && isFinite(userOkr.daysLeft) ? userOkr.daysLeft : null,
+          okrCompleted: userOkr.okrCompleted || 0,
+          keyResultCount: userOkr.keyResultcount || 0,
+        };
+
+        return {
+          userOkr: totalLeadOkr,
+          teamLead: teamLeadDetails,
+          teamMembers: teamMembersPaginated.items,
+        };
+      } else {
+        // Regular Member Response Structure - simpler format
+        return {
+          userOkr: userOkr.okr || 0,
+          userId,
+          userName: userResponse.name || userResponse.email,
+          departmentId: employeeJobInfo.departmentId,
+          departmentName: departments.find(dept => dept.id === employeeJobInfo.departmentId)?.name || null,
+          isDirectTeamMember: false,
+          isTeamLead: false,
+          okrScore: userOkr.okr || 0,
+          daysLeft: userOkr.daysLeft && isFinite(userOkr.daysLeft) ? userOkr.daysLeft : null,
+          okrCompleted: userOkr.okrCompleted || 0,
+          keyResultCount: userOkr.keyResultcount || 0,
+        };
+      }
+    } catch (error) {
+      return {
+        userOkr: 0,
+        teamMembers: [],
+      };
+    }
+  }
+
+  /**
+   * Get team members OKR data for a team lead - highly optimized
+   */
+  private async getTeamMembersOkrData(
+    departmentId: string,
+    tenantId: string,
+    departments: any[],
+    paginationOptions?: PaginationDto,
+  ) {
+    try {
+      const department = departments.find(item => item.id === departmentId);
+      if (!department) {
+        return this.paginationServise.paginateArray([], {
+          page: paginationOptions?.page,
+          limit: paginationOptions?.limit,
         });
       }
 
-      return result.userOkr || 0;
+      // Get all direct team members (non-leads) from the department
+      const directTeamMembers = department.users.filter(
+        user => !user.employeeJobInformation[0]?.departmentLeadOrNot,
+      );
+
+      if (!directTeamMembers.length) {
+        return this.paginationServise.paginateArray([], {
+          page: paginationOptions?.page,
+          limit: paginationOptions?.limit,
+        });
+      }
+
+      // Get all objectives for all team members in a single batch call
+      const userIds = directTeamMembers.map(user => user.id);
+      const allObjectives = await this.objectiveService.findUsersObjectives(tenantId, userIds);
+      
+      // Group objectives by user ID for quick lookup
+      const objectivesByUser = {};
+      if (allObjectives && allObjectives.length > 0) {
+        allObjectives.forEach(objective => {
+          if (!objectivesByUser[objective.userId]) {
+            objectivesByUser[objective.userId] = [];
+          }
+          objectivesByUser[objective.userId].push(objective);
+        });
+      }
+
+      // Process all members in parallel with pre-fetched objectives
+      const memberPromises = directTeamMembers.map(async (member) => {
+        try {
+          const userObjectives = objectivesByUser[member.id] || [];
+          const memberOkr = await this.averageOkrCalculation.calculateAverageOkr(userObjectives);
+          
+          return {
+            userId: member.id,
+            userName: member.name || member.email,
+            departmentId,
+            departmentName: department.name,
+            isDirectTeamMember: true,
+            isTeamLead: false,
+            okrScore: memberOkr.okr || 0,
+            daysLeft: memberOkr.daysLeft && isFinite(memberOkr.daysLeft) ? memberOkr.daysLeft : null,
+            okrCompleted: memberOkr.okrCompleted || 0,
+            keyResultCount: memberOkr.keyResultcount || 0,
+          };
+        } catch (error) {
+          console.warn(`[WARNING] Failed to get OKR for user ${member.id}:`, error.message);
+          return null;
+        }
+      });
+
+      const results = await Promise.all(memberPromises);
+      const validResults = results.filter(result => result !== null);
+
+      return this.paginationServise.paginateArray(validResults, {
+        page: paginationOptions?.page,
+        limit: paginationOptions?.limit,
+      });
     } catch (error) {
-      return 0;
+      console.warn(`[WARNING] Failed to get team members data:`, error.message);
+      return this.paginationServise.paginateArray([], {
+        page: paginationOptions?.page,
+        limit: paginationOptions?.limit,
+      });
     }
   }
+
+
 }
