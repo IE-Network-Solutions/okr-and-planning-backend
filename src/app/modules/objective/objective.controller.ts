@@ -20,7 +20,7 @@ import { CreateObjectiveDto } from './dto/create-objective.dto';
 import { UpdateObjectiveDto } from './dto/update-objective.dto';
 import { Objective } from './entities/objective.entity';
 import { PaginationDto } from '@root/src/core/commonDto/pagination-dto';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { FilterObjectiveDto } from './dto/filter-objective.dto';
 import { OKRDashboardService } from './services/okr-dashbord.service';
 import { ExcludeAuthGuard } from '@root/src/core/guards/exclud.guard';
@@ -49,6 +49,13 @@ export class ObjectiveController {
       tenantId,
     );
   }
+
+  /**
+   * Get team members OKR visibility based on user role
+   * Team leads see all their team members and child department members' OKRs
+   * Regular users only see their own OKR
+   */
+
 
   @Get(':userId')
   async findAllObjectives(
