@@ -805,7 +805,7 @@ returnedData.push({...data})
         keyResultcount: totalKeyResults,
       };
     } catch (error) {
-      console.warn(`[WARNING] Failed to get user OKR for ${userId}:`, error.message);
+      // console.warn(`[WARNING] Failed to get user OKR for ${userId}:`, error.message);
       return { okr: 0, daysLeft: 0, okrCompleted: 0, keyResultcount: 0 };
     }
   }
@@ -952,7 +952,7 @@ returnedData.push({...data})
 
       return results;
     } catch (error) {
-      console.warn(`[WARNING] Failed to get bulk users OKR:`, error.message);
+      // console.warn(`[WARNING] Failed to get bulk users OKR:`, error.message);
       return {};
     }
   }
@@ -1021,7 +1021,7 @@ returnedData.push({...data})
             keyResultCount: memberOkr.keyResultcount || 0,
           };
         } catch (error) {
-          console.warn(`[WARNING] Failed to get OKR for user ${member.id}:`, error.message);
+          // console.warn(`[WARNING] Failed to get OKR for user ${member.id}:`, error.message);
           return null;
         }
       });
@@ -1034,7 +1034,7 @@ returnedData.push({...data})
         limit: paginationOptions?.limit,
       });
     } catch (error) {
-      console.warn(`[WARNING] Failed to get team members data:`, error.message);
+      // console.warn(`[WARNING] Failed to get team members data:`, error.message);
       return this.paginationServise.paginateArray([], {
         page: paginationOptions?.page,
         limit: paginationOptions?.limit,
