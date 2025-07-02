@@ -869,7 +869,7 @@ returnedData.push({...data})
         limit: paginationOptions?.limit,
       });
     } catch (error) {
-      console.warn(`[WARNING] Failed to get team members data:`, error.message);
+     // console.warn(`[WARNING] Failed to get team members data:`, error.message);
       return this.paginationServise.paginateArray([], {
         page: paginationOptions?.page,
         limit: paginationOptions?.limit,
@@ -957,89 +957,6 @@ returnedData.push({...data})
     }
   }
 
-  /**
-   * Get team members OKR data for a team lead - highly optimized
-   */
-  private async getTeamMembersOkrData(
-    departmentId: string,
-    tenantId: string,
-    departments: any[],
-    paginationOptions?: PaginationDto,
-  ) {
-    try {
-      const department = departments.find(item => item.id === departmentId);
-      if (!department) {
-        return this.paginationServise.paginateArray([], {
-          page: paginationOptions?.page,
-          limit: paginationOptions?.limit,
-        });
-      }
 
-      // Get all direct team members (non-leads) from the department
-      const directTeamMembers = department.users.filter(
-        user => !user.employeeJobInformation[0]?.departmentLeadOrNot,
-      );
-
-      if (!directTeamMembers.length) {
-        return this.paginationServise.paginateArray([], {
-          page: paginationOptions?.page,
-          limit: paginationOptions?.limit,
-        });
-      }
-
-      // Get all objectives for all team members in a single batch call
-      const userIds = directTeamMembers.map(user => user.id);
-      const allObjectives = await this.objectiveService.findUsersObjectives(tenantId, userIds);
-      
-      // Group objectives by user ID for quick lookup
-      const objectivesByUser = {};
-      if (allObjectives && allObjectives.length > 0) {
-        allObjectives.forEach(objective => {
-          if (!objectivesByUser[objective.userId]) {
-            objectivesByUser[objective.userId] = [];
-          }
-          objectivesByUser[objective.userId].push(objective);
-        });
-      }
-
-      // Process all members in parallel with pre-fetched objectives
-      const memberPromises = directTeamMembers.map(async (member) => {
-        try {
-          const userObjectives = objectivesByUser[member.id] || [];
-          const memberOkr = await this.averageOkrCalculation.calculateAverageOkr(userObjectives);
-          
-          return {
-            userId: member.id,
-            userName: member.name || member.email,
-            departmentId,
-            departmentName: department.name,
-            isDirectTeamMember: true,
-            isTeamLead: false,
-            okrScore: memberOkr.okr || 0,
-            daysLeft: memberOkr.daysLeft && isFinite(memberOkr.daysLeft) ? memberOkr.daysLeft : null,
-            okrCompleted: memberOkr.okrCompleted || 0,
-            keyResultCount: memberOkr.keyResultcount || 0,
-          };
-        } catch (error) {
-          // console.warn(`[WARNING] Failed to get OKR for user ${member.id}:`, error.message);
-          return null;
-        }
-      });
-
-      const results = await Promise.all(memberPromises);
-      const validResults = results.filter(result => result !== null);
-
-      return this.paginationServise.paginateArray(validResults, {
-        page: paginationOptions?.page,
-        limit: paginationOptions?.limit,
-      });
-    } catch (error) {
-      // console.warn(`[WARNING] Failed to get team members data:`, error.message);
-      return this.paginationServise.paginateArray([], {
-        page: paginationOptions?.page,
-        limit: paginationOptions?.limit,
-      });
-    }
-  }
 
 }
