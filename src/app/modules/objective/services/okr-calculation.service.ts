@@ -34,6 +34,8 @@ export class OKRCalculationService {
     private readonly objectiveService: ObjectiveService,
     private readonly paginationServise: PaginationService,
     private readonly excelService: ExportExcelService,
+    @InjectRepository(Objective)
+    private readonly objectiveRepository: Repository<Objective>,
   ) {}
 
   async handleUserOkr(
@@ -665,28 +667,18 @@ returnedData.push({...data})
     paginationOptions?: PaginationDto,
   ) {
     try {
-      const userResponse =
-        await this.getFromOrganizatiAndEmployeInfoService.getUsers(
-          userId,
-          tenantId,
-        );
-      const averageOKRRule =
-        await this.averageOkrRuleService.findOneAverageOkrRuleByTenant(
-          tenantId,
-        );
-      const departments =
-        await this.getFromOrganizatiAndEmployeInfoService.getDepartmentsWithUsers(
-          tenantId,
-        );
+      // Parallel execution of all required data fetching
+      const [userResponse, averageOKRRule, departments] = await Promise.all([
+        this.getFromOrganizatiAndEmployeInfoService.getUsers(userId, tenantId),
+        this.averageOkrRuleService.findOneAverageOkrRuleByTenant(tenantId),
+        this.getFromOrganizatiAndEmployeInfoService.getDepartmentsWithUsers(tenantId),
+      ]);
 
       const employeeJobInfo = userResponse.employeeJobInformation[0];
       const isTeamLead = employeeJobInfo.departmentLeadOrNot;
 
-      // Get user's own OKR - optimized to use findUsersObjectives for consistency
-      const userObjectives = await this.objectiveService.findUsersObjectives(tenantId, [userId]);
-      const userOkr = await this.averageOkrCalculation.calculateAverageOkr(
-        userObjectives || [],
-      );
+      // Get user's own OKR using optimized QueryBuilder
+      const userOkr = await this.getUserOkrWithQueryBuilder(userId, tenantId);
 
       if (isTeamLead) {
         // Team Lead Response Structure
@@ -699,8 +691,8 @@ returnedData.push({...data})
           (userOkr.okr * (averageOKRRule?.myOkrPercentage ?? 20)) / 100 +
           (teamOkr * (averageOKRRule?.teamOkrPercentage ?? 80)) / 100;
 
-        // Get team members' OKRs
-        const teamMembersPaginated = await this.getTeamMembersOkrData(
+        // Get team members' OKRs using optimized QueryBuilder
+        const teamMembersPaginated = await this.getTeamMembersOkrDataOptimized(
           employeeJobInfo.departmentId,
           tenantId,
           departments,
@@ -747,6 +739,221 @@ returnedData.push({...data})
         userOkr: 0,
         teamMembers: [],
       };
+    }
+  }
+
+  /**
+   * Optimized method to get user OKR using QueryBuilder with single query
+   */
+  private async getUserOkrWithQueryBuilder(userId: string, tenantId: string) {
+    try {
+      const activeSession = await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(tenantId);
+      
+      const queryBuilder = this.objectiveRepository
+        .createQueryBuilder('objective')
+        .leftJoin('objective.keyResults', 'keyResults')
+        .addSelect([
+          'objective.id',
+          'objective.userId',
+          'objective.deadline',
+          'keyResults.id',
+          'keyResults.progress',
+          'keyResults.weight'
+        ])
+        .where('objective.userId = :userId', { userId })
+        .andWhere('objective.tenantId = :tenantId', { tenantId });
+
+      if (activeSession) {
+        queryBuilder.andWhere('objective.sessionId = :sessionId', { sessionId: activeSession.id });
+      }
+
+      const objectives = await queryBuilder.getMany();
+      
+      if (!objectives || objectives.length === 0) {
+        return { okr: 0, daysLeft: 0, okrCompleted: 0, keyResultcount: 0 };
+      }
+
+      // Calculate OKR metrics in memory (much faster than multiple DB calls)
+      let totalProgress = 0;
+      let completedKeyResults = 0;
+      let totalKeyResults = 0;
+      let maxDaysLeft = 0;
+
+      objectives.forEach(objective => {
+        const daysLeft = Math.ceil(
+          (new Date(objective.deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+        );
+        maxDaysLeft = Math.max(maxDaysLeft, daysLeft);
+
+        let objectiveProgress = 0;
+        objective.keyResults.forEach(keyResult => {
+          objectiveProgress += (keyResult.progress * keyResult.weight) / 100;
+          totalKeyResults++;
+          if (parseFloat(keyResult.progress.toString()) === 100) {
+            completedKeyResults++;
+          }
+        });
+        totalProgress += objectiveProgress;
+      });
+
+      const averageOkr = objectives.length > 0 ? totalProgress / objectives.length : 0;
+
+      return {
+        okr: averageOkr,
+        daysLeft: maxDaysLeft,
+        okrCompleted: completedKeyResults,
+        keyResultcount: totalKeyResults,
+      };
+    } catch (error) {
+      console.warn(`[WARNING] Failed to get user OKR for ${userId}:`, error.message);
+      return { okr: 0, daysLeft: 0, okrCompleted: 0, keyResultcount: 0 };
+    }
+  }
+
+  /**
+   * Get team members OKR data for a team lead - highly optimized with QueryBuilder
+   */
+  private async getTeamMembersOkrDataOptimized(
+    departmentId: string,
+    tenantId: string,
+    departments: any[],
+    paginationOptions?: PaginationDto,
+  ) {
+    try {
+      const department = departments.find(item => item.id === departmentId);
+      if (!department) {
+        return this.paginationServise.paginateArray([], {
+          page: paginationOptions?.page,
+          limit: paginationOptions?.limit,
+        });
+      }
+
+      // Get all direct team members (non-leads) from the department
+      const directTeamMembers = department.users.filter(
+        user => !user.employeeJobInformation[0]?.departmentLeadOrNot,
+      );
+
+      if (!directTeamMembers.length) {
+        return this.paginationServise.paginateArray([], {
+          page: paginationOptions?.page,
+          limit: paginationOptions?.limit,
+        });
+      }
+
+      // Get all OKR data for all team members in a single optimized query
+      const teamMembersOkrData = await this.getBulkUsersOkrWithQueryBuilder(
+        directTeamMembers.map(user => user.id),
+        tenantId
+      );
+
+      // Map the results to the expected format
+      const results = directTeamMembers.map(member => {
+        const memberOkr = teamMembersOkrData[member.id] || { okr: 0, daysLeft: 0, okrCompleted: 0, keyResultcount: 0 };
+        
+        return {
+          userId: member.id,
+          userName: member.name || member.email,
+          departmentId,
+          departmentName: department.name,
+          isDirectTeamMember: true,
+          isTeamLead: false,
+          okrScore: memberOkr.okr || 0,
+          daysLeft: memberOkr.daysLeft && isFinite(memberOkr.daysLeft) ? memberOkr.daysLeft : null,
+          okrCompleted: memberOkr.okrCompleted || 0,
+          keyResultCount: memberOkr.keyResultcount || 0,
+        };
+      });
+
+      return this.paginationServise.paginateArray(results, {
+        page: paginationOptions?.page,
+        limit: paginationOptions?.limit,
+      });
+    } catch (error) {
+      console.warn(`[WARNING] Failed to get team members data:`, error.message);
+      return this.paginationServise.paginateArray([], {
+        page: paginationOptions?.page,
+        limit: paginationOptions?.limit,
+      });
+    }
+  }
+
+  /**
+   * Optimized method to get OKR data for multiple users in a single query
+   */
+  private async getBulkUsersOkrWithQueryBuilder(userIds: string[], tenantId: string) {
+    try {
+      const activeSession = await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(tenantId);
+      
+      const queryBuilder = this.objectiveRepository
+        .createQueryBuilder('objective')
+        .leftJoin('objective.keyResults', 'keyResults')
+        .addSelect([
+          'objective.id',
+          'objective.userId',
+          'objective.deadline',
+          'keyResults.id',
+          'keyResults.progress',
+          'keyResults.weight'
+        ])
+        .where('objective.userId IN (:...userIds)', { userIds })
+        .andWhere('objective.tenantId = :tenantId', { tenantId });
+
+      if (activeSession) {
+        queryBuilder.andWhere('objective.sessionId = :sessionId', { sessionId: activeSession.id });
+      }
+
+      const objectives = await queryBuilder.getMany();
+      
+      // Group objectives by user ID and calculate OKR for each user
+      const objectivesByUser = {};
+      objectives.forEach(objective => {
+        if (!objectivesByUser[objective.userId]) {
+          objectivesByUser[objective.userId] = [];
+        }
+        objectivesByUser[objective.userId].push(objective);
+      });
+
+      const results = {};
+      
+      // Calculate OKR for each user
+      Object.keys(objectivesByUser).forEach(userId => {
+        const userObjectives = objectivesByUser[userId];
+        let totalProgress = 0;
+        let completedKeyResults = 0;
+        let totalKeyResults = 0;
+        let maxDaysLeft = 0;
+
+        userObjectives.forEach(objective => {
+          const daysLeft = Math.ceil(
+            (new Date(objective.deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+          );
+          maxDaysLeft = Math.max(maxDaysLeft, daysLeft);
+
+          let objectiveProgress = 0;
+          objective.keyResults.forEach(keyResult => {
+            objectiveProgress += (keyResult.progress * keyResult.weight) / 100;
+            totalKeyResults++;
+            if (parseFloat(keyResult.progress.toString()) === 100) {
+              completedKeyResults++;
+            }
+          });
+          totalProgress += objectiveProgress;
+        });
+
+        const averageOkr = userObjectives.length > 0 ? totalProgress / userObjectives.length : 0;
+
+        results[userId] = {
+          okr: averageOkr,
+          daysLeft: maxDaysLeft,
+          okrCompleted: completedKeyResults,
+          keyResultcount: totalKeyResults,
+        };
+      });
+
+      return results;
+    } catch (error) {
+      console.warn(`[WARNING] Failed to get bulk users OKR:`, error.message);
+      return {};
     }
   }
 
@@ -834,6 +1041,5 @@ returnedData.push({...data})
       });
     }
   }
-
 
 }
