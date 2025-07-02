@@ -154,7 +154,7 @@ export class ObjectiveController {
   }
 
   @Post('/single-user-okr')
-  @ExcludeAuthGuard()
+  
   getOkrOfSingleUser(
     @Headers('tenantId') tenantId: string,
     @Headers('userId') userId: string,
@@ -168,7 +168,7 @@ export class ObjectiveController {
   }
 
   @Post('/supervisor-okr')
- 
+  @ExcludeAuthGuard()
   getOkrOfSupervisor(
     @Headers('tenantId') tenantId: string,
     @Headers('userId') userId: string,
