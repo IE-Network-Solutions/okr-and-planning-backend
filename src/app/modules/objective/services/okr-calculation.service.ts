@@ -711,6 +711,7 @@ returnedData.push({...data})
           daysLeft: userOkr.daysLeft && isFinite(userOkr.daysLeft) ? userOkr.daysLeft : null,
           okrCompleted: userOkr.okrCompleted || 0,
           keyResultCount: userOkr.keyResultcount || 0,
+          objectives: userOkr.objectives || [],
         };
 
         return {
@@ -732,6 +733,7 @@ returnedData.push({...data})
           daysLeft: userOkr.daysLeft && isFinite(userOkr.daysLeft) ? userOkr.daysLeft : null,
           okrCompleted: userOkr.okrCompleted || 0,
           keyResultCount: userOkr.keyResultcount || 0,
+          objectives: userOkr.objectives || [],
         };
       }
     } catch (error) {
@@ -755,10 +757,18 @@ returnedData.push({...data})
         .addSelect([
           'objective.id',
           'objective.userId',
+          'objective.title',
+          'objective.description',
           'objective.deadline',
+          'objective.isClosed',
           'keyResults.id',
+          'keyResults.title',
+          'keyResults.description',
           'keyResults.progress',
-          'keyResults.weight'
+          'keyResults.weight',
+          'keyResults.currentValue',
+          'keyResults.targetValue',
+          'keyResults.initialValue'
         ])
         .where('objective.userId = :userId', { userId })
         .andWhere('objective.tenantId = :tenantId', { tenantId });
@@ -770,7 +780,13 @@ returnedData.push({...data})
       const objectives = await queryBuilder.getMany();
       
       if (!objectives || objectives.length === 0) {
-        return { okr: 0, daysLeft: 0, okrCompleted: 0, keyResultcount: 0 };
+        return { 
+          okr: 0, 
+          daysLeft: 0, 
+          okrCompleted: 0, 
+          keyResultcount: 0,
+          objectives: []
+        };
       }
 
       // Calculate OKR metrics in memory (much faster than multiple DB calls)
@@ -803,10 +819,17 @@ returnedData.push({...data})
         daysLeft: maxDaysLeft,
         okrCompleted: completedKeyResults,
         keyResultcount: totalKeyResults,
+        objectives: objectives
       };
     } catch (error) {
       // console.warn(`[WARNING] Failed to get user OKR for ${userId}:`, error.message);
-      return { okr: 0, daysLeft: 0, okrCompleted: 0, keyResultcount: 0 };
+      return { 
+        okr: 0, 
+        daysLeft: 0, 
+        okrCompleted: 0, 
+        keyResultcount: 0,
+        objectives: []
+      };
     }
   }
 
@@ -848,7 +871,7 @@ returnedData.push({...data})
 
       // Map the results to the expected format
       const results = directTeamMembers.map(member => {
-        const memberOkr = teamMembersOkrData[member.id] || { okr: 0, daysLeft: 0, okrCompleted: 0, keyResultcount: 0 };
+        const memberOkr = teamMembersOkrData[member.id] || { okr: 0, daysLeft: 0, okrCompleted: 0, keyResultcount: 0, objectives: [] };
         
         return {
           userId: member.id,
@@ -861,6 +884,7 @@ returnedData.push({...data})
           daysLeft: memberOkr.daysLeft && isFinite(memberOkr.daysLeft) ? memberOkr.daysLeft : null,
           okrCompleted: memberOkr.okrCompleted || 0,
           keyResultCount: memberOkr.keyResultcount || 0,
+          objectives: memberOkr.objectives || [],
         };
       });
 
@@ -890,10 +914,18 @@ returnedData.push({...data})
         .addSelect([
           'objective.id',
           'objective.userId',
+          'objective.title',
+          'objective.description',
           'objective.deadline',
+          'objective.isClosed',
           'keyResults.id',
+          'keyResults.title',
+          'keyResults.description',
           'keyResults.progress',
-          'keyResults.weight'
+          'keyResults.weight',
+          'keyResults.currentValue',
+          'keyResults.targetValue',
+          'keyResults.initialValue'
         ])
         .where('objective.userId IN (:...userIds)', { userIds })
         .andWhere('objective.tenantId = :tenantId', { tenantId });
@@ -947,6 +979,7 @@ returnedData.push({...data})
           daysLeft: maxDaysLeft,
           okrCompleted: completedKeyResults,
           keyResultcount: totalKeyResults,
+          objectives: userObjectives
         };
       });
 
