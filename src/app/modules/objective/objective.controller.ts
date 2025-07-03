@@ -125,14 +125,13 @@ export class ObjectiveController {
   @Post('/team')
   @ExcludeAuthGuard()
   getTeamOkr(
-    @Req() req: Request,
-    @Body() filterDto?: FilterObjectiveDto,
+    @Headers('tenantId') tenantId: string,
+    @Headers('userId') userId: string,
     @Query() paginationOptions?: PaginationDto,
   ) {
-    const tenantId = req['tenantId'];
-    return this.objectiveService.getTeamOkr(
+    return this.okrDashboardService.getOkrOfTeam(
+      userId,
       tenantId,
-      filterDto,
       paginationOptions,
     );
   }
