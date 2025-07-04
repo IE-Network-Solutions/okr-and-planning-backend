@@ -9,3 +9,7 @@ export class UpdatePlanTaskDto extends CreatePlanTaskDto {
   @IsOptional()
   id: string;
 }
+
+export class UpdateStatusDto {
+  status: string;
+}
