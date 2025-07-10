@@ -1,6 +1,5 @@
 import {
   Controller,
-  Get,
   Post,
   Body,
   Patch,
@@ -15,6 +14,7 @@ import { UpdateWeeklyPriorityDto } from './dto/update-weekly-priority-task.dto';
 import { PaginationDto } from '@root/src/core/commonDto/pagination-dto';
 import { ApiTags } from '@nestjs/swagger';
 import { FilterWeeklyPriorityDto } from './dto/filter-weekly-priority-task.dto';
+import { BulkCreateWeeklyPriorityDto } from './dto/bulk-create-weekly-priority-task.dto';
 
 @ApiTags('weekly-priorities')
 @Controller('weekly-priorities')
@@ -30,6 +30,17 @@ export class WeeklyPrioritiesController {
   ) {
     return this.weeklyPrioritiesService.create(
       createWeeklyPriorityDto,
+      tenantId,
+    );
+  }
+
+  @Post('/create/bulk')
+  async bulkCreate(
+    @Body() bulkCreateWeeklyPriorityDto: BulkCreateWeeklyPriorityDto,
+    @Headers('tenantId') tenantId: string,
+  ) {
+    return this.weeklyPrioritiesService.bulkCreate(
+      bulkCreateWeeklyPriorityDto,
       tenantId,
     );
   }

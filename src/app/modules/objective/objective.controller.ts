@@ -27,6 +27,8 @@ import { ExcludeAuthGuard } from '@root/src/core/guards/exclud.guard';
 import { OKRCalculationService } from './services/okr-calculation.service';
 import { UpdateObjectiveStatusDto } from './dto/update-objective-status.dto';
 import { FilterObjectiveOfAllEmployeesDto } from './dto/filter-objective-byemployees.dto';
+import { FilterVPRecognitionDTo } from '../variable_pay/dtos/vp-score-instance-dto/filter-vp-recognition.dto';
+import { EncryptionService } from '@root/src/core/services/encryption.service';
 
 @Controller('objective')
 @ApiTags('Objective')
@@ -35,7 +37,31 @@ export class ObjectiveController {
     private readonly objectiveService: ObjectiveService,
     private readonly okrDashboardService: OKRDashboardService,
     private readonly oKRCalculationService: OKRCalculationService,
+    private readonly encryptionService: EncryptionService,
   ) {}
+
+  @Post('test-encryption')
+  async testEncryption(@Body() data: any) {
+    // console.log('Received data in controller:', data);
+  }
+  @Post('encrypt-text')
+  async encryptText(@Body() body: { text: string | any }) {
+    // console.log('Original data to encrypt:', body.text);
+    
+    let encryptedText;
+    if (typeof body.text === 'string') {
+      encryptedText = this.encryptionService.encryptText(body.text);
+    } else {
+      // If it's an object, use encryptObject instead
+      encryptedText = this.encryptionService.encryptObject(body.text); 
+    }
+   // console.log('Encrypted text:', encryptedText);
+    // return {
+    //   originalData: body.text,
+    //   encryptedText: encryptedText,
+    //   timestamp: new Date().toISOString()
+    // };
+  }
 
   @Post()
   async createObjective(
@@ -252,6 +278,19 @@ export class ObjectiveController {
       tenantId,
       filterObjectiveOfAllEmployeesDto,
       paginationOptions,
+    );
+  }
+
+    @Post('/get-okr-score/to-recognize/all-employees/score')
+  async getOkrScoreInTimeRange(
+  
+     @Headers('tenantId') tenantId: string,
+       @Body() filterVpRecognitionDTo: FilterVPRecognitionDTo,
+  ) {
+      return this.oKRCalculationService.getOkrScoreInTimeRange(
+      filterVpRecognitionDTo,
+      tenantId,
+  
     );
   }
 }

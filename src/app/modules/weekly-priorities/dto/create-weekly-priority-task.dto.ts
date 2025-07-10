@@ -1,4 +1,4 @@
-import { IsString } from 'class-validator';
+import { IsOptional, IsString } from 'class-validator';
 import { Status } from '../enums/status.enum';
 
 export class CreateWeeklyPriorityDto {
@@ -8,10 +8,20 @@ export class CreateWeeklyPriorityDto {
   departmentId: string;
 
   @IsString()
+  planId: string;
+
+  @IsString()
+  taskId: string;
+
+  @IsString()
   status: Status;
 
   @IsString()
   month?: string;
   @IsString()
   session?: string;
+
+  @IsString()
+  @IsOptional()
+  failureReason?: string;
 }

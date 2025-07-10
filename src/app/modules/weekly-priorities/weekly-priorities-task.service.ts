@@ -44,6 +44,35 @@ export class WeeklyPrioritiesService {
     }
   }
 
+  async bulkCreate(
+    bulkCreateWeeklyPriorityDto: { tasks: CreateWeeklyPriorityDto[] },
+    tenantId: string,
+  ) {
+    try {
+      const activeWeek =
+        await this.weeklyPrioritiesWeekService.findActiveWeek();
+
+      if (!activeWeek) {
+        throw new BadRequestException('No active week found');
+      }
+
+      const weeklyPriorityTasks = bulkCreateWeeklyPriorityDto.tasks.map(
+        (task) =>
+          this.weeklyPriorityTaskRepository.create({
+            ...task,
+            weeklyPriorityWeek: activeWeek,
+            tenantId,
+          }),
+      );
+
+      return await this.weeklyPriorityTaskRepository.save(weeklyPriorityTasks);
+    } catch (error) {
+      throw new BadRequestException(
+        `Failed to create WeeklyPriorityTasks: ${error.message}`,
+      );
+    }
+  }
+
   async findAll(
     tenantId: string,
     paginationOptions?: PaginationDto,
@@ -67,7 +96,8 @@ export class WeeklyPrioritiesService {
           'WeeklyPriorityTask.weeklyPriorityWeek',
           'weeklyPriorityWeek',
         )
-        .where('WeeklyPriorityTask.tenantId = :tenantId', { tenantId });
+        .where('WeeklyPriorityTask.tenantId = :tenantId', { tenantId })
+        .orderBy('WeeklyPriorityTask.createdAt', 'DESC');
 
       if (filterWeeklyPriorityDto) {
         if (filterWeeklyPriorityDto.departmentId?.length) {
@@ -85,6 +115,18 @@ export class WeeklyPrioritiesService {
                 filterWeeklyPriorityDto.weeklyPriorityWeekId,
             },
           );
+        }
+
+        if (filterWeeklyPriorityDto.planId?.length) {
+          queryBuilder.andWhere('WeeklyPriorityTask.planId IN (:...planIds)', {
+            planIds: filterWeeklyPriorityDto.planId,
+          });
+        }
+
+        if (filterWeeklyPriorityDto.taskId?.length) {
+          queryBuilder.andWhere('WeeklyPriorityTask.taskId IN (:...taskIds)', {
+            taskIds: filterWeeklyPriorityDto.taskId,
+          });
         }
       }
 
