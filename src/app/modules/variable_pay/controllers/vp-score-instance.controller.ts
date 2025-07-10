@@ -111,16 +111,15 @@ export class VpScoreInstanceController {
   ) {
     return this.vpScoreInstanceService.removeVpScoreInstance(id);
   }
-  
+
   @Post('/get-vp-score/recognition')
   getVpScoreForRecognition(
-  @Headers('tenantId') tenantId: string,
+    @Headers('tenantId') tenantId: string,
     @Body() filterVpRecognitionDTo: FilterVPRecognitionDTo,
   ) {
     return this.vpScoreInstanceService.getVpScoreForRecognition(
       filterVpRecognitionDTo,
       tenantId,
-  
     );
   }
 }

@@ -1,7 +1,7 @@
 // object of new and remove. new implies create and remove implies delete.
 
-import { IsArray, IsObject } from "class-validator";
-import { CreateWeeklyPriorityDto } from "./create-weekly-priority-task.dto";
+import { IsArray, IsObject } from 'class-validator';
+import { CreateWeeklyPriorityDto } from './create-weekly-priority-task.dto';
 
 export class BulkUpdateWeeklyPriorityDto {
   @IsArray()
@@ -12,4 +12,3 @@ export class BulkUpdateWeeklyPriorityDto {
   @IsObject({ each: true })
   remove: CreateWeeklyPriorityDto[];
 }
-

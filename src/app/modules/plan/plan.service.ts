@@ -154,7 +154,6 @@ export class PlanService {
           );
         }
       }
-      
 
       const boolValue = forPlan === '1' ? false : true;
       const planningUser = await this.planningUserRepository.findOne({
@@ -312,19 +311,21 @@ export class PlanService {
       }
       // Step 2: Fetch All Plans for the User
       const plans = await this.planRepository
-  .createQueryBuilder('plan')
-  .leftJoinAndSelect('plan.plan', 'childPlans') // Child plans
-  .leftJoinAndSelect('plan.parentPlan', 'parentPlan') // Parent plans
-  .leftJoinAndSelect('plan.tasks', 'tasks') // Tasks related to the plan
-  .leftJoinAndSelect('tasks.keyResult', 'keyResult') // KeyResult related to tasks
-    .leftJoinAndSelect('keyResult.metricType', 'metricType') // KeyResult related to tasks
+        .createQueryBuilder('plan')
+        .leftJoinAndSelect('plan.plan', 'childPlans') // Child plans
+        .leftJoinAndSelect('plan.parentPlan', 'parentPlan') // Parent plans
+        .leftJoinAndSelect('plan.tasks', 'tasks') // Tasks related to the plan
+        .leftJoinAndSelect('tasks.keyResult', 'keyResult') // KeyResult related to tasks
+        .leftJoinAndSelect('keyResult.metricType', 'metricType') // KeyResult related to tasks
 
-    .leftJoinAndSelect('tasks.milestone', 'milestone') // KeyResult related to tasks
+        .leftJoinAndSelect('tasks.milestone', 'milestone') // KeyResult related to tasks
 
-  .leftJoinAndSelect('keyResult.objective', 'objective') // Objective related to KeyResult
-  .where('plan.planningUserId = :planningUserId', { planningUserId: planningUser.id })
-  .andWhere('plan.sessionId = :sessionId', { sessionId: activeSessionId })
-  .getMany();
+        .leftJoinAndSelect('keyResult.objective', 'objective') // Objective related to KeyResult
+        .where('plan.planningUserId = :planningUserId', {
+          planningUserId: planningUser.id,
+        })
+        .andWhere('plan.sessionId = :sessionId', { sessionId: activeSessionId })
+        .getMany();
       // const plans = await this.planRepository.find({
       //   where: { planningUserId: planningUser.id, sessionId: activeSessionId },
       //   relations: [
@@ -335,7 +336,6 @@ export class PlanService {
       //     'tasks.keyResult.objective', // Objective related to KeyResult
       //   ],
       // });
-
 
       if (!plans || plans.length === 0) {
         return []; // Return an empty array if no plans exist

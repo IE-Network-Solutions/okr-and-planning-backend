@@ -358,8 +358,6 @@ export class ObjectiveService {
     }
   }
 
-
-
   async getCompanyOkr(
     tenantId: string,
     userId: string,
