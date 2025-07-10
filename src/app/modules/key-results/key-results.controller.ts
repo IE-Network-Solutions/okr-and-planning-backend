@@ -76,7 +76,6 @@ export class KeyResultsController {
       tenantId,
       objectiveId,
     );
-
   }
   @Delete(':id')
   removekeyResult(@Req() req: Request, @Param('id') id: string) {
