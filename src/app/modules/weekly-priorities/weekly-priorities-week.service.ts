@@ -27,7 +27,7 @@ export class WeeklyPrioritiesWeekService {
         order: { count: 'desc' },
       });
     } catch (error) {
-      throw new BadRequestException(error.message);
+      throw new BadRequestException('Unable to retrieve the weekly period with highest order. Please try again later.');
     }
   }
   async findActiveWeek(): Promise<WeeklyPriorityWeek | null> {
@@ -36,7 +36,7 @@ export class WeeklyPrioritiesWeekService {
         where: { isActive: true },
       });
     } catch (error) {
-      throw new BadRequestException(error.message);
+      throw new BadRequestException('Unable to retrieve the active weekly period. Please try again later.');
     }
   }
 

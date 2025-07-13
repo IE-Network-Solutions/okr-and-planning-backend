@@ -51,7 +51,7 @@ export class OkrReportService {
           activeSessionId = activeSession.id;
         } catch (error) {
           throw new NotFoundException(
-            'There is no active Session for this tenant',
+            'No active planning session found. Please contact your administrator to set up a planning session.',
           );
         }
       }
@@ -71,7 +71,7 @@ export class OkrReportService {
       // Step 2: Save the Report entity
       const savedReport = await this.reportRepository.save(report);
       if (!savedReport) {
-        throw new Error('Report not Saved');
+        throw new Error('Unable to save the report. Please try again later.');
       }
 
       // Step 3: Return the saved report with its relations
@@ -106,7 +106,7 @@ export class OkrReportService {
         activeSessionId = activeSession.id;
       } catch (error) {
         throw new NotFoundException(
-          'There is no active Session for this tenant',
+          'No active planning session found. Please contact your administrator to set up a planning session.',
         );
       }
     }
@@ -154,7 +154,7 @@ export class OkrReportService {
 
           if (!report) {
             throw new NotFoundException(
-              `Report with ID  not found for tenant ${tenantId}`,
+              `The report you're trying to delete could not be found.`,
             );
           }
 
@@ -297,7 +297,7 @@ export class OkrReportService {
       relations: ['reportTask'], // Load relations as needed
     });
     if (!updatedReport) {
-      throw new Error(`Report with id ${id} not found`);
+      throw new Error(`The report you're looking for could not be found.`);
     }
     return updatedReport;
   }
@@ -313,7 +313,7 @@ export class OkrReportService {
       });
 
       if (!report) {
-        throw new NotFoundException('Report does not exist.');
+        throw new NotFoundException('The report you\'re looking for could not be found.');
       }
       const bool = value === 'true';
 
@@ -328,7 +328,7 @@ export class OkrReportService {
         throw error; // Re-throw known exceptions.
       }
       throw new InternalServerErrorException(
-        'An error occurred while validating the plan.',
+        'Unable to validate the report. Please try again later.',
       );
     }
   }

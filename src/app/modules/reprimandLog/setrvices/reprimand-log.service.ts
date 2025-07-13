@@ -31,7 +31,9 @@ export class ReprimandLogService {
     // Find the recognition type by its ID
     const recognitionType = await this.recognitionTypeService.findOne(typeId);
     if (!recognitionType) {
-      throw new Error(`Recognition Type ID ${typeId} not found`);
+      throw new NotFoundException(
+        `The recognition type you selected could not be found.`,
+      );
     }
 
     const savedLogs: ReprimandLog[] = [];
@@ -161,7 +163,7 @@ export class ReprimandLogService {
 
     // If reprimand not found, throw an exception
     if (!reprimand) {
-      throw new NotFoundException(`ReprimandLog with ID ${id} not found`);
+      throw new NotFoundException(`The reprimand log you're looking for could not be found.`);
     }
 
     // Count the number of reprimands for the same recipientId
@@ -186,7 +188,9 @@ export class ReprimandLogService {
   ): Promise<ReprimandLog> {
     const reprimandLog = await this.findOne(id);
     if (!reprimandLog) {
-      throw new NotFoundException(`ReprimandLog with ID ${id} not found`);
+      throw new NotFoundException(
+        `The reprimand log you're trying to update could not be found.`,
+      );
     }
 
     // Update the action if provided
@@ -211,7 +215,7 @@ export class ReprimandLogService {
       );
       if (!recognitionType) {
         throw new NotFoundException(
-          `RecognitionType with ID ${updateReprimandDto.typeId} not found`,
+          `The recognition type you selected could not be found.`,
         );
       }
       reprimandLog.type = recognitionType;
@@ -241,7 +245,7 @@ export class ReprimandLogService {
   async remove(id: string): Promise<ReprimandLog> {
     const reprimand = await this.findOne(id);
     if (!reprimand) {
-      throw new NotFoundException(`ReprimandLog with ID ${id} not found`);
+      throw new NotFoundException(`The reprimand log you're looking for could not be found.`);
     }
     return this.reprimandRepository.softRemove(reprimand);
   }

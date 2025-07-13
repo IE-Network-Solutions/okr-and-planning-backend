@@ -57,14 +57,16 @@ export class PlanTasksService {
           sessionId = activeSession.id;
         } catch (error) {
           throw new NotFoundException(
-            'There is no active Session for this tenant',
+            'No active planning session found. Please contact your administrator to set up a planning session.',
           );
         }
       }
 
       const result: any = [];
       if (!createPlanTasksDto || createPlanTasksDto.length === 0) {
-        throw new BadRequestException('No tasks provided');
+        throw new BadRequestException(
+          'Please provide at least one task to create.',
+        );
       }
 
       const planningUser = await this.planningUserRepository.findOne({
@@ -77,7 +79,9 @@ export class PlanTasksService {
           where: { id: createPlanTasksDto[0].parentPlanId },
         });
         if (!parentPlan) {
-          throw new NotFoundException('Parent plan not found');
+          throw new NotFoundException(
+            'The parent plan you selected could not be found. Please choose a different plan.',
+          );
         }
       }
 
@@ -104,7 +108,9 @@ export class PlanTasksService {
       }
 
       if (!plan) {
-        throw new NotFoundException('Plan not found');
+        throw new NotFoundException(
+          'Unable to find the specified plan. Please check the plan ID and try again.',
+        );
       }
 
       for (const createPlanTaskDto of createPlanTasksDto) {
@@ -125,7 +131,7 @@ export class PlanTasksService {
             where: { id: createPlanTaskDto.parentTaskId },
           });
           if (!parentTask) {
-            throw new NotFoundException('Parent Task could not be found');
+            throw new NotFoundException('The parent task you selected could not be found. Please choose a different task.');
           }
         }
 
@@ -169,7 +175,7 @@ export class PlanTasksService {
     } catch (error) {
       await queryRunner.rollbackTransaction();
       if (error.name === 'EntityNotFoundError') {
-        throw new NotFoundException('Error creating tasks');
+        throw new NotFoundException('Unable to create the tasks. Please check your information and try again.');
       }
       throw error;
     } finally {

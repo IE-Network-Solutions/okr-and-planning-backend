@@ -38,7 +38,7 @@ export class FileUploadService {
       return response.data;
     } catch (error) {
       throw new HttpException(
-        `Failed to upload file. Please try again later. ${error.message}`,
+        `Unable to upload your file. Please check your internet connection and try again.`,
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }

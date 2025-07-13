@@ -21,13 +21,26 @@ export class AllExceptionsFilter extends BaseExceptionFilter {
       const response = host.switchToHttp().getResponse();
       const status = HttpStatus.BAD_REQUEST;
       this.logError(exception, status);
+      // Provide user-friendly database error messages
+      let userMessage =
+        'An error occurred while processing your request. Please try again.';
+      // Handle specific database errors with user-friendly messages
+      if (exception.message.includes('duplicate key')) {
+        userMessage =
+          'This record already exists. Please use a different value.';
+      } else if (exception.message.includes('foreign key constraint')) {
+        userMessage =
+          'This operation cannot be completed because it references data that no longer exists.';
+      } else if (exception.message.includes('not null constraint')) {
+        userMessage = 'Please provide all required information.';
+      } else if (exception.message.includes('unique constraint')) {
+        userMessage =
+          'This value must be unique. Please choose a different option.';
+      }
       response.status(status).json({
         statusCode: status,
-        message: exception.message
-          .replace(/\\/g, '')
-          .replace(/\n/g, '')
-          .replace(/"/g, "'"),
-        error: 'Database Error',
+        message: userMessage,
+        error: 'Data Processing Error',
       });
     } else {
       super.catch(exception, host);

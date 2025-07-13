@@ -27,7 +27,7 @@ export class WeeklyPrioritiesService {
         await this.weeklyPrioritiesWeekService.findActiveWeek();
 
       if (!activeWeek) {
-        throw new BadRequestException('No active week found');
+        throw new BadRequestException('No active week is currently set. Please contact your administrator to set up an active week.');
       }
 
       const weeklyPriorityTask = this.weeklyPriorityTaskRepository.create({
@@ -39,7 +39,7 @@ export class WeeklyPrioritiesService {
       return await this.weeklyPriorityTaskRepository.save(weeklyPriorityTask);
     } catch (error) {
       throw new BadRequestException(
-        `Failed to create WeeklyPriorityTask: ${error.message}`,
+        `Unable to create the weekly priority task. Please check your information and try again.`,
       );
     }
   }
@@ -53,7 +53,7 @@ export class WeeklyPrioritiesService {
         await this.weeklyPrioritiesWeekService.findActiveWeek();
 
       if (!activeWeek) {
-        throw new BadRequestException('No active week found');
+        throw new BadRequestException('No active week is currently set. Please contact your administrator to set up an active week.');
       }
 
       const weeklyPriorityTasks = bulkCreateWeeklyPriorityDto.tasks.map(
@@ -68,7 +68,7 @@ export class WeeklyPrioritiesService {
       return await this.weeklyPriorityTaskRepository.save(weeklyPriorityTasks);
     } catch (error) {
       throw new BadRequestException(
-        `Failed to create WeeklyPriorityTasks: ${error.message}`,
+        `Unable to create the weekly priority tasks. Please check your information and try again.`,
       );
     }
   }
@@ -85,7 +85,7 @@ export class WeeklyPrioritiesService {
         await this.weeklyPrioritiesWeekService.findActiveWeek();
 
       if (!activeWeek) {
-        throw new BadRequestException('No active week found');
+        throw new BadRequestException('No active week is currently set. Please contact your administrator to set up an active week.');
       }
 
       // Handle new tasks
@@ -136,7 +136,7 @@ export class WeeklyPrioritiesService {
       return result;
     } catch (error) {
       throw new BadRequestException(
-        `Failed to bulk update WeeklyPriorityTasks: ${error.message}`,
+        `Unable to update the weekly priority tasks. Please check your information and try again.`,
       );
     }
   }

@@ -32,7 +32,9 @@ export class AuthGuard implements CanActivate {
       request.authToken = token;
       return true;
     } catch (error) {
-      throw new UnauthorizedException('Invalid or expired token');
+      throw new UnauthorizedException(
+        'Your session has expired. Please log in again to continue.',
+      );
     }
   }
 }

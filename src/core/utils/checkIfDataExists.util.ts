@@ -10,8 +10,25 @@ export async function checkIfDataExists(
         where: { [column]: value },
       });
       if (exists) {
+        let fieldName = column;
+        switch (column) {
+          case 'name':
+            fieldName = 'name';
+            break;
+          case 'email':
+            fieldName = 'email address';
+            break;
+          case 'code':
+            fieldName = 'code';
+            break;
+          case 'title':
+            fieldName = 'title';
+            break;
+          default:
+            fieldName = column.replace(/([A-Z])/g, ' $1').toLowerCase();
+        }
         messages.push(
-          `${value} ${column} already exist. Please try a different one.`,
+          `A ${fieldName} with the value "${value}" already exists. Please choose a different ${fieldName}.`,
         );
       }
       return exists;

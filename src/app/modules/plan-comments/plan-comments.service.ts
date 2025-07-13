@@ -31,7 +31,7 @@ export class PlanCommentsService {
       return await this.planCommentRepository.save(comment);
     } catch (error) {
       if (error.name === 'EntityNotFoundError') {
-        throw new NotFoundException('Error creating comment');
+        throw new NotFoundException('Unable to create the comment. Please check your information and try again.');
       }
       throw error;
     }
@@ -46,7 +46,7 @@ export class PlanCommentsService {
       return await this.planCommentRepository.findOneByOrFail({ id });
     } catch (error) {
       if (error.name === 'EntityNotFoundError') {
-        throw new NotFoundException('Error creating the comment');
+        throw new NotFoundException('Unable to create the comment. Please check your information and try again.');
       }
       throw error;
     }
@@ -70,7 +70,7 @@ export class PlanCommentsService {
       return await this.findOne(previous.id);
     } catch (error) {
       if (error.name === 'EntityNotFoundError') {
-        throw new NotFoundException('Error updating comment');
+        throw new NotFoundException('Unable to update the comment. Please check your information and try again.');
       }
       throw error;
     }
@@ -85,9 +85,7 @@ export class PlanCommentsService {
       return await this.planCommentRepository.softRemove({ id });
     } catch (error) {
       if (error.name === 'EntityNotFoundError') {
-        throw new NotFoundException(
-          'There has been an error deleting the plan',
-        );
+        throw new NotFoundException('Unable to delete the comment. Please try again later.');
       }
     }
   }

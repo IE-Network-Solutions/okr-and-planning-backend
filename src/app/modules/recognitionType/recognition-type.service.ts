@@ -67,7 +67,7 @@ export class RecognitionTypeService {
       where: { id },
     });
     if (!recognitionType) {
-      throw new NotFoundException(`RecognitionType with ID ${id} not found`);
+      throw new NotFoundException(`The recognition type you're looking for could not be found.`);
     }
     return recognitionType;
   }
@@ -78,7 +78,7 @@ export class RecognitionTypeService {
   ): Promise<RecognitionType> {
     const recognitionType = await this.findOne(id);
     if (!recognitionType) {
-      throw new NotFoundException(`Recognition Type with ID ${id} not found`);
+      throw new NotFoundException(`The recognition type you're looking for could not be found.`);
     }
     await this.recognitionTypeRepository.update(id, updateRecognitionTypeDto);
     return this.findOne(id);

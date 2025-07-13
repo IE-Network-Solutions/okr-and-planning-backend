@@ -45,7 +45,7 @@ export class PlanService {
           activeSessionId = activeSession.id;
         } catch (error) {
           throw new NotFoundException(
-            'There is no active Session for this tenant',
+            'No active planning session found. Please contact your administrator to set up a planning session.',
           );
         }
       }
@@ -56,7 +56,9 @@ export class PlanService {
       });
 
       if (!planningUser) {
-        throw new NotFoundException('Planning user assignment not found');
+        throw new NotFoundException(
+          'Planning assignment not found. Please check your planning period settings.',
+        );
       }
 
       let parentPlan: Plan | null = null;
@@ -66,7 +68,7 @@ export class PlanService {
           where: { id: createPlanDto.parentPlanId },
         });
         if (!parentPlan) {
-          throw new NotFoundException('Parent plan not found');
+          throw new NotFoundException('The parent plan you selected could not be found. Please choose a different plan.');
         }
       }
 
@@ -94,7 +96,7 @@ export class PlanService {
       return await this.planRepository.save(plan);
     } catch (error) {
       if (error.name === 'EntityNotFoundError') {
-        throw new NotFoundException('Error creating the plan');
+        throw new NotFoundException('Unable to create the plan. Please check your information and try again.');
       }
       throw error;
     }
@@ -116,9 +118,9 @@ export class PlanService {
         bool = false;
       }
       if (plan.isValidated === true && bool === true) {
-        throw new NotFoundException('Already validated plan');
+        throw new NotFoundException('This plan has already been validated.');
       } else if (plan.isValidated === false && bool === false) {
-        throw new NotFoundException('Already open plan');
+        throw new NotFoundException('This plan is already open and available for editing.');
       }
       if (plan.tenantId === tenantId) {
         plan.isValidated = bool;
@@ -126,7 +128,7 @@ export class PlanService {
       return await this.planRepository.save(plan);
     } catch (error) {
       if (error.name === 'EntityNotFoundError') {
-        throw new NotFoundException('Error validation the plan');
+        throw new NotFoundException('Unable to update the plan validation status. Please try again.');
       }
       throw error;
     }
@@ -150,7 +152,7 @@ export class PlanService {
           activeSessionId = activeSession.id;
         } catch (error) {
           throw new NotFoundException(
-            'There is no active Session for this tenant',
+            'No active planning session found. Please contact your administrator to set up a planning session.',
           );
         }
       }
@@ -162,7 +164,7 @@ export class PlanService {
 
       if (!planningUser) {
         throw new NotFoundException(
-          `The specified planning period or user does not exist.`,
+          `You don't have access to this planning period. Please contact your administrator.`,
         );
       }
 
@@ -236,7 +238,7 @@ export class PlanService {
       return await this.planRepository.findDescendantsTree(plan);
     } catch (error) {
       if (error.name === 'EntityNotFoundError') {
-        throw new NotFoundException('Error fetching the specified plan');
+        throw new NotFoundException('Unable to retrieve the specified plan. Please check the plan ID and try again.');
       }
       throw error;
     }

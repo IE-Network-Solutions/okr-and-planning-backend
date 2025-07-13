@@ -44,7 +44,7 @@ export class PlanningPeriodsService {
       return await this.planningPeriodRepository.save(period);
     } catch (error) {
       if (error.name === 'EntityNotFoundError') {
-        throw new NotFoundException('Error creating the planning period');
+        throw new NotFoundException('Unable to create the planning period. Please check your information and try again.');
       }
       throw error;
     }
@@ -68,12 +68,12 @@ export class PlanningPeriodsService {
           { tenantId },
         );
       if (!paginatedData) {
-        throw new NotFoundException('No planning period entries found');
+        throw new NotFoundException('No planning periods found. Please create a planning period first.');
       }
       return paginatedData;
     } catch (error) {
       if (error.name === 'EntityNotFoundError') {
-        throw new NotFoundException('No Planning period found');
+        throw new NotFoundException('No planning periods found. Please create a planning period first.');
       }
     }
   }
@@ -86,7 +86,7 @@ export class PlanningPeriodsService {
     } catch (error) {
       if (error.name === 'EntityNotFoundError') {
         throw new NotFoundException(
-          'The requested planning period does not exist',
+          'The requested planning period could not be found. Please check the planning period ID.',
         );
       }
       throw error;
@@ -101,7 +101,7 @@ export class PlanningPeriodsService {
       const planning = await this.findOnePlanningPeriod(id);
       if (!planning) {
         throw new NotFoundException(
-          `Planning period with ID ${id} does not exist.`,
+          `The planning period you're trying to update could not be found.`,
         );
       }
 
@@ -110,7 +110,9 @@ export class PlanningPeriodsService {
         10,
       );
       if (isNaN(daysToAdd)) {
-        throw new BadRequestException('Invalid submission deadline format');
+        throw new BadRequestException(
+          'Please enter a valid number of days for the submission deadline.',
+        );
       }
 
       const submissionDeadlineTimestamp = formatISO(
@@ -129,7 +131,7 @@ export class PlanningPeriodsService {
 
       if (updateResult.affected === 0) {
         throw new NotFoundException(
-          'Error while updating the selected planning period',
+          'Unable to update the planning period. Please try again later.',
         );
       }
 
@@ -141,16 +143,18 @@ export class PlanningPeriodsService {
 
   async removePlanningPeriod(id: string): Promise<PlanningPeriod> {
     try {
-      const planning = await this.findOnePlanningPeriod(id);
+      const planning = await this.planningPeriodRepository.findOneByOrFail({
+        id,
+      });
       if (!planning) {
         throw new NotFoundException(
-          'Error while deleting the selected planning period',
+          'Unable to delete the planning period. Please try again later.',
         );
       }
       return await this.planningPeriodRepository.softRemove({ id });
     } catch (error) {
       throw new NotFoundException(
-        `The specified planning period with id ${id} can not be found`,
+        `The planning period you're trying to delete could not be found.`,
       );
     }
   }
@@ -164,7 +168,7 @@ export class PlanningPeriodsService {
 
       if (planningUsers.length === 0) {
         throw new NotFoundException(
-          `No planning period users found for userId ${userId}`,
+          `No planning period assignments found for this user.`,
         );
       }
 
@@ -181,7 +185,7 @@ export class PlanningPeriodsService {
         throw error; // Re-throw the NotFoundException for proper handling
       }
       throw new Error(
-        `An error occurred while deleting planning period users: ${error.message}`,
+        `Unable to remove planning period assignments. Please try again later.`,
       );
     }
   }
@@ -200,14 +204,14 @@ export class PlanningPeriodsService {
 
       if (!updatedPlanningPeriod) {
         throw new NotFoundException(
-          `The Planning period that you are updating for user with Id ${id} does not exist`,
+          `The planning period you're trying to update could not be found.`,
         );
       }
 
       return updatedPlanningPeriod;
     } catch (error) {
       if (error.name === 'EntityNotFoundError') {
-        throw new NotFoundException('Error assigning user');
+        throw new NotFoundException('Unable to update the planning period status. Please try again later.');
       }
       throw error;
     }

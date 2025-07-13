@@ -45,7 +45,9 @@ export class FailureReasonService {
     });
 
     if (!failureReason) {
-      throw new NotFoundException(`Failure reason with ID not found`);
+      throw new NotFoundException(
+        `The failure reason you're looking for could not be found.`,
+      );
     }
 
     // Update the failure reason fields with new data

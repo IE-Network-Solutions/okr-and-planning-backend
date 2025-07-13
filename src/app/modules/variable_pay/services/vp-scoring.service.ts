@@ -90,7 +90,7 @@ export class VpScoringService {
       return await this.findOneVpScoring(savedVpScoring.id);
     } catch (error) {
       await queryRunner.rollbackTransaction();
-      throw new BadRequestException(error.message);
+      throw new BadRequestException('Unable to create the scoring configuration. Please check your information and try again.');
     } finally {
       await queryRunner.release();
     }
@@ -121,7 +121,7 @@ export class VpScoringService {
 
       return paginatedData;
     } catch (error) {
-      throw new BadRequestException(error.message);
+      throw new BadRequestException('Unable to retrieve scoring configurations. Please try again later.');
     }
   }
 
@@ -138,7 +138,7 @@ export class VpScoringService {
       });
       return vpScoring;
     } catch (error) {
-      throw new NotFoundException(`VpScoring Not Found`);
+      throw new NotFoundException(`The scoring configuration you're looking for could not be found.`);
     }
   }
 
@@ -150,7 +150,7 @@ export class VpScoringService {
     try {
       const vpScoring = await this.findOneVpScoring(id);
       if (!vpScoring) {
-        throw new NotFoundException(`VpScoring Not Found`);
+        throw new NotFoundException(`The scoring configuration you're looking for could not be found.`);
       }
       const vpScoringCriteria = updateVpScoringDto.vpScoringCriteria;
       const updateVpScoring = updateVpScoringDto.createUserVpScoringDto;
@@ -232,19 +232,21 @@ export class VpScoringService {
       }
       return await this.findOneVpScoring(id);
     } catch (error) {
-      throw new BadRequestException(error.message);
+      throw new BadRequestException('Unable to update the scoring configuration. Please check your information and try again.');
     }
   }
   async removeVpScoring(id: string): Promise<VpScoring> {
     try {
       const vpScoring = await this.findOneVpScoring(id);
       if (!vpScoring) {
-        throw new NotFoundException(`VpScoring Not Found`);
+        throw new NotFoundException(`The scoring configuration you're looking for could not be found.`);
       }
       await this.vpScoringRepository.softRemove({ id });
       return vpScoring;
     } catch (error) {
-      throw new BadRequestException(error.message);
+      throw new BadRequestException(
+        'Unable to remove the scoring configuration. Please try again later.',
+      );
     }
   }
 }

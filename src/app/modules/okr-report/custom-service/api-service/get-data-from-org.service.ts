@@ -9,7 +9,7 @@ export class OrgEmployeeInformationApiService {
   async getUserInfo(tenantId: string, userIds: string[]): Promise<any> {
     if (!this.orgServer) {
       throw new HttpException(
-        'ORG_SERVER URL not defined',
+        'Unable to connect to organization services. Please contact support.',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
@@ -34,13 +34,13 @@ export class OrgEmployeeInformationApiService {
       // Handle different response errors (if Axios provides one)
       if (error.response) {
         throw new HttpException(
-          error.response.data || 'Failed to fetch user info',
+          'Unable to retrieve user information. Please try again later.',
           error.response.status || HttpStatus.INTERNAL_SERVER_ERROR,
         );
       }
 
       throw new HttpException(
-        'Failed to fetch user info',
+        'Unable to connect to organization services. Please check your connection and try again.',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }

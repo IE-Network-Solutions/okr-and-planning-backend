@@ -137,7 +137,7 @@ export class OkrReportTaskService {
       return savedReportTasks;
     } catch (error) {
       await queryRunner.rollbackTransaction();
-      throw new BadRequestException(error.message);
+      throw new BadRequestException('Unable to create the report tasks. Please check your information and try again.');
     } finally {
       await queryRunner.release();
     }
@@ -505,7 +505,7 @@ export class OkrReportTaskService {
 
       return reportTasks;
     } catch (error) {
-      throw new ConflictException(error.message);
+      throw new ConflictException('Unable to retrieve report tasks. Please try again later.');
     }
   }
   async deleteReportTasks(reportTaskId: string) {

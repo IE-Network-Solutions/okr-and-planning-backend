@@ -25,7 +25,9 @@ export class TenantGuard implements CanActivate {
     const tenantId = request.headers.tenantid;
 
     if (!tenantId) {
-      throw new BadRequestException('tenantId In header is missing');
+      throw new BadRequestException(
+        'Organization information is missing. Please refresh the page and try again.',
+      );
     }
     request.tenantId = tenantId;
     return true;

@@ -56,7 +56,7 @@ export class KeyResultsService {
         ? await queryRunner.manager.save(KeyResult, keyResult)
         : await this.keyResultRepository.save(keyResult);
     } catch (error) {
-      throw new BadRequestException(error.message);
+      throw new BadRequestException('Unable to create the key result. Please check your information and try again.');
     }
   }
   async createBulkkeyResult(
@@ -90,7 +90,7 @@ export class KeyResultsService {
 
       return keyResults;
     } catch (error) {
-      throw new BadRequestException(error.message);
+      throw new BadRequestException('Unable to create the key results. Please check your information and try again.');
     }
   }
   async findAllkeyResults(
@@ -123,7 +123,7 @@ export class KeyResultsService {
       );
       return paginatedData;
     } catch (error) {
-      throw new BadRequestException(error.message);
+      throw new BadRequestException('Unable to retrieve key results. Please try again later.');
     }
   }
 
@@ -136,7 +136,7 @@ export class KeyResultsService {
       });
       return keyResult;
     } catch (error) {
-      throw new NotFoundException(`keyResult Not Found`);
+      throw new NotFoundException(`The key result you're looking for could not be found.`);
     }
   }
 
@@ -163,7 +163,7 @@ export class KeyResultsService {
       }
 
       if (!keyResult) {
-        throw new NotFoundException(`keyResult Not Found`);
+        throw new NotFoundException(`The key result you're looking for could not be found.`);
       }
 
       const keyResultTobeUpdated = new UpdateKeyResultDto();
@@ -205,7 +205,7 @@ export class KeyResultsService {
       }
       return await this.findOnekeyResult(id);
     } catch (error) {
-      throw new BadRequestException(error);
+      throw new BadRequestException('Unable to update the key result. Please check your information and try again.');
     }
   }
   async updatekeyResults(
@@ -268,7 +268,7 @@ export class KeyResultsService {
         if (entityToDelete) {
           await queryRunner.manager.softRemove(entityToDelete);
         } else {
-          throw new NotFoundException('KeyResult Not Found');
+          throw new NotFoundException('The key result you\'re trying to delete could not be found.');
         }
       }
 
@@ -290,7 +290,7 @@ export class KeyResultsService {
   async removekeyResult(id: string): Promise<KeyResult> {
     const keyResult = await this.findOnekeyResult(id);
     if (!keyResult) {
-      throw new NotFoundException(`keyResult Not found`);
+      throw new NotFoundException(`The key result you're looking for could not be found.`);
     }
     await this.keyResultRepository.softRemove({ id });
     return keyResult;
@@ -354,7 +354,7 @@ export class KeyResultsService {
 
       return paginatedData;
     } catch (error) {
-      throw new BadRequestException(error.message);
+      throw new BadRequestException('Unable to retrieve key results for this user. Please try again later.');
     }
   }
 
@@ -382,7 +382,7 @@ export class KeyResultsService {
       }
     } catch (error) {
       throw new BadRequestException(
-        `Failed to update key results: ${error.message}`,
+        `Unable to update key result status. Please try again later.`,
       );
     }
   }
@@ -402,7 +402,9 @@ export class KeyResultsService {
         where: { objectiveId: In(objectiveIds) },
       });
     } catch (error) {
-      throw new BadRequestException(error.message);
+      throw new BadRequestException(
+        'Unable to update key result status. Please try again later.',
+      );
     }
   }
 }

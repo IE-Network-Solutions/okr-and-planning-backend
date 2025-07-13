@@ -97,7 +97,7 @@ export class ObjectiveService {
       return savedObjective;
     } catch (error) {
       await queryRunner.rollbackTransaction();
-      throw new BadRequestException(error.message);
+      throw new BadRequestException('Unable to create the objective. Please check your information and try again.');
     } finally {
       await queryRunner.release();
     }
@@ -151,7 +151,7 @@ export class ObjectiveService {
         items: calculatedObjectives,
       };
     } catch (error) {
-      throw new BadRequestException(error.message);
+      throw new BadRequestException('Unable to retrieve objectives. Please try again later.');
     }
   }
 
@@ -194,7 +194,7 @@ export class ObjectiveService {
         items: calculatedObjectives,
       };
     } catch (error) {
-      throw new BadRequestException(error.message);
+      throw new BadRequestException('Unable to retrieve objectives for this session. Please try again later.');
     }
   }
   async findOneObjective(id: string): Promise<Objective> {
@@ -205,7 +205,7 @@ export class ObjectiveService {
       });
       return Objective;
     } catch (error) {
-      throw new NotFoundException(`Objective Not Found`);
+      throw new NotFoundException(`The objective you're looking for could not be found.`);
     }
   }
 
@@ -216,7 +216,7 @@ export class ObjectiveService {
   ): Promise<Objective> {
     const objective = await this.findOneObjective(id);
     if (!objective) {
-      throw new NotFoundException(`Objective Not Found`);
+      throw new NotFoundException(`The objective you're looking for could not be found.`);
     }
     let keyResults: UpdateKeyResultDto[] = [];
     keyResults = updateObjectiveDto.keyResults;
@@ -234,7 +234,7 @@ export class ObjectiveService {
   ): Promise<Objective> {
     const Objective = await this.findOneObjective(id);
     if (!Objective) {
-      throw new NotFoundException(`Objective Not Found`);
+      throw new NotFoundException(`The objective you're looking for could not be found.`);
     }
 
     await this.objectiveRepository.update(
@@ -249,7 +249,9 @@ export class ObjectiveService {
   async removeObjective(id: string): Promise<Objective> {
     const objective = await this.findOneObjective(id);
     if (!objective) {
-      throw new NotFoundException(`Objective Not Found`);
+      throw new NotFoundException(
+        `The objective you're looking for could not be found.`,
+      );
     }
     await this.objectiveRepository.softRemove({ id });
     return objective;
