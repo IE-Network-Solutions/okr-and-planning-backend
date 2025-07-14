@@ -16,7 +16,6 @@ import { EncryptionService } from '@root/src/core/services/encryption.service';
 
 import { ExcelModule } from '@root/src/core/export/export-excel.module';
 
-
 @Module({
   imports: [
     TypeOrmModule.forFeature([Objective]),

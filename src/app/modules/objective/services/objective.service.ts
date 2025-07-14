@@ -358,37 +358,6 @@ export class ObjectiveService {
     }
   }
 
-  async getTeamOkr(
-    tenantId: string,
-    filterDto?: FilterObjectiveDto,
-    paginationOptions?: PaginationDto,
-  ): Promise<Pagination<Objective>> {
-    try {
-      if (filterDto && filterDto['users'].length > 0) {
-        const objectives = await this.objectiveFilter(
-          tenantId,
-          filterDto,
-          paginationOptions,
-        );
-        if (objectives.items.length > 0) {
-          const newObjective =
-            await this.averageOkrCalculation.calculateObjectiveProgress(
-              objectives.items,
-            );
-
-          return {
-            ...objectives,
-            items: newObjective,
-          };
-        }
-        return objectives;
-      }
-      return EmptyPaginationDto.createEmptyPaginationResult(paginationOptions);
-    } catch (error) {
-      throw new BadRequestException(error.message);
-    }
-  }
-
   async getCompanyOkr(
     tenantId: string,
     userId: string,

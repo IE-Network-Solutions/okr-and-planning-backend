@@ -387,8 +387,9 @@ export class PlanningPeriodsService {
           userId: id,
         },
       });
-      return planningPeriodUser.sort((a, b) => 
-        a.planningPeriod.intervalLength - b.planningPeriod.intervalLength
+      return planningPeriodUser.sort(
+        (a, b) =>
+          a.planningPeriod.intervalLength - b.planningPeriod.intervalLength,
       );
     } catch (error) {
       if (error.name === 'EntityNotFoundError') {

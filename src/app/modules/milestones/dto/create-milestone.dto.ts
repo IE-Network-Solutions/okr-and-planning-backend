@@ -13,8 +13,7 @@ export class CreateMilestoneDto {
   @IsOptional()
   @IsString()
   status?: Status;
-  @Transform(({ value }) => value === null ? null : parseFloat(value))
-
+  @Transform(({ value }) => (value === null ? null : parseFloat(value)))
   @IsNumber({ maxDecimalPlaces: 2 })
   @IsNumber()
   weight: number;

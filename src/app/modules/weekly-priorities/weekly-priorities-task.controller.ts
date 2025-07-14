@@ -15,6 +15,7 @@ import { PaginationDto } from '@root/src/core/commonDto/pagination-dto';
 import { ApiTags } from '@nestjs/swagger';
 import { FilterWeeklyPriorityDto } from './dto/filter-weekly-priority-task.dto';
 import { BulkCreateWeeklyPriorityDto } from './dto/bulk-create-weekly-priority-task.dto';
+import { BulkUpdateWeeklyPriorityDto } from './dto/bulk-update-weekly-priority-task.dto';
 
 @ApiTags('weekly-priorities')
 @Controller('weekly-priorities')
@@ -69,5 +70,16 @@ export class WeeklyPrioritiesController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.weeklyPrioritiesService.remove(id);
+  }
+
+  @Post('/update/bulk')
+  async bulkUpdate(
+    @Body() bulkUpdateWeeklyPriorityDto: BulkUpdateWeeklyPriorityDto,
+    @Headers('tenantId') tenantId: string,
+  ) {
+    return this.weeklyPrioritiesService.bulkUpdate(
+      bulkUpdateWeeklyPriorityDto,
+      tenantId,
+    );
   }
 }

@@ -55,24 +55,30 @@ export class OkrProgressService {
       let newValue = keyResultCurrentValue;
 
       if (actualValueToUpdate !== undefined) {
-        const diff =
-          parseFloat(keyResult.actualValue?.toString() || '0') -
-          parseFloat(actualValueToUpdate.toString());
+        const actual = parseFloat(keyResult.actualValue?.toString() || '0');
+        const oldActual = parseFloat(actualValueToUpdate?.toString() || '0');
 
-        if (diff !== 0) {
-          newValue = keyResultCurrentValue + diff;
+        const isFirstTime = keyResultCurrentValue === 0 && oldActual === 0;
+
+        if (isFirstTime) {
+          newValue = actual;
+        } else {
+          const diff = actual - oldActual;
+          if (diff !== 0) {
+            newValue = keyResultCurrentValue + diff;
+          }
         }
       }
 
-      const initialDifference =
-        newValue - parseFloat(keyResult.initialValue.toString());
       const targetDifference =
         parseFloat(keyResult.targetValue.toString()) -
         parseFloat(keyResult.initialValue.toString());
-      let progress = (initialDifference / targetDifference) * 100;
+      let progress = (newValue / targetDifference) * 100;
 
       if (progress > 100) {
         progress = 100;
+      } else if (progress < 0) {
+        progress = 0;
       }
 
       updateValue.progress = progress;

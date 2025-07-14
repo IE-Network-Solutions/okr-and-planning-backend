@@ -73,6 +73,74 @@ export class WeeklyPrioritiesService {
     }
   }
 
+  async bulkUpdate(
+    bulkUpdateWeeklyPriorityDto: {
+      new: CreateWeeklyPriorityDto[];
+      remove: CreateWeeklyPriorityDto[];
+    },
+    tenantId: string,
+  ) {
+    try {
+      const activeWeek =
+        await this.weeklyPrioritiesWeekService.findActiveWeek();
+
+      if (!activeWeek) {
+        throw new BadRequestException('No active week found');
+      }
+
+      // Handle new tasks
+      const newTasks = bulkUpdateWeeklyPriorityDto.new.map((task) =>
+        this.weeklyPriorityTaskRepository.create({
+          ...task,
+          weeklyPriorityWeek: activeWeek,
+          tenantId,
+        }),
+      );
+
+      // Handle tasks to remove
+      const tasksToRemove = await Promise.all(
+        bulkUpdateWeeklyPriorityDto.remove.map(async (task) => {
+          const existingTask = await this.weeklyPriorityTaskRepository.findOne({
+            where: {
+              taskId: task.taskId,
+              departmentId: task.departmentId,
+              planId: task.planId,
+              tenantId,
+            },
+          });
+          return existingTask;
+        }),
+      );
+
+      // Filter out any null values (tasks that weren't found)
+      const validTasksToRemove = tasksToRemove.filter((task) => task !== null);
+
+      // Perform the operations in a transaction
+      const result =
+        await this.weeklyPriorityTaskRepository.manager.transaction(
+          async (transactionalEntityManager) => {
+            const savedNewTasks = await transactionalEntityManager.save(
+              newTasks,
+            );
+            const removedTasks = await transactionalEntityManager.softRemove(
+              validTasksToRemove,
+            );
+
+            return {
+              created: savedNewTasks,
+              removed: removedTasks,
+            };
+          },
+        );
+
+      return result;
+    } catch (error) {
+      throw new BadRequestException(
+        `Failed to bulk update WeeklyPriorityTasks: ${error.message}`,
+      );
+    }
+  }
+
   async findAll(
     tenantId: string,
     paginationOptions?: PaginationDto,
