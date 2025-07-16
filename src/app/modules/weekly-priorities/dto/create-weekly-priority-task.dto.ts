@@ -8,7 +8,7 @@ export class CreateWeeklyPriorityDto {
 
   @IsString()
   title: string;
-  
+
   @IsString()
   departmentId: string;
 
