@@ -177,10 +177,13 @@ export class KeyResultsService {
       keyResultTobeUpdated.currentValue = updatekeyResultDto.currentValue;
       keyResultTobeUpdated.metricTypeId = updatekeyResultDto.metricTypeId;
       // Only log defined fields for clarity
-      const definedUpdatePayload = Object.entries(keyResultTobeUpdated)
-        .filter(([notused, v]) => v !== undefined)
-        .reduce((acc, [k, v]) => ({ ...acc, [k]: v }), {});
 
+      const definedUpdatePayload = Object.entries(keyResultTobeUpdated)
+       .filter(([_, v]) => v !== undefined)
+        .reduce((acc, [k, v]) => {
+          acc[k] = v;
+          return acc;
+        }, {});
       //  keyResultTobeUpdated['lastUpdateValue'] = updatekeyResultDto['lastUpdateValue'];
 
       await this.keyResultRepository.update({ id }, definedUpdatePayload);

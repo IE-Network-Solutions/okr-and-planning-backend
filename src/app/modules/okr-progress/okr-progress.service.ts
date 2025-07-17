@@ -45,17 +45,22 @@ export class OkrProgressService {
             keyResultProgress += parseFloat(milestone.weight.toString());
           }
         });
+        if (!Number.isFinite(keyResultProgress) || isNaN(keyResultProgress)) {
+          keyResultProgress = 0;
+        }
+
         // Handle invalid progress
-        if (!isFinite(keyResultProgress) || isNaN(keyResultProgress)) {
+        if (!Number.isFinite(keyResultProgress) || isNaN(keyResultProgress)) {
           keyResultProgress = 0;
         }
         updateValue.progress = keyResultProgress;
         shouldUpdateCurrentValue = false;
       } else if (keyResult.metricType.name === NAME.ACHIEVE) {
         let progress = parseFloat(keyResult.progress?.toString() || '0');
-        if (!isFinite(progress) || isNaN(progress)) {
+        if (!Number.isFinite(progress) || isNaN(progress)) {
           progress = 0;
         }
+        
         updateValue.progress = progress;
         shouldUpdateCurrentValue = false;
       } else {
@@ -85,15 +90,15 @@ export class OkrProgressService {
           parseFloat(keyResult.targetValue?.toString() || '0') -
           parseFloat(keyResult.initialValue?.toString() || '0');
         let progress = 0;
-        if (targetDifference !== 0 && isFinite(targetDifference)) {
+        if (targetDifference !== 0 && Number.isFinite(targetDifference)) {
           progress = (newValue / targetDifference) * 100;
         } else {
           progress = 0;
         }
-        if (!isFinite(progress) || isNaN(progress)) {
-          progress = 0;
+        if (!Number.isFinite(progress) || isNaN(progress)) {
+            progress = 0;
         }
-        if (!isFinite(newValue) || isNaN(newValue)) {
+        if (!Number.isFinite(newValue) || isNaN(newValue)) {
           shouldUpdateCurrentValue = false;
         }
         updateValue.progress = progress;
