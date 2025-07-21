@@ -47,22 +47,16 @@ export class OkrProgressService {
         });
         if (!Number.isFinite(keyResultProgress) || isNaN(keyResultProgress)) {
           keyResultProgress = 0;
-        }
-
-        // Handle invalid progress
-        if (!Number.isFinite(keyResultProgress) || isNaN(keyResultProgress)) {
-          keyResultProgress = 0;
+          shouldUpdateCurrentValue = false;
         }
         updateValue.progress = keyResultProgress;
-        shouldUpdateCurrentValue = false;
       } else if (keyResult.metricType.name === NAME.ACHIEVE) {
         let progress = parseFloat(keyResult.progress?.toString() || '0');
         if (!Number.isFinite(progress) || isNaN(progress)) {
           progress = 0;
+          shouldUpdateCurrentValue = false;
         }
-        
         updateValue.progress = progress;
-        shouldUpdateCurrentValue = false;
       } else {
         const previousValue = keyResults; // Already fetched above
         const keyResultCurrentValue = parseFloat(
@@ -96,7 +90,8 @@ export class OkrProgressService {
           progress = 0;
         }
         if (!Number.isFinite(progress) || isNaN(progress)) {
-            progress = 0;
+          progress = 0;
+          shouldUpdateCurrentValue = false;
         }
         if (!Number.isFinite(newValue) || isNaN(newValue)) {
           shouldUpdateCurrentValue = false;

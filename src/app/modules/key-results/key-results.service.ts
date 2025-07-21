@@ -179,7 +179,7 @@ export class KeyResultsService {
       // Only log defined fields for clarity
 
       const definedUpdatePayload = Object.entries(keyResultTobeUpdated)
-       .filter(([_, v]) => v !== undefined)
+        .filter(([notused, v]) => v !== undefined)
         .reduce((acc, [k, v]) => {
           acc[k] = v;
           return acc;
