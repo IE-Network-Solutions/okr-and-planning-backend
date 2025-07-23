@@ -93,6 +93,7 @@ export class OKRDashboardService {
           paginationOptions,
         );
 
+        
         return teamMembersData;
       } else {
         // For regular members, return their own objectives in the requested format
@@ -291,11 +292,19 @@ export class OKRDashboardService {
         allTeamObjectives.push(...teamLeadObjectives);
       }
 
-      // Add other team members' objectives
+      // Add other team members' objectives from the current department
       for (const member of directTeamMembers) {
         const memberObjectives = await this.getUserDetailedObjectives(member.id, tenantId);
         allTeamObjectives.push(...memberObjectives);
       }
+
+      // Get all subordinates from child departments recursively
+      const childDepartmentsSubordinates = await this.getAllSubordinatesFromChildDepartments(
+        departmentId,
+        tenantId,
+        departments,
+      );
+      allTeamObjectives.push(...childDepartmentsSubordinates);
 
       return this.paginationServise.paginateArray(allTeamObjectives, {
         page: paginationOptions?.page,
@@ -306,6 +315,46 @@ export class OKRDashboardService {
         page: paginationOptions?.page,
         limit: paginationOptions?.limit,
       });
+    }
+  }
+
+  /**
+   * Recursively get all subordinates from child departments
+   */
+  private async getAllSubordinatesFromChildDepartments(
+    departmentId: string,
+    tenantId: string,
+    departments: any[],
+  ): Promise<any[]> {
+    try {
+      const allSubordinatesObjectives = [];
+
+      // Get child departments
+      const childDepartments = await this.getFromOrganizatiAndEmployeInfoService
+        .childDepartmentWithUsers(tenantId, departmentId);
+
+      for (const childDepartment of childDepartments) {
+        // Get all users from this child department
+        const childDepartmentUsers = childDepartment.users || [];
+        
+        for (const user of childDepartmentUsers) {
+          // Get objectives for each user in the child department
+          const userObjectives = await this.getUserDetailedObjectives(user.id, tenantId);
+          allSubordinatesObjectives.push(...userObjectives);
+        }
+
+        // Recursively get subordinates from deeper child departments
+        const deeperSubordinates = await this.getAllSubordinatesFromChildDepartments(
+          childDepartment.id,
+          tenantId,
+          departments,
+        );
+        allSubordinatesObjectives.push(...deeperSubordinates);
+      }
+
+      return allSubordinatesObjectives;
+    } catch (error) {
+      return [];
     }
   }
 
