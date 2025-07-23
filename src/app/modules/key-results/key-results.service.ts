@@ -176,15 +176,17 @@ export class KeyResultsService {
       keyResultTobeUpdated.progress = updatekeyResultDto.progress;
       keyResultTobeUpdated.currentValue = updatekeyResultDto.currentValue;
       keyResultTobeUpdated.metricTypeId = updatekeyResultDto.metricTypeId;
+      // Only log defined fields for clarity
 
+      const definedUpdatePayload = Object.entries(keyResultTobeUpdated)
+        .filter(([notused, v]) => v !== undefined)
+        .reduce((acc, [k, v]) => {
+          acc[k] = v;
+          return acc;
+        }, {});
       //  keyResultTobeUpdated['lastUpdateValue'] = updatekeyResultDto['lastUpdateValue'];
 
-      await this.keyResultRepository.update(
-        { id },
-
-        keyResultTobeUpdated,
-      );
-
+      await this.keyResultRepository.update({ id }, definedUpdatePayload);
       if (
         updatekeyResultDto.milestones &&
         updatekeyResultDto.milestones.length > 0
