@@ -6,4 +6,3 @@ import { ExportExcelService } from './export-excel.service';
   exports: [ExportExcelService],
 })
 export class ExcelModule {}
-

@@ -56,7 +56,6 @@ export class ObjectiveController {
    * Regular users only see their own OKR
    */
 
-
   @Get(':userId')
   async findAllObjectives(
     @Req() req: Request,
@@ -262,16 +261,14 @@ export class ObjectiveController {
     );
   }
 
-    @Post('/get-okr-score/to-recognize/all-employees/score')
+  @Post('/get-okr-score/to-recognize/all-employees/score')
   async getOkrScoreInTimeRange(
-  
-     @Headers('tenantId') tenantId: string,
-       @Body() filterVpRecognitionDTo: FilterVPRecognitionDTo,
+    @Headers('tenantId') tenantId: string,
+    @Body() filterVpRecognitionDTo: FilterVPRecognitionDTo,
   ) {
-      return this.oKRCalculationService.getOkrScoreInTimeRange(
+    return this.oKRCalculationService.getOkrScoreInTimeRange(
       filterVpRecognitionDTo,
       tenantId,
-  
     );
   }
 }

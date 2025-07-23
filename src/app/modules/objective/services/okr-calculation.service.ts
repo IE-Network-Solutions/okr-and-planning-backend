@@ -24,7 +24,6 @@ import { FilterObjectiveOfAllEmployeesDto } from '../dto/filter-objective-byempl
 import { ExportExcelService } from '@root/src/core/export/export-excel.service';
 import { FilterVPRecognitionDTo } from '../../variable_pay/dtos/vp-score-instance-dto/filter-vp-recognition.dto';
 
-
 @Injectable()
 export class OKRCalculationService {
   constructor(
@@ -73,6 +72,8 @@ export class OKRCalculationService {
         supervisorOkr: 0,
         companyOkr: 0,
         teamOkr: 0,
+        supervisorKeyResultCount: 0,
+        supervisorKeyResultAchieved: 0,
       };
       const userTeamOkr = await this.calculateRecursiveOKR(
         employeeJobInfo.departmentId,
@@ -128,6 +129,17 @@ export class OKRCalculationService {
           averageOKRRule,
         );
         result.supervisorOkr = totalSupervisorOkr;
+        const objectives = await this.objectiveService.findAllObjectives(
+          supervisorUserId,
+          tenantId,
+          null,
+        );
+        const supervisorOKR =
+          await this.averageOkrCalculation.calculateAverageOkr(
+            objectives.items,
+          );
+        result.supervisorKeyResultCount = supervisorOKR.keyResultcount;
+        result.supervisorKeyResultAchieved = supervisorOKR.okrCompleted;
       }
 
       const companyOkr = await this.companyOkr(
@@ -157,6 +169,8 @@ export class OKRCalculationService {
         supervisorOkr: 0,
         companyOkr: 0,
         teamOkr: 0,
+        supervisorKeyResultCount: 0,
+        supervisorKeyResultAchieved: 0,
       };
     }
   }
@@ -280,48 +294,46 @@ export class OKRCalculationService {
     }
   }
 
-
-  async getOkrScoreInTimeRange(filterVpRecognitionDTo: FilterVPRecognitionDTo,tenantId:string){
- try {
-
-     const getAllSessions = await this.getFromOrganizatiAndEmployeInfoService.getAllSessions(tenantId);
+  async getOkrScoreInTimeRange(
+    filterVpRecognitionDTo: FilterVPRecognitionDTo,
+    tenantId: string,
+  ) {
+    try {
+      const getAllSessions =
+        await this.getFromOrganizatiAndEmployeInfoService.getAllSessions(
+          tenantId,
+        );
       const data = { recipientId: null, totalPoints: 0 };
-      const returnedData=[]
+      const returnedData = [];
       const startDate = new Date(filterVpRecognitionDTo.startDate);
-      const endDate = new Date (filterVpRecognitionDTo.endDate);
+      const endDate = new Date(filterVpRecognitionDTo.endDate);
       const condition = filterVpRecognitionDTo.condition;
       const value = parseFloat(filterVpRecognitionDTo.value.toString());
-const sessionIds = getAllSessions.items
-  .filter(item => {
-    const itemStart = new Date(item.startDate);
-    const itemEnd = new Date(item.endDate);
-    return itemStart >= startDate && itemEnd <= endDate;
-  })
-  .map(item => item.id); 
-if(sessionIds.length !== 0) {
-
-  const okrProgress = await this.getAllEmployeesOkrProgress(tenantId,{sessions:sessionIds})
-  for(const okrScore of okrProgress.items){
-    const score= parseFloat(okrScore.okrScore.toString());
-        if (eval(`${score} ${condition} ${value}`)) {
-const data = {recipientId: okrScore.userId,
-            totalPoints: score,}
-returnedData.push({...data})
+      const sessionIds = getAllSessions.items
+        .filter((item) => {
+          const itemStart = new Date(item.startDate);
+          const itemEnd = new Date(item.endDate);
+          return itemStart >= startDate && itemEnd <= endDate;
+        })
+        .map((item) => item.id);
+      if (sessionIds.length !== 0) {
+        const okrProgress = await this.getAllEmployeesOkrProgress(tenantId, {
+          sessions: sessionIds,
+        });
+        for (const okrScore of okrProgress.items) {
+          const score = parseFloat(okrScore.okrScore.toString());
+          if (eval(`${score} ${condition} ${value}`)) {
+            const data = { recipientId: okrScore.userId, totalPoints: score };
+            returnedData.push({ ...data });
+          }
         }
+        return returnedData.sort((a, b) => b.totalPoints - a.totalPoints);
+      }
 
-
-  }
-  return returnedData.sort((a, b) => b.totalPoints - a.totalPoints);
-}
-       
-
-      return returnedData  
-      
+      return returnedData;
     } catch (error) {
       throw new BadRequestException(error.message);
-      
     }
-
   }
 
   async calculateRecursiveOKR(
