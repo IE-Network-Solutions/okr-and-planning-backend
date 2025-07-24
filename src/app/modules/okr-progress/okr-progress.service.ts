@@ -31,12 +31,16 @@ export class OkrProgressService {
     isOnCreate: 'ON_CREATE' | 'ON_UPDATE' | 'ON_DELETE';
     actualValueToUpdate?: any;
   }): Promise<any> {
-    const updateValue = new UpdateKeyResultDto();
-    let shouldUpdateCurrentValue = true;
+
     try {
       const keyResults = await this.keyResultService.findOnekeyResult(
         keyResult.id,
       );
+      // Initialize updateValue with the current values from keyResults
+      const updateValue = new UpdateKeyResultDto();
+      Object.assign(updateValue, keyResults);
+      
+      let shouldUpdateCurrentValue = true;
 
       if (keyResult.metricType.name === NAME.MILESTONE) {
         let keyResultProgress = 0;
@@ -93,25 +97,27 @@ export class OkrProgressService {
           progress = 0;
           shouldUpdateCurrentValue = false;
         }
-        if (!Number.isFinite(newValue) || isNaN(newValue)) {
-          shouldUpdateCurrentValue = false;
-        }
+
         updateValue.progress = progress;
         if (shouldUpdateCurrentValue) {
           updateValue.currentValue = newValue;
         }
       }
 
+
       // **Update and Fetch Latest Key Result**
-      await this.keyResultService.updatekeyResult(
+     const respnseData= await this.keyResultService.updatekeyResult(
         keyResult.id,
         updateValue,
         keyResult.tenantId,
       );
+
+      return respnseData;
     } catch (error) {
+      // Ensure updateValue is defined in this scope
+      const updateValue = new UpdateKeyResultDto();
       // On error, do not update currentValue, and set progress to 0
       updateValue.progress = 0;
-      shouldUpdateCurrentValue = false;
       await this.keyResultService.updatekeyResult(
         keyResult.id,
         updateValue,

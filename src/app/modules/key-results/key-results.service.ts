@@ -147,19 +147,15 @@ export class KeyResultsService {
   ): Promise<KeyResult> {
     try {
       const keyResult = await this.findOnekeyResult(id);
-      let oldKeyResultMetricsType = null;
+      let  oldKeyResultMetricsType = null;
       let newKeyResultMetricsType = null;
 
-      if (updatekeyResultDto?.metricTypeId) {
-        oldKeyResultMetricsType =
-          await this.metricTypeService.findOneMetricType(
-            keyResult?.metricTypeId,
-          );
+      if(updatekeyResultDto?.metricTypeId){
+       oldKeyResultMetricsType=await this.metricTypeService.findOneMetricType(keyResult?.metricTypeId);
 
-        newKeyResultMetricsType =
-          await this.metricTypeService.findOneMetricType(
-            updatekeyResultDto?.metricTypeId,
-          );
+      newKeyResultMetricsType=await this.metricTypeService.findOneMetricType(
+          updatekeyResultDto?.metricTypeId,
+        );
       }
 
       if (!keyResult) {
@@ -176,17 +172,15 @@ export class KeyResultsService {
       keyResultTobeUpdated.progress = updatekeyResultDto.progress;
       keyResultTobeUpdated.currentValue = updatekeyResultDto.currentValue;
       keyResultTobeUpdated.metricTypeId = updatekeyResultDto.metricTypeId;
-      // Only log defined fields for clarity
 
-      const definedUpdatePayload = Object.entries(keyResultTobeUpdated)
-        .filter(([notused, v]) => v !== undefined)
-        .reduce((acc, [k, v]) => {
-          acc[k] = v;
-          return acc;
-        }, {});
       //  keyResultTobeUpdated['lastUpdateValue'] = updatekeyResultDto['lastUpdateValue'];
 
-      await this.keyResultRepository.update({ id }, definedUpdatePayload);
+      await this.keyResultRepository.update(
+        { id },
+
+        keyResultTobeUpdated,
+      );
+
       if (
         updatekeyResultDto.milestones &&
         updatekeyResultDto.milestones.length > 0
@@ -200,8 +194,8 @@ export class KeyResultsService {
       if (
         oldKeyResultMetricsType.id !== newKeyResultMetricsType.id &&
         oldKeyResultMetricsType?.name === NAME.MILESTONE &&
-        newKeyResultMetricsType !== null &&
-        oldKeyResultMetricsType !== null
+        newKeyResultMetricsType!==null &&
+        oldKeyResultMetricsType!==null
       ) {
         await this.milestonesService.removeMilestoneByKeyresultId(id);
       }
