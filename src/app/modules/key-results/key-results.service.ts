@@ -147,19 +147,15 @@ export class KeyResultsService {
   ): Promise<KeyResult> {
     try {
       const keyResult = await this.findOnekeyResult(id);
-      let oldKeyResultMetricsType = null;
+      let  oldKeyResultMetricsType = null;
       let newKeyResultMetricsType = null;
 
-      if (updatekeyResultDto?.metricTypeId) {
-        oldKeyResultMetricsType =
-          await this.metricTypeService.findOneMetricType(
-            keyResult?.metricTypeId,
-          );
+      if(updatekeyResultDto?.metricTypeId){
+       oldKeyResultMetricsType=await this.metricTypeService.findOneMetricType(keyResult?.metricTypeId);
 
-        newKeyResultMetricsType =
-          await this.metricTypeService.findOneMetricType(
-            updatekeyResultDto?.metricTypeId,
-          );
+      newKeyResultMetricsType=await this.metricTypeService.findOneMetricType(
+          updatekeyResultDto?.metricTypeId,
+        );
       }
 
       if (!keyResult) {
@@ -198,8 +194,8 @@ export class KeyResultsService {
       if (
         oldKeyResultMetricsType.id !== newKeyResultMetricsType.id &&
         oldKeyResultMetricsType?.name === NAME.MILESTONE &&
-        newKeyResultMetricsType !== null &&
-        oldKeyResultMetricsType !== null
+        newKeyResultMetricsType!==null &&
+        oldKeyResultMetricsType!==null
       ) {
         await this.milestonesService.removeMilestoneByKeyresultId(id);
       }
