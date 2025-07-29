@@ -169,6 +169,23 @@ export class PlanningPeriodsController {
       filterUSerDto,
     );
   }
+  @Get('/assignment/getAssignedUsers/grouped-by-user')
+  async findAssignedUserGroupedByUser(
+    @Req() req: Request,
+    @Query()
+    paginationOptions: PaginationDto,
+    @Query()
+    filterUSerDto?: FilterUserDto,
+  ): Promise<
+    Pagination<{ userId: string; planningPeriod: PlanningPeriodUser[] }>
+  > {
+    const tenantId = req['tenantId'];
+    return await this.planningPeriodService.findAllGroupedByUser(
+      tenantId,
+      paginationOptions,
+      filterUSerDto,
+    );
+  }
 
   @Get('assignment/assignedUser/:userId')
   async findByUser(@Param('userId') id: string): Promise<PlanningPeriodUser[]> {

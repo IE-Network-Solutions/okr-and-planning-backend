@@ -19,6 +19,7 @@ import { FilterUserDto } from './dto/filter-user.dto';
 import { IntervalHierarchy } from './enum/interval-type.enum';
 import { PlanService } from '../../plan/plan.service';
 import { addDays, formatISO } from 'date-fns';
+import { GetFromOrganizatiAndEmployeInfoService } from '../../objective/services/get-data-from-org.service';
 
 @Injectable()
 export class PlanningPeriodsService {
@@ -29,7 +30,7 @@ export class PlanningPeriodsService {
     private planningUserRepository: Repository<PlanningPeriodUser>,
     private readonly paginationService: PaginationService,
     private readonly planService: PlanService,
-
+    private readonly getFromOrganizatiAndEmployeInfoService: GetFromOrganizatiAndEmployeInfoService,
     @InjectDataSource() private readonly dataSource: DataSource,
   ) {}
   async createPlanningPeriods(
@@ -347,6 +348,11 @@ export class PlanningPeriodsService {
     }
   }
 
+  // userIds = await this.getFromOrganizatiAndEmployeInfoService.getAllUsers(
+  //   tenantId,
+  // );
+
+  // userDataIds = userIds?.items?.map((user) => user.id);
   async findAll(
     tenantId: string,
     paginationOptions: PaginationDto,
@@ -380,6 +386,80 @@ export class PlanningPeriodsService {
       }
     }
   }
+
+  async findAllGroupedByUser(
+    tenantId: string,
+    paginationOptions: PaginationDto,
+    filterUserDto: FilterUserDto,
+  ): Promise<
+    Pagination<{ userId: string; planningPeriod: PlanningPeriodUser[] }>
+  > {
+    try {
+      // Configure pagination options
+      const options: IPaginationOptions = {
+        page: paginationOptions.page,
+        limit: paginationOptions.limit,
+      };
+
+      // Fetch user IDs for the tenant
+      const userIds =
+        await this.getFromOrganizatiAndEmployeInfoService.getAllUsers(tenantId);
+
+      const Ids = filterUserDto?.userId
+        ? [filterUserDto.userId]
+        : userIds?.items?.map((user) => user.id);
+      // Handle case when no users are found
+      if (!Ids?.length) {
+        throw new NotFoundException('No users found for the tenant');
+      }
+
+      // Create query builder for a single user
+      const createQueryBuilder = (userId: string) => {
+        return this.planningUserRepository
+          .createQueryBuilder('PlanningPeriod')
+          .where('PlanningPeriod.tenantId = :tenantId', { tenantId })
+          .andWhere('PlanningPeriod.userId = :userId', { userId });
+      };
+
+      // Fetch planning periods for each user
+      const planningPeriodsPromises = Ids.map(async (userId) => {
+        const query = await createQueryBuilder(userId);
+        const planningPeriod = await query.getMany(); // Assuming getMany to fetch all periods
+        return {
+          userId,
+          planningPeriod: planningPeriod?.map(
+            (period) => period.planningPeriod,
+          ),
+        };
+      });
+
+      console.log(planningPeriodsPromises, 'planningPeriodsPromises');
+
+      // Resolve all promises
+      const planningPeriods = await Promise.all(planningPeriodsPromises);
+
+      return;
+      // Paginate the results
+      // const paginatedData =
+      //   await this.paginationService.paginate<PlanningPeriodUser>(
+      //     planningPeriods,
+      //     options,
+      //   );
+
+      // return paginatedData;
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      if (error.name === 'EntityNotFoundError') {
+        throw new NotFoundException('No assigned users found');
+      }
+      throw new InternalServerErrorException(
+        'Failed to fetch grouped planning periods',
+      );
+    }
+  }
+
   async findByUser(id: string): Promise<PlanningPeriodUser[]> {
     try {
       const planningPeriodUser = await this.planningUserRepository.find({
