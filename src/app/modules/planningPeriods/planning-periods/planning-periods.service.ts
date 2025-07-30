@@ -391,13 +391,11 @@ export class PlanningPeriodsService {
     tenantId: string,
     paginationOptions: PaginationDto,
     filterUserDto: FilterUserDto,
-  ): Promise<
-    Pagination<{ userId: string; planningPeriod: PlanningPeriod[] }>
-  > {
+  ): Promise<Pagination<{ userId: string; planningPeriod: PlanningPeriod[] }>> {
     try {
       const options: IPaginationOptions = {
-        page: paginationOptions.page || 1,
-        limit: paginationOptions.limit || 10,
+        page: filterUserDto?.userId ? 1 : paginationOptions.page || 1,
+        limit: filterUserDto?.userId ? 10 : paginationOptions.limit || 10,
       };
 
       let userIds;
@@ -405,11 +403,17 @@ export class PlanningPeriodsService {
         userIds = [filterUserDto.userId];
       } else {
         try {
-          const usersResponse = await this.getFromOrganizatiAndEmployeInfoService.getAllUsers(tenantId);
+          const usersResponse =
+            await this.getFromOrganizatiAndEmployeInfoService.getAllUsers(
+              tenantId,
+            );
           userIds = usersResponse?.items?.map((user) => user.id);
         } catch (error) {
           try {
-            const usersResponse = await this.getFromOrganizatiAndEmployeInfoService.getAllActiveUsers(tenantId);
+            const usersResponse =
+              await this.getFromOrganizatiAndEmployeInfoService.getAllActiveUsers(
+                tenantId,
+              );
             userIds = usersResponse?.items?.map((user) => user.id);
           } catch (alternativeError) {
             return this.paginationService.paginateArray([], options);
@@ -430,12 +434,18 @@ export class PlanningPeriodsService {
       const planningPeriodsPromises = userIds.map(async (userId) => {
         try {
           const userPlanningPeriods = await getUserPlanningPeriods(userId);
-          
+
+          const lastUpdated = userPlanningPeriods
+            .map((ppu) => ppu.updatedAt)
+            .filter((date) => date !== null && date !== undefined)
+            .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())[0];
+          // console.log(lastUpdated, 'lastUpdated');
           const planningPeriods = userPlanningPeriods
             .map((ppu) => ppu.planningPeriod)
-            .filter((pp) => pp != null); 
+            .filter((pp) => pp != null);
           return {
             userId,
+            lastUpdated,
             planningPeriod: planningPeriods,
           };
         } catch (error) {
@@ -448,7 +458,7 @@ export class PlanningPeriodsService {
       const planningPeriods = await Promise.all(planningPeriodsPromises);
       const paginatedData = await this.paginationService.paginateArray(
         planningPeriods,
-        options
+        options,
       );
       return paginatedData;
     } catch (error) {
