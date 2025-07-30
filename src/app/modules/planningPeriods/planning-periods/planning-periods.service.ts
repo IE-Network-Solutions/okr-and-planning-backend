@@ -392,61 +392,65 @@ export class PlanningPeriodsService {
     paginationOptions: PaginationDto,
     filterUserDto: FilterUserDto,
   ): Promise<
-    Pagination<{ userId: string; planningPeriod: PlanningPeriodUser[] }>
+    Pagination<{ userId: string; planningPeriod: PlanningPeriod[] }>
   > {
     try {
-      // Configure pagination options
       const options: IPaginationOptions = {
-        page: paginationOptions.page,
-        limit: paginationOptions.limit,
+        page: paginationOptions.page || 1,
+        limit: paginationOptions.limit || 10,
       };
 
-      // Fetch user IDs for the tenant
-      const userIds =
-        await this.getFromOrganizatiAndEmployeInfoService.getAllUsers(tenantId);
-
-      const Ids = filterUserDto?.userId
-        ? [filterUserDto.userId]
-        : userIds?.items?.map((user) => user.id);
-      // Handle case when no users are found
-      if (!Ids?.length) {
-        throw new NotFoundException('No users found for the tenant');
+      let userIds;
+      if (filterUserDto?.userId) {
+        userIds = [filterUserDto.userId];
+      } else {
+        try {
+          const usersResponse = await this.getFromOrganizatiAndEmployeInfoService.getAllUsers(tenantId);
+          userIds = usersResponse?.items?.map((user) => user.id);
+        } catch (error) {
+          try {
+            const usersResponse = await this.getFromOrganizatiAndEmployeInfoService.getAllActiveUsers(tenantId);
+            userIds = usersResponse?.items?.map((user) => user.id);
+          } catch (alternativeError) {
+            return this.paginationService.paginateArray([], options);
+          }
+        }
       }
-
-      // Create query builder for a single user
-      const createQueryBuilder = (userId: string) => {
-        return this.planningUserRepository
-          .createQueryBuilder('PlanningPeriod')
-          .where('PlanningPeriod.tenantId = :tenantId', { tenantId })
-          .andWhere('PlanningPeriod.userId = :userId', { userId });
+      if (!userIds?.length) {
+        return this.paginationService.paginateArray([], options);
+      }
+      const getUserPlanningPeriods = (userId: string) => {
+        return this.planningUserRepository.find({
+          where: {
+            userId: userId,
+            tenantId: tenantId,
+          },
+        });
       };
-
-      // Fetch planning periods for each user
-      const planningPeriodsPromises = Ids.map(async (userId) => {
-        const query = await createQueryBuilder(userId);
-        const planningPeriod = await query.getMany(); // Assuming getMany to fetch all periods
-        return {
-          userId,
-          planningPeriod: planningPeriod?.map(
-            (period) => period.planningPeriod,
-          ),
-        };
+      const planningPeriodsPromises = userIds.map(async (userId) => {
+        try {
+          const userPlanningPeriods = await getUserPlanningPeriods(userId);
+          
+          const planningPeriods = userPlanningPeriods
+            .map((ppu) => ppu.planningPeriod)
+            .filter((pp) => pp != null); 
+          return {
+            userId,
+            planningPeriod: planningPeriods,
+          };
+        } catch (error) {
+          return {
+            userId,
+            planningPeriod: [],
+          };
+        }
       });
-
-      console.log(planningPeriodsPromises, 'planningPeriodsPromises');
-
-      // Resolve all promises
       const planningPeriods = await Promise.all(planningPeriodsPromises);
-
-      return;
-      // Paginate the results
-      // const paginatedData =
-      //   await this.paginationService.paginate<PlanningPeriodUser>(
-      //     planningPeriods,
-      //     options,
-      //   );
-
-      // return paginatedData;
+      const paginatedData = await this.paginationService.paginateArray(
+        planningPeriods,
+        options
+      );
+      return paginatedData;
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw error;

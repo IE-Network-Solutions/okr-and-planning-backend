@@ -16,7 +16,7 @@ import { CreatePlanningPeriodsDTO } from './dto/create-planningPeriods.dto';
 import { PlanningPeriod } from './entities/planningPeriod.entity';
 import { PaginationDto } from '@root/src/core/commonDto/pagination-dto';
 import { Pagination } from 'nestjs-typeorm-paginate';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiHeader, ApiTags } from '@nestjs/swagger';
 import { PlanningPeriodUser } from './entities/planningPeriodUser.entity';
 import { AssignUsersDTO } from './dto/assignUser.dto';
 
@@ -47,6 +47,11 @@ class ParamsWithUUIDBYPLAN {
 }
 @Controller('planning-periods')
 @ApiTags('Planning-periods')
+@ApiHeader({
+  name: 'tenantId',
+  description: 'Tenant ID for multi-tenancy support',
+  required: true,
+})
 export class PlanningPeriodsController {
   constructor(private readonly planningPeriodService: PlanningPeriodsService) {}
   @Post()
@@ -177,8 +182,8 @@ export class PlanningPeriodsController {
     @Query()
     filterUSerDto?: FilterUserDto,
   ): Promise<
-    Pagination<{ userId: string; planningPeriod: PlanningPeriodUser[] }>
-  > {
+    Pagination<{ userId: string; planningPeriod: PlanningPeriod[] }>
+    > {
     const tenantId = req['tenantId'];
     return await this.planningPeriodService.findAllGroupedByUser(
       tenantId,
