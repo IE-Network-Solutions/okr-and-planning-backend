@@ -6,14 +6,21 @@ import { PlanningPeriod } from './entities/planningPeriod.entity';
 import { PlanningPeriodUser } from './entities/planningPeriodUser.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PlanModule } from '../../plan/plan.module';
+import { GetFromOrganizatiAndEmployeInfoService } from '../../objective/services/get-data-from-org.service';
+import { HttpModule } from '@nestjs/axios';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([PlanningPeriod, PlanningPeriodUser]),
     PlanModule,
+    HttpModule,
   ],
   controllers: [PlanningPeriodsController],
-  providers: [PlanningPeriodsService, PaginationService],
+  providers: [
+    PlanningPeriodsService,
+    PaginationService,
+    GetFromOrganizatiAndEmployeInfoService,
+  ],
   exports: [PlanningPeriodsService],
 })
 export class PlanningPeriodsModule {}
