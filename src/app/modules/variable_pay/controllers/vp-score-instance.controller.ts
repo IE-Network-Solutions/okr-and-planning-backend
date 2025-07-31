@@ -69,6 +69,22 @@ export class VpScoreInstanceController {
       tenantId,
     );
   }
+
+  @Post('/by-month/:userId')
+  findOneVpScoreInstanceOfUserScoreByMonth(
+    @Param('userId') userId: string,
+    @Headers('tenantId') tenantId: string,
+    @Body() monthId: Array<string>,
+    @Req() request: any,
+  ) {
+    const token = request.token;
+    return this.vpScoreInstanceService.findOneVpScoreInstanceOfUserScoreByMonth(
+      userId,
+      tenantId,
+      monthId,
+    );
+  }
+
   @Get('/score/:userId')
   findOneVpScoreInstanceOfUser(
     @Param('userId') userId: string,
