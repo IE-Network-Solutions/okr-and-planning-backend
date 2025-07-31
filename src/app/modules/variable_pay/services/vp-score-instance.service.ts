@@ -144,6 +144,24 @@ export class VpScoreInstanceService {
       throw new NotFoundException(`VpScoreInstance Not Found`);
     }
   }
+  async findOneVpScoreInstanceOfUserScoreByMonth(
+    userId: string,
+    tenantId: string,
+    monthId: Array<string>,
+  ): Promise<VpScoreInstance[]> {
+    try {
+      const vpScoreInstance = await this.vpScoreInstanceRepository.find({
+        where: { userId: userId },
+        relations: ['vpScoring'],
+      });
+      const filterData = vpScoreInstance.filter((item) =>
+        monthId.includes(item.monthId),
+      );
+      return filterData;
+    } catch (error) {
+      throw new NotFoundException(`VpScoreInstance Not Found`);
+    }
+  }
 
   async updateVpScoreInstance(
     id: string,
