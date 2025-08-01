@@ -743,4 +743,48 @@ export class PlanTasksService {
     });
     return failedPlanTasks;
   }
+
+  async updateActualValueById(
+    id: string,
+    actualValue: number,
+    updateChangeOnly = false,
+  ): Promise<PlanTask> {
+    const planTask = await this.taskRepository.findOne({
+      where: { id },
+      relations: ['parentTask'],
+    });
+    if (!planTask) {
+      throw new NotFoundException(`PlanTask with ID ${id} not found`);
+    }
+    const prevActualValue = Number(planTask.actualValue) ?? 0;
+    let newActualValue: number;
+    let diff: number;
+
+    if (updateChangeOnly) {
+      if (actualValue === 0) {
+        return planTask;
+      }
+      newActualValue = prevActualValue + actualValue;
+      diff = actualValue;
+    } else {
+      newActualValue = Number(actualValue);
+      diff = newActualValue - prevActualValue;
+    }
+    planTask.actualValue = newActualValue;
+    await this.taskRepository.save(planTask);
+
+    let parent = planTask.parentTask;
+    while (parent) {
+      const parentTask = await this.taskRepository.findOne({
+        where: { id: parent.id },
+        relations: ['parentTask'],
+      });
+      if (!parentTask) break;
+      const parentPrevActualValue = parentTask.actualValue ?? 0;
+      parentTask.actualValue = parentPrevActualValue + diff;
+      await this.taskRepository.save(parentTask);
+      parent = parentTask.parentTask;
+    }
+    return planTask;
+  }
 }

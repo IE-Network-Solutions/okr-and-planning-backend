@@ -1,4 +1,4 @@
-import { IsBoolean, IsEnum, IsString } from 'class-validator';
+import { IsBoolean, IsEnum, IsOptional, IsString } from 'class-validator';
 import { SourceService } from '../../enums/sourceService.enum';
 
 export class CreateVpCriteriaDto {
@@ -19,4 +19,7 @@ export class CreateVpCriteriaDto {
 
   @IsBoolean()
   active: boolean;
+
+  @IsOptional()
+  createdBy?: string;
 }

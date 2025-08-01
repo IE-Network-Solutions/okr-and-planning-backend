@@ -95,17 +95,18 @@ export class OKRDashboardService {
           paginationOptions,
         );
 
-        
         return teamMembersData;
       } else {
         // For regular members, return their own objectives in the requested format
-        const userObjectives = await this.getUserDetailedObjectives(userId, tenantId);
-        
+        const userObjectives = await this.getUserDetailedObjectives(
+          userId,
+          tenantId,
+        );
+
         return this.paginationServise.paginateArray(userObjectives, {
           page: paginationOptions?.page,
           limit: paginationOptions?.limit,
         });
-
       }
     } catch (error) {
       return this.paginationServise.paginateArray([], {
@@ -211,14 +212,16 @@ export class OKRDashboardService {
     }
   }
 
-
   /**
    * Get detailed objectives for a single user with all relationships
    */
   private async getUserDetailedObjectives(userId: string, tenantId: string) {
     try {
-      const activeSession = await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(tenantId);
-      
+      const activeSession =
+        await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(
+          tenantId,
+        );
+
       const queryBuilder = this.objectiveRepository
         .createQueryBuilder('objective')
         .leftJoinAndSelect('objective.keyResults', 'keyResults')
@@ -228,25 +231,32 @@ export class OKRDashboardService {
         .andWhere('objective.tenantId = :tenantId', { tenantId });
 
       if (activeSession) {
-        queryBuilder.andWhere('objective.sessionId = :sessionId', { sessionId: activeSession.id });
+        queryBuilder.andWhere('objective.sessionId = :sessionId', {
+          sessionId: activeSession.id,
+        });
       }
 
       const objectives = await queryBuilder.getMany();
-      
+
       // Get user data separately
-      const userData = await this.getFromOrganizatiAndEmployeInfoService.getUsers(userId, tenantId);
-      
-      return objectives.map(objective => {
+      const userData =
+        await this.getFromOrganizatiAndEmployeInfoService.getUsers(
+          userId,
+          tenantId,
+        );
+
+      return objectives.map((objective) => {
         // Calculate days left
         const daysLeft = Math.ceil(
-          (new Date(objective.deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+          (new Date(objective.deadline).getTime() - Date.now()) /
+            (1000 * 60 * 60 * 24),
         );
 
         // Calculate objective progress and completed key results
         let objectiveProgress = 0;
         let completedKeyResults = 0;
-        
-        objective.keyResults.forEach(keyResult => {
+
+        objective.keyResults.forEach((keyResult) => {
           objectiveProgress += (keyResult.progress * keyResult.weight) / 100;
           if (parseFloat(keyResult.progress.toString()) === 100) {
             completedKeyResults++;
@@ -258,14 +268,13 @@ export class OKRDashboardService {
           user: userData,
           daysLeft,
           objectiveProgress,
-          completedKeyResults
+          completedKeyResults,
         };
       });
     } catch (error) {
       return [];
     }
   }
-
 
   /**
    * Get detailed team members OKR data with all relationships
@@ -290,33 +299,39 @@ export class OKRDashboardService {
         (user) => !user.employeeJobInformation[0]?.departmentLeadOrNot,
       );
 
-
       // Get the team lead
       const teamLead = department.users.find(
-        user => user.employeeJobInformation[0]?.departmentLeadOrNot,
+        (user) => user.employeeJobInformation[0]?.departmentLeadOrNot,
       );
 
       // Get detailed objectives for all team members including the team lead
       const allTeamObjectives = [];
-      
+
       // Add team lead's objectives first
       if (teamLead) {
-        const teamLeadObjectives = await this.getUserDetailedObjectives(teamLead.id, tenantId);
+        const teamLeadObjectives = await this.getUserDetailedObjectives(
+          teamLead.id,
+          tenantId,
+        );
         allTeamObjectives.push(...teamLeadObjectives);
       }
 
       // Add other team members' objectives from the current department
       for (const member of directTeamMembers) {
-        const memberObjectives = await this.getUserDetailedObjectives(member.id, tenantId);
+        const memberObjectives = await this.getUserDetailedObjectives(
+          member.id,
+          tenantId,
+        );
         allTeamObjectives.push(...memberObjectives);
       }
 
       // Get all subordinates from child departments recursively
-      const childDepartmentsSubordinates = await this.getAllSubordinatesFromChildDepartments(
-        departmentId,
-        tenantId,
-        departments,
-      );
+      const childDepartmentsSubordinates =
+        await this.getAllSubordinatesFromChildDepartments(
+          departmentId,
+          tenantId,
+          departments,
+        );
       allTeamObjectives.push(...childDepartmentsSubordinates);
 
       return this.paginationServise.paginateArray(allTeamObjectives, {
@@ -343,25 +358,32 @@ export class OKRDashboardService {
       const allSubordinatesObjectives = [];
 
       // Get child departments
-      const childDepartments = await this.getFromOrganizatiAndEmployeInfoService
-        .childDepartmentWithUsers(tenantId, departmentId);
+      const childDepartments =
+        await this.getFromOrganizatiAndEmployeInfoService.childDepartmentWithUsers(
+          tenantId,
+          departmentId,
+        );
 
       for (const childDepartment of childDepartments) {
         // Get all users from this child department
         const childDepartmentUsers = childDepartment.users || [];
-        
+
         for (const user of childDepartmentUsers) {
           // Get objectives for each user in the child department
-          const userObjectives = await this.getUserDetailedObjectives(user.id, tenantId);
+          const userObjectives = await this.getUserDetailedObjectives(
+            user.id,
+            tenantId,
+          );
           allSubordinatesObjectives.push(...userObjectives);
         }
 
         // Recursively get subordinates from deeper child departments
-        const deeperSubordinates = await this.getAllSubordinatesFromChildDepartments(
-          childDepartment.id,
-          tenantId,
-          departments,
-        );
+        const deeperSubordinates =
+          await this.getAllSubordinatesFromChildDepartments(
+            childDepartment.id,
+            tenantId,
+            departments,
+          );
         allSubordinatesObjectives.push(...deeperSubordinates);
       }
 
