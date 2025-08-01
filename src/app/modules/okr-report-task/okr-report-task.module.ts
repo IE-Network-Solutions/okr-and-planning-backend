@@ -47,7 +47,11 @@ import { PlanTasksService } from '../plan-tasks/plan-tasks.service';
     HttpModule.register({}),
   ],
   controllers: [OkrReportTaskController],
-  providers: [OkrReportTaskService, GetFromOrganizatiAndEmployeInfoService,PlanTasksService],
+  providers: [
+    OkrReportTaskService,
+    GetFromOrganizatiAndEmployeInfoService,
+    PlanTasksService,
+  ],
   exports: [OkrReportTaskService],
 })
 export class OkrReportTaskModule {}

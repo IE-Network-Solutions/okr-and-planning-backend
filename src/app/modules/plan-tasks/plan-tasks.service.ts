@@ -747,9 +747,12 @@ export class PlanTasksService {
   async updateActualValueById(
     id: string,
     actualValue: number,
-    updateChangeOnly: boolean = false
+    updateChangeOnly = false,
   ): Promise<PlanTask> {
-    const planTask = await this.taskRepository.findOne({ where: { id }, relations: ['parentTask'] });
+    const planTask = await this.taskRepository.findOne({
+      where: { id },
+      relations: ['parentTask'],
+    });
     if (!planTask) {
       throw new NotFoundException(`PlanTask with ID ${id} not found`);
     }
@@ -762,7 +765,7 @@ export class PlanTasksService {
         return planTask;
       }
       newActualValue = prevActualValue + actualValue;
-      diff = actualValue; 
+      diff = actualValue;
     } else {
       newActualValue = Number(actualValue);
       diff = newActualValue - prevActualValue;
@@ -772,7 +775,10 @@ export class PlanTasksService {
 
     let parent = planTask.parentTask;
     while (parent) {
-      const parentTask = await this.taskRepository.findOne({ where: { id: parent.id }, relations: ['parentTask'] });
+      const parentTask = await this.taskRepository.findOne({
+        where: { id: parent.id },
+        relations: ['parentTask'],
+      });
       if (!parentTask) break;
       const parentPrevActualValue = parentTask.actualValue ?? 0;
       parentTask.actualValue = parentPrevActualValue + diff;

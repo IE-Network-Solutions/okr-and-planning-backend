@@ -231,7 +231,6 @@ export class PlanService {
         ],
       });
 
-      console.log(plans,"***********************************1234");
       if (!plans || plans.length === 0) {
         return []; // Return an empty array if no plans exist
       }
@@ -241,7 +240,7 @@ export class PlanService {
       throw error;
     }
   }
-  
+
   async open(planId: string, tenantId: string): Promise<Plan> {
     try {
       const plan = await this.planRepository.findOne({
