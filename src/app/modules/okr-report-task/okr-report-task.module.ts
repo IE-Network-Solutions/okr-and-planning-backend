@@ -20,6 +20,7 @@ import { VariablePayModule } from '../variable_pay/variable-pay.module';
 import { PaginationModule } from '@root/src/core/pagination/pagination.module';
 import { GetFromOrganizatiAndEmployeInfoService } from '../objective/services/get-data-from-org.service';
 import { HttpModule } from '@nestjs/axios';
+import { PlanTasksService } from '../plan-tasks/plan-tasks.service';
 
 @Module({
   imports: [
@@ -46,7 +47,7 @@ import { HttpModule } from '@nestjs/axios';
     HttpModule.register({}),
   ],
   controllers: [OkrReportTaskController],
-  providers: [OkrReportTaskService, GetFromOrganizatiAndEmployeInfoService],
+  providers: [OkrReportTaskService, GetFromOrganizatiAndEmployeInfoService,PlanTasksService],
   exports: [OkrReportTaskService],
 })
 export class OkrReportTaskModule {}

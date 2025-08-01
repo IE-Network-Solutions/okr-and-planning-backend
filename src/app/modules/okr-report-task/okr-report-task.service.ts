@@ -46,6 +46,8 @@ export class OkrReportTaskService {
     @InjectRepository(PlanTask)
     private planTaskRepository: Repository<PlanTask>,
 
+    private planTaskService: PlanTasksService,
+
     private reportService: OkrReportService,
 
     private okrProgressService: OkrProgressService,
@@ -121,8 +123,6 @@ export class OkrReportTaskService {
         returnedReportData,
         tenantId,
       );
-
-      // Calculate the sum of actual values for each plan task
       const planTaskActualValues = reportTasks.reduce((acc, task) => {
         const planTaskId = task.planTaskId;
         const actualValue = Number(task.actualValue) || 0;
@@ -131,19 +131,80 @@ export class OkrReportTaskService {
           acc[planTaskId] = 0;
         }
         acc[planTaskId] += actualValue;
-        
         return acc;
       }, {} as Record<string, number>);
 
-      // Update each plan task with the accumulated actual value
-      for (const [planTaskId, totalActualValue] of Object.entries(planTaskActualValues)) {
-        await this.planTaskRepository.update(
-          { id: planTaskId },
-          { actualValue: totalActualValue }
-        );
+
+      const checkHasChildPlanTask=async(planTaskId:string)=>{
+        try {
+          const childPlan=await this.planTaskRepository.find({
+            where:{
+              parentTaskId:planTaskId
+            }
+          })
+          return childPlan.length>0
+        } catch (error) {
+          return false;
+        }
       }
 
+      // Helper function to get total actual value from child plans
+      const getTotalChildActualValue = async (parentTaskId: string): Promise<number> => {
+        try {
+          const childPlans = await this.planTaskRepository.find({
+            where: { parentTaskId }
+          });
+          
+          return childPlans.reduce((total, child) => {
+            const childValue = Number(child.actualValue) || 0;
+            return total + childValue;
+          }, 0);
+        } catch (error) {
+          return 0;
+        }
+      };
 
+      
+      for (const [planTaskId, totalActualValue] of Object.entries(planTaskActualValues)) {
+        const hasChildPlan = await checkHasChildPlanTask(planTaskId as string);
+        if (hasChildPlan) {
+          const planTask = await this.planTaskRepository.findOne({
+            where: { id: planTaskId as string },
+          });
+          if (!planTask) continue; 
+          
+          // Get the current actual value of the parent plan task
+          const currentParentActualValue = Number(planTask.actualValue) || 0;
+          
+          // Get the total actual value from all child plans
+          const totalChildActualValue = await getTotalChildActualValue(planTaskId as string);
+          
+          // Calculate the difference between what's being reported and what's already accounted for
+          const difference = Number(totalActualValue) - totalChildActualValue;
+          
+          // Only update if there's a difference
+          if (difference !== 0) {
+            const newValue = currentParentActualValue + difference;
+            await this.planTaskService.updateActualValueById(planTaskId, newValue, true);
+            
+            // Update the report task's actual value with the difference
+            const reportTaskToUpdate = reportTasks.find(task => task.planTaskId === planTaskId);
+            if (reportTaskToUpdate) {
+              reportTaskToUpdate.actualValue = difference.toString();
+            }
+          } else {
+            // If no difference, set actual value to 0 for the report task
+            const reportTaskToUpdate = reportTasks.find(task => task.planTaskId === planTaskId);
+            if (reportTaskToUpdate) {
+              reportTaskToUpdate.actualValue = '0';
+            }
+          }
+        } else {
+          await this.planTaskService.updateActualValueById(planTaskId, Number(totalActualValue));
+        }
+      }
+
+      
 
       const savedReportTasks = await this.reportTaskRepo.save(reportTasks);
       const checkPlanIsReported = await this.updatePlanIsReported(
@@ -287,7 +348,6 @@ export class OkrReportTaskService {
         reportScore,
       });
 
-
       const currentTasks = await this.reportTaskRepo.find({
         where: { reportId },
       });
@@ -302,6 +362,36 @@ export class OkrReportTaskService {
           customReason: value?.customReason ?? null,
         },
       }));
+
+      // Helper function to check if plan task has children
+      const checkHasChildPlanTask = async (planTaskId: string): Promise<boolean> => {
+        try {
+          const childPlan = await this.planTaskRepository.find({
+            where: { parentTaskId: planTaskId }
+          });
+          return childPlan.length > 0;
+        } catch (error) {
+          return false;
+        }
+      };
+
+      // Helper function to get total actual value from child plans
+      const getTotalChildActualValue = async (parentTaskId: string): Promise<number> => {
+        try {
+          const childPlans = await this.planTaskRepository.find({
+            where: { parentTaskId }
+          });
+          
+          return childPlans.reduce((total, child) => {
+            const childValue = Number(child.actualValue) || 0;
+            return total + childValue;
+          }, 0);
+        } catch (error) {
+          console.error(`Error getting child actual values for task ${parentTaskId}:`, error);
+          return 0;
+        }
+      };
+
       const savedReportTasks = [];
       for (const { planTaskId, updatePayload } of newTasks) {
         const existingTask = currentTasks.find(
@@ -309,10 +399,10 @@ export class OkrReportTaskService {
         );
 
         if (existingTask) {
-          
           const planTask = await this.planTaskRepository.findOne({
             where: { id: existingTask?.planTaskId }
           });
+          
           // Get the old report task to calculate the difference
           const oldReportTask = await this.reportTaskRepo.findOne({
             where: { planTaskId: existingTask?.planTaskId }
@@ -323,15 +413,40 @@ export class OkrReportTaskService {
           const oldActualValueOfPlanTask = Number(planTask?.actualValue) || 0;
           const currentActualValue = Number(updatePayload?.actualValue) || 0;
           
-          // Calculate the difference and update the plan task's actual value
-          const difference = currentActualValue - oldActualValueOfReportTask;
-          const newActualValue = Math.max(0, oldActualValueOfPlanTask + difference); // Ensure non-negative
+          // Check if this plan task has children
+          const hasChildPlan = await checkHasChildPlanTask(planTaskId);
           
-          // Update the plan task with the new actual value
-          await this.planTaskRepository.update(
-            { id: planTaskId },
-            { actualValue: newActualValue }
-          );
+          if (hasChildPlan) {
+            // For parent plans with children, calculate difference based on child progress
+            const totalChildActualValue = await getTotalChildActualValue(planTaskId);
+            
+            // Calculate the difference between what's being reported and what's already accounted for from children
+            const difference = currentActualValue - totalChildActualValue;
+            
+            // Only update if there's a difference
+            if (difference !== 0) {
+              const newActualValue = Math.max(0, oldActualValueOfPlanTask + difference);
+              await this.planTaskRepository.update(
+                { id: planTaskId },
+                { actualValue: newActualValue }
+              );
+              
+              // Update the report task's actual value with the difference
+              updatePayload.actualValue = difference.toString();
+            } else {
+              // If no difference, set actual value to 0 for the report task
+              updatePayload.actualValue = '0';
+            }
+          } else {
+            // For plans without children, use the original logic
+            const difference = currentActualValue - oldActualValueOfReportTask;
+            const newActualValue = Math.max(0, oldActualValueOfPlanTask + difference);
+            
+            await this.planTaskRepository.update(
+              { id: planTaskId },
+              { actualValue: newActualValue }
+            );
+          }
 
           await this.reportTaskRepo.update({ planTaskId }, updatePayload);
 
