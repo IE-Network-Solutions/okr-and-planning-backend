@@ -193,6 +193,20 @@ export class ObjectiveController {
     );
   }
 
+  @Post('/team-okr/vp')
+  @ExcludeAuthGuard()
+  getOkrOfTeamVp(
+    @Headers('tenantId') tenantId: string,
+    @Headers('userId') userId: string,
+    @Query() paginationOptions?: PaginationDto,
+  ) {
+    return this.okrDashboardService.getOkrOfTeamVp(
+      userId,
+      tenantId,
+      paginationOptions,
+    );
+  }
+
   @Post('/company-okr')
   @ExcludeAuthGuard()
   getCompanyOkrOnVP(
