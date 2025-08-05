@@ -379,6 +379,7 @@ export class PlanService {
       //   ],
       // });
 
+
       if (!plans || plans.length === 0) {
         return []; // Return an empty array if no plans exist
       }
