@@ -484,4 +484,35 @@ export class OKRDashboardService {
     );
     return companyOkr || 0;
   }
+
+
+  async getOkrOfTeamteams(
+    userId: string,
+    tenantId: string,
+    paginationOptions?: PaginationDto,
+  ): Promise<number> {
+    try {
+      const response =
+        await this.getFromOrganizatiAndEmployeInfoService.getUsers(
+          userId,
+          tenantId,
+        );
+      const departments =
+        await this.getFromOrganizatiAndEmployeInfoService.getDepartmentsWithUsers(
+          tenantId,
+        );
+      const employeeJobInfo = response.employeeJobInformation[0];
+  const teamOk = await this.oKRCalculationService.calculateRecursiveOKR(
+        employeeJobInfo.departmentId,
+        tenantId,
+        departments,
+      );
+      return teamOk || 0;
+    } catch (error) {
+      throw new Error(error.message);
+    }
+  }
 }
+
+
+
