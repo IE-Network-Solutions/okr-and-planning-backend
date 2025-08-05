@@ -195,12 +195,12 @@ export class ObjectiveController {
 
   @Post('/team-okr/vp')
   @ExcludeAuthGuard()
-  getOkrOfTeamteams(
+  getOkrOfTeamVp(
     @Headers('tenantId') tenantId: string,
     @Headers('userId') userId: string,
     @Query() paginationOptions?: PaginationDto,
   ) {
-    return this.okrDashboardService.getOkrOfTeamteams(
+    return this.okrDashboardService.getOkrOfTeamVp(
       userId,
       tenantId,
       paginationOptions,

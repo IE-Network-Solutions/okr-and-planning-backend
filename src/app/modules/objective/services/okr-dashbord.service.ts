@@ -486,7 +486,7 @@ export class OKRDashboardService {
   }
 
 
-  async getOkrOfTeamteams(
+  async getOkrOfTeamVp(
     userId: string,
     tenantId: string,
     paginationOptions?: PaginationDto,
