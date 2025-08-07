@@ -21,29 +21,25 @@ describe('PlanningPeriodsController', () => {
         PlanningPeriodsService,
         {
           provide: getRepositoryToken(PlanningPeriod),
-          useValue: mock<Repository<PlanningPeriod>>(), // Use mock for the repository
+          useValue: mock<Repository<PlanningPeriod>>(),
         },
         {
           provide: getRepositoryToken(PlanningPeriodUser),
-          useValue: mock<Repository<PlanningPeriodUser>>(), // Use mock for the repository
+          useValue: mock<Repository<PlanningPeriodUser>>(),
         },
         {
-          provide: getRepositoryToken(DataSource),
-          useValue: mock<Repository<PlanningPeriodUser>>(), // Use mock for the repository
+          provide: PaginationService,
+          useValue: {
+            paginate: jest.fn(),
+          },
         },
         {
           provide: PlanService,
           useValue: mock<PlanService>(),
         },
         {
-          provide: PaginationService,
-          useValue: {
-            paginate: jest.fn(), // Mock the paginate method
-          },
-        },
-        {
           provide: DataSource,
-          useValue: mock<DataSource>(), // Mock the DataSource
+          useValue: mock<DataSource>(),
         },
       ],
     }).compile();
@@ -59,7 +55,7 @@ describe('PlanningPeriodsController', () => {
       getRepositoryToken(PlanningPeriod),
     );
 
-    jest.clearAllMocks(); // Clear mocks before each test
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {

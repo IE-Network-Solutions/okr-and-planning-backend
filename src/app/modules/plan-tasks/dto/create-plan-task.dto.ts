@@ -22,7 +22,7 @@ export class CreatePlanTaskDto {
 
   @IsOptional()
   @Transform(({ value }) => (value === null ? null : parseFloat(value)))
-  @IsNumber({ maxDecimalPlaces: 2 })
+  @IsNumber({ maxDecimalPlaces: 3 })
   @IsNumber()
   targetValue?: number;
 
@@ -64,7 +64,7 @@ export class CreatePlanTaskDto {
 
   @IsOptional()
   @Transform(({ value }) => parseFloat(value))
-  @IsNumber({ maxDecimalPlaces: 2 })
+  @IsNumber({ maxDecimalPlaces: 3 })
   @IsNumber()
   weight: number;
 

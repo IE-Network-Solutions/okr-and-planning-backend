@@ -48,13 +48,13 @@ export class PlanTask extends BaseModel {
   @Column({
     type: 'decimal',
     precision: 16,
-    scale: 2,
+    scale: 3,
     nullable: true,
     transformer: decimalTransformer,
   })
   targetValue: number;
 
-  @Column({ type: 'decimal', precision: 16, scale: 2, default: 5 })
+  @Column({ type: 'decimal', precision: 16, scale: 3, default: 5 })
   weight: number;
 
   @TreeParent()
