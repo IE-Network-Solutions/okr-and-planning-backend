@@ -8,6 +8,7 @@ import { PlanningPeriodsController } from './planning-periods.controller';
 import { PlanningPeriodsService } from './planning-periods.service';
 import { PlanningPeriodUser } from './entities/planningPeriodUser.entity';
 import { PlanService } from '../../plan/plan.service';
+import { GetFromOrganizatiAndEmployeInfoService } from '../../objective/services/get-data-from-org.service';
 
 describe('PlanningPeriodsController', () => {
   let planningPeriodsController: PlanningPeriodsController;
@@ -36,6 +37,10 @@ describe('PlanningPeriodsController', () => {
         {
           provide: PlanService,
           useValue: mock<PlanService>(),
+        },
+        {
+          provide: GetFromOrganizatiAndEmployeInfoService,
+          useValue: mock<GetFromOrganizatiAndEmployeInfoService>(),
         },
         {
           provide: DataSource,

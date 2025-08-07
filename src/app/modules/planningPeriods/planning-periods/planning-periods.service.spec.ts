@@ -7,6 +7,7 @@ import { PlanningPeriodsService } from './planning-periods.service';
 import { PlanningPeriod } from './entities/planningPeriod.entity';
 import { PlanningPeriodUser } from './entities/planningPeriodUser.entity';
 import { PlanService } from '../../plan/plan.service';
+import { GetFromOrganizatiAndEmployeInfoService } from '../../objective/services/get-data-from-org.service';
 
 describe('PlanningPeriodsService', () => {
   let planningPeriodsService: PlanningPeriodsService;
@@ -23,7 +24,6 @@ describe('PlanningPeriodsService', () => {
           provide: getRepositoryToken(PlanningPeriodUser),
           useValue: mock<Repository<PlanningPeriodUser>>(),
         },
-
         {
           provide: PaginationService,
           useValue: mock<PaginationService>(),
@@ -33,8 +33,12 @@ describe('PlanningPeriodsService', () => {
           useValue: mock<PlanService>(),
         },
         {
+          provide: GetFromOrganizatiAndEmployeInfoService,
+          useValue: mock<GetFromOrganizatiAndEmployeInfoService>(),
+        },
+        {
           provide: DataSource,
-          useValue: mock<DataSource>(), // Mock the DataSource
+          useValue: mock<DataSource>(),
         },
       ],
     }).compile();
