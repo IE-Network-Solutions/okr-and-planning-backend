@@ -19,6 +19,7 @@ import { FilterUserDto } from './dto/filter-user.dto';
 import { IntervalHierarchy } from './enum/interval-type.enum';
 import { PlanService } from '../../plan/plan.service';
 import { addDays, formatISO } from 'date-fns';
+import { GetFromOrganizatiAndEmployeInfoService } from '../../objective/services/get-data-from-org.service';
 
 @Injectable()
 export class PlanningPeriodsService {
@@ -29,7 +30,7 @@ export class PlanningPeriodsService {
     private planningUserRepository: Repository<PlanningPeriodUser>,
     private readonly paginationService: PaginationService,
     private readonly planService: PlanService,
-
+    private readonly getFromOrganizatiAndEmployeInfoService: GetFromOrganizatiAndEmployeInfoService,
     @InjectDataSource() private readonly dataSource: DataSource,
   ) {}
   async createPlanningPeriods(
@@ -347,6 +348,11 @@ export class PlanningPeriodsService {
     }
   }
 
+  // userIds = await this.getFromOrganizatiAndEmployeInfoService.getAllUsers(
+  //   tenantId,
+  // );
+
+  // userDataIds = userIds?.items?.map((user) => user.id);
   async findAll(
     tenantId: string,
     paginationOptions: PaginationDto,
@@ -380,6 +386,94 @@ export class PlanningPeriodsService {
       }
     }
   }
+
+  async findAllGroupedByUser(
+    tenantId: string,
+    paginationOptions: PaginationDto,
+    filterUserDto: FilterUserDto,
+  ): Promise<Pagination<{ userId: string; planningPeriod: PlanningPeriod[] }>> {
+    try {
+      const options: IPaginationOptions = {
+        page: filterUserDto?.userId ? 1 : paginationOptions.page || 1,
+        limit: filterUserDto?.userId ? 10 : paginationOptions.limit || 10,
+      };
+
+      let userIds;
+      if (filterUserDto?.userId) {
+        userIds = [filterUserDto.userId];
+      } else {
+        try {
+          const usersResponse =
+            await this.getFromOrganizatiAndEmployeInfoService.getAllUsers(
+              tenantId,
+            );
+          userIds = usersResponse?.items?.map((user) => user.id);
+        } catch (error) {
+          try {
+            const usersResponse =
+              await this.getFromOrganizatiAndEmployeInfoService.getAllActiveUsers(
+                tenantId,
+              );
+            userIds = usersResponse?.items?.map((user) => user.id);
+          } catch (alternativeError) {
+            return this.paginationService.paginateArray([], options);
+          }
+        }
+      }
+      if (!userIds?.length) {
+        return this.paginationService.paginateArray([], options);
+      }
+      const getUserPlanningPeriods = (userId: string) => {
+        return this.planningUserRepository.find({
+          where: {
+            userId: userId,
+            tenantId: tenantId,
+          },
+        });
+      };
+      const planningPeriodsPromises = userIds.map(async (userId) => {
+        try {
+          const userPlanningPeriods = await getUserPlanningPeriods(userId);
+
+          const lastUpdated = userPlanningPeriods
+            .map((ppu) => ppu.updatedAt)
+            .filter((date) => date !== null && date !== undefined)
+            .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())[0];
+          // console.log(lastUpdated, 'lastUpdated');
+          const planningPeriods = userPlanningPeriods
+            .map((ppu) => ppu.planningPeriod)
+            .filter((pp) => pp != null);
+          return {
+            userId,
+            lastUpdated,
+            planningPeriod: planningPeriods,
+          };
+        } catch (error) {
+          return {
+            userId,
+            planningPeriod: [],
+          };
+        }
+      });
+      const planningPeriods = await Promise.all(planningPeriodsPromises);
+      const paginatedData = await this.paginationService.paginateArray(
+        planningPeriods,
+        options,
+      );
+      return paginatedData;
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      if (error.name === 'EntityNotFoundError') {
+        throw new NotFoundException('No assigned users found');
+      }
+      throw new InternalServerErrorException(
+        'Failed to fetch grouped planning periods',
+      );
+    }
+  }
+
   async findByUser(id: string): Promise<PlanningPeriodUser[]> {
     try {
       const planningPeriodUser = await this.planningUserRepository.find({
