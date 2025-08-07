@@ -14,6 +14,7 @@ import { OkrProgressService } from '../okr-progress/okr-progress.service';
 import { Milestone } from '../milestones/entities/milestone.entity';
 import { UserVpScoringService } from '../variable_pay/services/user-vp-scoring.service';
 import { GetFromOrganizatiAndEmployeInfoService } from '../objective/services/get-data-from-org.service';
+import { PlanTasksService } from '../plan-tasks/plan-tasks.service';
 
 describe('OkrReportTaskController', () => {
   let okrReportController: OkrReportController;
@@ -35,7 +36,7 @@ describe('OkrReportTaskController', () => {
         },
         {
           provide: getRepositoryToken(Milestone),
-          useClass: Repository, // Mock the DataSource
+          useClass: Repository,
         },
         {
           provide: getRepositoryToken(Plan),
@@ -44,6 +45,10 @@ describe('OkrReportTaskController', () => {
         {
           provide: getRepositoryToken(PlanTask),
           useClass: Repository,
+        },
+        {
+          provide: PlanTasksService,
+          useValue: mock<PlanTasksService>(),
         },
         {
           provide: GetFromOrganizatiAndEmployeInfoService,
@@ -55,11 +60,11 @@ describe('OkrReportTaskController', () => {
         },
         {
           provide: OkrProgressService,
-          useValue: mock<OkrReportService>(),
+          useValue: mock<OkrProgressService>(),
         },
         {
           provide: DataSource,
-          useValue: mock<DataSource>(), // Mock the DataSource
+          useValue: mock<DataSource>(),
         },
         {
           provide: UserVpScoringService,
