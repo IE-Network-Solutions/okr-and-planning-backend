@@ -21,8 +21,10 @@ export class CreatePlanTaskDto {
   task: string;
 
   @IsOptional()
-  @Transform(({ value }) => (value ? BigInt(value) : undefined))
-  targetValue?: bigint;
+  @Transform(({ value }) => (value === null ? null : parseFloat(value)))
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @IsNumber()
+  targetValue?: number;
 
   @IsEnum(Priority)
   priority: Priority;

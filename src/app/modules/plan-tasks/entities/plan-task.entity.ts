@@ -19,7 +19,7 @@ import { Milestone } from '../../milestones/entities/milestone.entity';
 //   from: (value: string | null): number | null =>
 //     value !== null ? parseInt(value, 10) : null,
 // };
-export const bigintTransformer: ValueTransformer = {
+export const decimalTransformer: ValueTransformer = {
   to: (value: number | null): string | null => {
     // Ensure that the value is not undefined before calling toString
     if (value !== null && value !== undefined) {
@@ -30,7 +30,7 @@ export const bigintTransformer: ValueTransformer = {
   from: (value: string | null): number | null => {
     // Ensure that the value is not null or undefined before parsing
     if (value !== null && value !== undefined) {
-      return parseInt(value, 10);
+      return parseFloat(value);
     }
     return null; // Return null if the value is null or undefined
   },
@@ -45,9 +45,14 @@ export class PlanTask extends BaseModel {
   @Column({ type: 'enum', enum: Priority, default: Priority.MEDIUM })
   priority: Priority;
 
-  @Column({ type: 'bigint', nullable: true, transformer: bigintTransformer })
-  // @Column({ type: 'bigint', nullable: true })
-  targetValue: bigint;
+  @Column({
+    type: 'decimal',
+    precision: 16,
+    scale: 2,
+    nullable: true,
+    transformer: decimalTransformer,
+  })
+  targetValue: number;
 
   @Column({ type: 'decimal', precision: 16, scale: 2, default: 5 })
   weight: number;
