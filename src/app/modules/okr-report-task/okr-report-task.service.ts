@@ -22,6 +22,7 @@ import { Milestone } from '../milestones/entities/milestone.entity';
 import { Status } from '../milestones/enum/milestone.status.enum';
 import { UserVpScoringService } from '../variable_pay/services/user-vp-scoring.service';
 import { CreateReportDTO } from '../okr-report/dto/create-report.dto';
+import { PlanTasksService } from '../plan-tasks/plan-tasks.service';
 import { GetFromOrganizatiAndEmployeInfoService } from '../objective/services/get-data-from-org.service';
 import { In } from 'typeorm';
 
