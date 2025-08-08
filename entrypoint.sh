@@ -7,6 +7,6 @@ VAULT_TOKEN=$(vault login -method=userpass username="$VAULT_USERNAME" password="
 
 export VAULT_TOKEN
 
-eval $(vault kv get -format=json env/okr | jq -r '.data.data | to_entries[] | "export \(.key)=\(.value)"')
+eval $(vault kv get -format=json env/osei | jq -r '.data.data | to_entries[] | "export \(.key)=\(.value)"')
 
 exec node dist/main.js
