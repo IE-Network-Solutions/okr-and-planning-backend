@@ -41,4 +41,10 @@ export const configuration = () => ({
     orgStructureUrl: process.env.ORG_AND_EMP_URL,
     fileServerUrl: process.env.FILE_SERVER_URL,
   },
+  encryption: {
+    algorithm: process.env.ENCRYPTION_ALGORITHM || 'aes-256-gcm',
+    key: process.env.ENCRYPTION_KEY,
+    salt: process.env.ENCRYPTION_SALT || 'default-salt',
+    iv: process.env.ENCRYPTION_IV,
+  },
 });
