@@ -35,6 +35,6 @@ COPY --from=builder /app/package.json ./package.json
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-EXPOSE 8008
+EXPOSE 8007
 
 ENTRYPOINT ["/entrypoint.sh"]
