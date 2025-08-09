@@ -12,7 +12,6 @@ import { GetFromOrganizatiAndEmployeInfoService } from './services/get-data-from
 import { AverageOkrCalculation } from './services/average-okr-calculation.service';
 import { OKRDashboardService } from './services/okr-dashbord.service';
 import { OKRCalculationService } from './services/okr-calculation.service';
-import { EncryptionService } from '@root/src/core/services/encryption.service';
 
 import { ExcelModule } from '@root/src/core/export/export-excel.module';
 
@@ -33,7 +32,6 @@ import { ExcelModule } from '@root/src/core/export/export-excel.module';
     AverageOkrCalculation,
     OKRDashboardService,
     OKRCalculationService,
-    EncryptionService,
   ],
   exports: [ObjectiveService, GetFromOrganizatiAndEmployeInfoService],
 })
