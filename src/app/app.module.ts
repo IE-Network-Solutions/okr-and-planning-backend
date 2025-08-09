@@ -25,7 +25,6 @@ configuration values obtained from a ConfigService. */
     AppConfigModule,
     CoreModule,
     SharedModule,
-    
     ThrottlerModule.forRoot({
       ttl: 60, // The time-to-live for each request count record (in seconds)
       limit: 10, // The maximum number of requests allowed in the given time period
