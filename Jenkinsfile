@@ -17,6 +17,8 @@ pipeline {
                             env.SSH_CREDENTIALS_ID_1 = 'testlab'
                             env.REMOTE_SERVER_1 = REMOTE_SERVER_TEST
                             env.SECRETS_PATH = '/home/ubuntu/secrets/.okr-env'
+                        } else {
+                            error("Branch does not match expected pattern for deployment")
                         }
                     }
                 }
@@ -28,10 +30,10 @@ pipeline {
                 script {
                     withCredentials([string(credentialsId: 'pepproduction2', variable: 'SERVER_PASSWORD')]) {
                         def secretsPath = env.SECRETS_PATH
-                        env.REPO_URL = sh(script: "sshpass -p '$SERVER_PASSWORD' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} 'grep REPO_URL ${secretsPath} | cut -d= -f2'", returnStdout: true).trim()
-                        env.BRANCH_NAME = sh(script: "sshpass -p '$SERVER_PASSWORD' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} 'grep BRANCH_NAME ${secretsPath} | cut -d= -f2'", returnStdout: true).trim()
-                        env.REPO_DIR = sh(script: "sshpass -p '$SERVER_PASSWORD' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} 'grep REPO_DIR ${secretsPath} | cut -d= -f2'", returnStdout: true).trim()
-                        env.DOCKERHUB_REPO = sh(script: "sshpass -p '$SERVER_PASSWORD' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} 'grep DOCKERHUB_REPO ${secretsPath} | cut -d= -f2'", returnStdout: true).trim()
+                        env.REPO_URL = sh(script: "sshpass -p '${SERVER_PASSWORD}' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} 'grep REPO_URL ${secretsPath} | cut -d= -f2'", returnStdout: true).trim()
+                        env.BRANCH_NAME = sh(script: "sshpass -p '${SERVER_PASSWORD}' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} 'grep BRANCH_NAME ${secretsPath} | cut -d= -f2'", returnStdout: true).trim()
+                        env.REPO_DIR = sh(script: "sshpass -p '${SERVER_PASSWORD}' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} 'grep REPO_DIR ${secretsPath} | cut -d= -f2'", returnStdout: true).trim()
+                        env.DOCKERHUB_REPO = sh(script: "sshpass -p '${SERVER_PASSWORD}' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} 'grep DOCKERHUB_REPO ${secretsPath} | cut -d= -f2'", returnStdout: true).trim()
                     }
                 }
             }
@@ -39,31 +41,29 @@ pipeline {
 
         stage('Prepare Repository') {
             steps {
-                        withCredentials([string(credentialsId: 'pepproduction2', variable: 'SERVER_PASSWORD')]) {
-                            sh """
-                                sshpass -p '$SERVER_PASSWORD' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} '
-                                if [ -d "$REPO_DIR" ]; then
-                                    sudo chown -R \$USER:\$USER $REPO_DIR
-                                    sudo chmod -R 755 $REPO_DIR
-                                fi'
-                            """
-
+                withCredentials([string(credentialsId: 'pepproduction2', variable: 'SERVER_PASSWORD')]) {
+                    sh """
+                        sshpass -p '${SERVER_PASSWORD}' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} '
+                        if [ -d "${env.REPO_DIR}" ]; then
+                            sudo chown -R \$USER:\$USER ${env.REPO_DIR}
+                            sudo chmod -R 755 ${env.REPO_DIR}
+                        fi'
+                    """
                 }
             }
         }
 
         stage('Pull Latest Changes') {
-           steps {
-                        withCredentials([string(credentialsId: 'pepproduction2', variable: 'SERVER_PASSWORD')]) {
-                            sh """
-                                sshpass -p '$SERVER_PASSWORD' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} '
-                                if [ ! -d "$REPO_DIR/.git" ]; then
-                                    git clone $REPO_URL -b $BRANCH_NAME $REPO_DIR
-                                else
-                                    cd $REPO_DIR && git reset --hard HEAD && git pull origin $BRANCH_NAME
-                                fi'
-                            """
-
+            steps {
+                withCredentials([string(credentialsId: 'pepproduction2', variable: 'SERVER_PASSWORD')]) {
+                    sh """
+                        sshpass -p '${SERVER_PASSWORD}' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} '
+                        if [ ! -d "${env.REPO_DIR}/.git" ]; then
+                            git clone ${env.REPO_URL} -b ${env.BRANCH_NAME} ${env.REPO_DIR}
+                        else
+                            cd ${env.REPO_DIR} && git reset --hard HEAD && git pull origin ${env.BRANCH_NAME}
+                        fi'
+                    """
                 }
             }
         }
@@ -75,7 +75,7 @@ pipeline {
                     string(credentialsId: 'pepproduction2', variable: 'SERVER_PASSWORD')
                 ]) {
                     sh """
-                        sshpass -p '$SERVER_PASSWORD' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} '
+                        sshpass -p '${SERVER_PASSWORD}' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} '
                             cd ${env.REPO_DIR} &&
                             docker build -t ${env.DOCKERHUB_REPO}:${env.BRANCH_NAME} . &&
                             echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin &&
@@ -87,16 +87,32 @@ pipeline {
             }
         }
 
-        stage('Run Docker Container') {
+        stage('Deploy / Update Service') {
             steps {
                 withCredentials([
                     usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKERHUB_USERNAME', passwordVariable: 'DOCKERHUB_PASSWORD'),
                     string(credentialsId: 'pepproduction2', variable: 'SERVER_PASSWORD')
                 ]) {
                     sh """
-                        sshpass -p '$SERVER_PASSWORD' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} '
+                        sshpass -p '${SERVER_PASSWORD}' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} '
                             echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin &&
-                            docker stack deploy -c ~/docker-compose.yml pep
+                            
+                            # Init swarm only if not already running
+                            docker info | grep "Swarm: active" || docker swarm init --advertise-addr \$(hostname -I | awk '{print \$1}')
+                            
+                            # Check if stack exists
+                            if docker stack ls | grep pep; then
+                                echo "Updating service with rolling restart..."
+                                docker service update \
+                                    --update-parallelism 1 \
+                                    --update-delay 10s \
+                                    --image ${env.DOCKERHUB_REPO}:${env.BRANCH_NAME} \
+                                    pep_okr_backend
+                            else
+                                echo "Deploying new stack..."
+                                docker stack deploy -c ~/docker-compose.yml pep
+                            fi
+
                             docker container prune -f
                         '
                     """
@@ -107,7 +123,7 @@ pipeline {
 
     post {
         success {
-            echo 'Next.js application deployed successfully using Docker!'
+            echo 'Application deployed/updated successfully using Docker Swarm!'
         }
         failure {
             echo 'Deployment failed.'
