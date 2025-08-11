@@ -68,55 +68,43 @@ pipeline {
             }
         }
 
-stage('Build Docker Image') {
-    steps {
-        withCredentials([string(credentialsId: 'pepproduction2', variable: 'SERVER_PASSWORD')]) {
-            sh """
-                sshpass -p '${SERVER_PASSWORD}' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} /bin/bash -c '
-                    set -e
-                    cd ${env.REPO_DIR}
-                    docker build --no-cache -t ${env.DOCKERHUB_REPO}:${env.BRANCH_NAME} .
-                    docker image prune -f
-                '
-            """
+        stage('Build Docker Image') {
+            steps {
+                withCredentials([
+                    usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKERHUB_USERNAME', passwordVariable: 'DOCKERHUB_PASSWORD'),
+                    string(credentialsId: 'pepproduction2', variable: 'SERVER_PASSWORD')
+                ]) {
+                    sh """
+                        sshpass -p '${SERVER_PASSWORD}' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} '
+                            cd ${env.REPO_DIR} &&
+                            docker build --no-cache -t ${env.DOCKERHUB_REPO}:${env.BRANCH_NAME} . &&
+                            echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin &&
+                            docker push ${env.DOCKERHUB_REPO}:${env.BRANCH_NAME} &&
+                            docker image prune -f
+                        '
+                    """
+                }
+            }
+        }
+
+        stage('Deploy / Update Service') {
+            steps {
+                withCredentials([
+                    usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKERHUB_USERNAME', passwordVariable: 'DOCKERHUB_PASSWORD'),
+                    string(credentialsId: 'pepproduction2', variable: 'SERVER_PASSWORD')
+                ]) {
+                    sh """
+                        sshpass -p '${SERVER_PASSWORD}' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} '
+                            echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin &&
+                            docker stack deploy -c docker-compose.yml pep
+                            docker container prune -f
+                        '
+                    """
+                }
+            }
         }
     }
-}
 
-
-      stage('Deploy / Update Service') {
-    steps {
-        withCredentials([string(credentialsId: 'pepproduction2', variable: 'SERVER_PASSWORD')]) {
-            sh """
-                sshpass -p '${SERVER_PASSWORD}' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} /bin/bash -c '
-                    set -e
-                    if ! docker info | grep -q "Swarm: active"; then
-                        docker swarm init --advertise-addr \$(hostname -I | awk '{print \$1}')
-                    fi
-
-                    if docker stack ls | grep -q "pep"; then
-                        docker service update --force \\
-                            --update-parallelism 1 \\
-                            --update-delay 10s \\
-                            --image ${env.DOCKERHUB_REPO}:${env.BRANCH_NAME} \\
-                            pep_okr_backend
-                    else
-                        docker stack deploy -c ~/docker-compose.yml pep
-                    fi
-
-                    echo "Post-deploy diagnostics:"
-                    docker service ls
-                    docker service ps pep_okr_backend
-                    docker images | grep "${env.DOCKERHUB_REPO}"
-                    docker ps --filter "name=pep_okr_backend"
-
-                    docker container prune -f
-                '
-            """
-        }
-    }
-}
-    }
     post {
         success {
             echo 'Application deployed/updated successfully using Docker Swarm!'
