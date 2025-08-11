@@ -91,7 +91,7 @@ stage('Build Docker Image') {
                 sshpass -p '${SERVER_PASSWORD}' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} /bin/bash -c '
                     set -e
                     if ! docker info | grep -q "Swarm: active"; then
-                        docker swarm init --advertise-addr \$(hostname -I | awk "{print \\$1}")
+                        docker swarm init --advertise-addr \$(hostname -I | awk '{print \$1}')
                     fi
 
                     if docker stack ls | grep -q "pep"; then
