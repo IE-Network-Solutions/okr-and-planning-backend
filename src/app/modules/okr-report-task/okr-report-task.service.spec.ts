@@ -10,9 +10,9 @@ import { PlanTask } from '../plan-tasks/entities/plan-task.entity';
 import { OkrReportService } from '../okr-report/okr-report.service';
 import { OkrProgressService } from '../okr-progress/okr-progress.service';
 import { Milestone } from '../milestones/entities/milestone.entity';
-import { Report } from '../okr-report/entities/okr-report.entity';
 import { UserVpScoringService } from '../variable_pay/services/user-vp-scoring.service';
 import { GetFromOrganizatiAndEmployeInfoService } from '../objective/services/get-data-from-org.service';
+import { PlanTasksService } from '../plan-tasks/plan-tasks.service';
 
 describe('OkrReportTaskService', () => {
   let okrReportTaskService: OkrReportTaskService;
@@ -26,10 +26,6 @@ describe('OkrReportTaskService', () => {
           useValue: mock<Repository<ReportTask>>(),
         },
         {
-          provide: GetFromOrganizatiAndEmployeInfoService,
-          useValue: mock<GetFromOrganizatiAndEmployeInfoService>(),
-        },
-        {
           provide: getRepositoryToken(PlanningPeriodUser),
           useValue: mock<Repository<PlanningPeriodUser>>(),
         },
@@ -38,16 +34,24 @@ describe('OkrReportTaskService', () => {
           useValue: mock<Repository<Plan>>(),
         },
         {
+          provide: getRepositoryToken(Milestone),
+          useValue: mock<Repository<Milestone>>(),
+        },
+        {
+          provide: DataSource,
+          useValue: mock<DataSource>(),
+        },
+        {
           provide: getRepositoryToken(PlanTask),
           useValue: mock<Repository<PlanTask>>(),
         },
         {
-          provide: getRepositoryToken(Milestone),
-          useValue: mock<Repository<Milestone>>(), // Mock the DataSource
+          provide: PlanTasksService,
+          useValue: mock<PlanTasksService>(),
         },
         {
-          provide: getRepositoryToken(Report),
-          useValue: mock<Repository<Report>>(), // Mock the DataSource
+          provide: GetFromOrganizatiAndEmployeInfoService,
+          useValue: mock<GetFromOrganizatiAndEmployeInfoService>(),
         },
         {
           provide: OkrReportService,
@@ -60,10 +64,6 @@ describe('OkrReportTaskService', () => {
         {
           provide: UserVpScoringService,
           useValue: mock<UserVpScoringService>(),
-        },
-        {
-          provide: DataSource,
-          useValue: mock<DataSource>(), // Mock the DataSource
         },
       ],
     }).compile();

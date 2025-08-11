@@ -50,6 +50,20 @@ export class PlanController {
     return await this.planService.open(planId, tenantId);
   }
 
+  @Get('get-user-child-plans/:planId')
+  async getAllUserChildPlans(
+    @Param('planId') planId: string,
+    @Req() req: Request,
+    @Headers('sessionId') sessionId?: string,
+  ): Promise<Plan[]> {
+    const tenantId = req['tenantId'];
+    return await this.planService.findAllUsersChildPlans(
+      tenantId,
+      planId,
+      sessionId,
+    );
+  }
+
   @Get('find-all-plans/users/:userId/planning-period/:planningPeriodId')
   async findAll(
     @Param('userId') userId: string,
