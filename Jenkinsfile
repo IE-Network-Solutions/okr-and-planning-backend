@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     options {
-        timeout(time: 20, unit: 'MINUTES')
+        timeout(time: 5, unit: 'MINUTES')
     }
 
     stages {
@@ -77,7 +77,7 @@ pipeline {
                     sh """
                         sshpass -p '${SERVER_PASSWORD}' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} '
                             cd ${env.REPO_DIR} &&
-                            docker build --no-cache -t ${env.DOCKERHUB_REPO}:${env.BRANCH_NAME} . &&
+                            docker build -t ${env.DOCKERHUB_REPO}:${env.BRANCH_NAME} . &&
                             echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin &&
                             docker push ${env.DOCKERHUB_REPO}:${env.BRANCH_NAME} &&
                             docker image prune -f
