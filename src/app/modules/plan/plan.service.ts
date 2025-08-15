@@ -199,6 +199,48 @@ export class PlanService {
     }
   }
 
+  async findAllUsersChildPlans(
+    tenantId: string,
+    planId: string,
+    sessionId?: string,
+  ): Promise<Plan[]> {
+    try {
+      let activeSessionId = sessionId;
+
+      if (!activeSessionId) {
+        try {
+          const activeSession =
+            await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(
+              tenantId,
+            );
+          activeSessionId = activeSession.id;
+        } catch (error) {
+          throw new NotFoundException(
+            'There is no active Session for this tenant',
+          );
+        }
+      }
+      const plans = await this.planRepository.find({
+        where: {
+          parentPlanId: planId,
+          sessionId: activeSessionId,
+        },
+        relations: [
+          'plan', // Child plans
+          'tasks', // Tasks related to the plan
+        ],
+      });
+
+      if (!plans || plans.length === 0) {
+        return []; // Return an empty array if no plans exist
+      }
+
+      return plans;
+    } catch (error) {
+      throw error;
+    }
+  }
+
   async open(planId: string, tenantId: string): Promise<Plan> {
     try {
       const plan = await this.planRepository.findOne({

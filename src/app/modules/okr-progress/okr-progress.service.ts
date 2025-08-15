@@ -31,7 +31,6 @@ export class OkrProgressService {
     isOnCreate: 'ON_CREATE' | 'ON_UPDATE' | 'ON_DELETE';
     actualValueToUpdate?: any;
   }): Promise<any> {
-
     try {
       const keyResults = await this.keyResultService.findOnekeyResult(
         keyResult.id,
@@ -39,7 +38,7 @@ export class OkrProgressService {
       // Initialize updateValue with the current values from keyResults
       const updateValue = new UpdateKeyResultDto();
       Object.assign(updateValue, keyResults);
-      
+
       let shouldUpdateCurrentValue = true;
 
       if (keyResult.metricType.name === NAME.MILESTONE) {
@@ -104,9 +103,8 @@ export class OkrProgressService {
         }
       }
 
-
       // **Update and Fetch Latest Key Result**
-     const respnseData= await this.keyResultService.updatekeyResult(
+      const respnseData = await this.keyResultService.updatekeyResult(
         keyResult.id,
         updateValue,
         keyResult.tenantId,
