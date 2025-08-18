@@ -96,7 +96,7 @@ stage('Deploy / Update Service') {
             string(credentialsId: 'pepproduction2', variable: 'SERVER_PASSWORD')
         ]) {
             sh """
-                sshpass -p '$SERVER_PASSWORD' ssh -o StrictHostKeyChecking=no ubuntu@$SERVER_IP \\
+                sshpass -p '$SERVER_PASSWORD' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} \\
                 'set -e
                  echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
                  docker pull ${env.DOCKERHUB_REPO}:${env.BRANCH_NAME}
