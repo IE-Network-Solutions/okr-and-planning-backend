@@ -97,6 +97,7 @@ stage('Deploy / Update Service') {
         ]) {
             sh """
                 sshpass -p '${SERVER_PASSWORD}' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} '
+                set -e
                     echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin &&
                     docker pull ${env.DOCKERHUB_REPO}:${env.BRANCH_NAME} &&
                     docker service update --image ${env.DOCKERHUB_REPO}:${env.BRANCH_NAME} ${env.SERVICE_NAME} ||
