@@ -96,24 +96,20 @@ stage('Deploy / Update Service') {
         ]) {
             sh """
                 sshpass -p '${SERVER_PASSWORD}' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} '
-                    echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin &&
-                    docker pull ${env.DOCKERHUB_REPO}:${env.BRANCH_NAME} &&
+                    set -e
+
+                    echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+                    docker pull ${env.DOCKERHUB_REPO}:${env.BRANCH_NAME}
+
                     docker service update --image ${env.DOCKERHUB_REPO}:${env.BRANCH_NAME} --force ${env.SERVICE_NAME} || true
 
-                    # Wait for update to stabilize
-                    for i in {1..12}; do
-                        STATE=\$(docker service inspect ${env.SERVICE_NAME} --format "{{.UpdateStatus.State}}")
-                        echo "Current update state: \$STATE"
-                        
-                        if [[ "\$STATE" == "rollback_started" ]]; then
-                            echo "Rollback detected. Aborting pipeline."
-                            exit 1
-                        elif [[ "\$STATE" == "completed" ]]; then
-                            echo "Update completed successfully."
-                            break
-                        fi
-                        sleep 5
-                    done
+                    # Check for rollback after update
+                    STATE=\$(docker service inspect ${env.SERVICE_NAME} --format "{{.UpdateStatus.State}}")
+                    echo "Service update state: \$STATE"
+                    if [[ "\$STATE" == "rollback_started" || "\$STATE" == "rollback_completed" ]]; then
+                        echo "Rollback detected! Aborting Jenkins pipeline."
+                        exit 1
+                    fi
 
                     docker container prune -f
                 '
@@ -121,6 +117,7 @@ stage('Deploy / Update Service') {
         }
     }
 }
+
 
 
 
