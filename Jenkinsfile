@@ -34,6 +34,7 @@ pipeline {
                         env.BRANCH_NAME = sh(script: "sshpass -p '${SERVER_PASSWORD}' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} 'grep BRANCH_NAME ${secretsPath} | cut -d= -f2'", returnStdout: true).trim()
                         env.REPO_DIR = sh(script: "sshpass -p '${SERVER_PASSWORD}' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} 'grep REPO_DIR ${secretsPath} | cut -d= -f2'", returnStdout: true).trim()
                         env.DOCKERHUB_REPO = sh(script: "sshpass -p '${SERVER_PASSWORD}' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} 'grep DOCKERHUB_REPO ${secretsPath} | cut -d= -f2'", returnStdout: true).trim()
+                        env.SERVICE_NAME = sh(script: "sshpass -p '${SERVER_PASSWORD}' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} 'grep SERVICE_NAME ${secretsPath} | cut -d= -f2'", returnStdout: true).trim()
                     }
                 }
             }
@@ -87,23 +88,29 @@ pipeline {
             }
         }
 
-        stage('Deploy / Update Service') {
-            steps {
-                withCredentials([
-                    usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKERHUB_USERNAME', passwordVariable: 'DOCKERHUB_PASSWORD'),
-                    string(credentialsId: 'pepproduction2', variable: 'SERVER_PASSWORD')
-                ]) {
-                    sh """
-                        sshpass -p '${SERVER_PASSWORD}' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} '
-                            echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin &&
-                            docker pull ${env.DOCKERHUB_REPO}:${env.BRANCH_NAME} &&
-                            docker stack deploy -c docker-compose.yml pep
-                            docker container prune -f
-                        '
-                    """
-                }
-            }
+stage('Deploy / Update Service') {
+    steps {
+        withCredentials([
+            usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKERHUB_USERNAME', passwordVariable: 'DOCKERHUB_PASSWORD'),
+            string(credentialsId: 'pepproduction2', variable: 'SERVER_PASSWORD')
+        ]) {
+            sh """
+                sshpass -p '${SERVER_PASSWORD}' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} '
+                    echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin &&
+                    docker pull ${env.DOCKERHUB_REPO}:${env.BRANCH_NAME} &&
+                    docker service update --image ${env.DOCKERHUB_REPO}:${env.BRANCH_NAME} ${env.SERVICE_NAME} ||
+                    {
+                        echo "Deployment failed, rolling back..."
+                        docker service rollback ${env.SERVICE_NAME}
+                        exit 1
+                    } &&
+                    docker container prune -f
+                '
+            """
         }
+    }
+}
+
     }
 
     post {
