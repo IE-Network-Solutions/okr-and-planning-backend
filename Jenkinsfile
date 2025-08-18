@@ -100,14 +100,7 @@ stage('Deploy / Update Service') {
                     set -e
                     echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
                     docker pull ${env.DOCKERHUB_REPO}:${env.BRANCH_NAME}
-                    
-                    # Attempt service update, rollback if it fails
-                    if ! docker service update --image ${env.DOCKERHUB_REPO}:${env.BRANCH_NAME} ${env.SERVICE_NAME}; then
-                        echo "Deployment failed, rolling back..."
-                        docker service rollback ${env.SERVICE_NAME}
-                        exit 1
-                    fi
-
+                    docker service update --image ${env.DOCKERHUB_REPO}:${env.BRANCH_NAME} ${env.SERVICE_NAME}
                     docker container prune -f
 ENDSSH
             """
