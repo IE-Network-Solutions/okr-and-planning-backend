@@ -96,21 +96,36 @@ stage('Deploy / Update Service') {
             string(credentialsId: 'pepproduction2', variable: 'SERVER_PASSWORD')
         ]) {
             sh """
-                sshpass -p '${SERVER_PASSWORD}' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} '
-                    echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin &&
-                    docker pull ${env.DOCKERHUB_REPO}:${env.BRANCH_NAME} &&
-                    docker service update --image ${env.DOCKERHUB_REPO}:${env.BRANCH_NAME} ${env.SERVICE_NAME} ||
-                    {
+                sshpass -p '${SERVER_PASSWORD}' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} bash -c '
+                    set -e
+
+                    # Login to DockerHub
+                    echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+
+                    # Pull the latest image
+                    docker pull ${env.DOCKERHUB_REPO}:${env.BRANCH_NAME}
+
+                    # Update the service and handle failures
+                    if ! docker service update --image ${env.DOCKERHUB_REPO}:${env.BRANCH_NAME} ${env.SERVICE_NAME}; then
                         echo "Deployment failed, rolling back..."
                         docker service rollback ${env.SERVICE_NAME}
+
+                        # Check if rollback succeeded
+                        if [ \$? -ne 0 ]; then
+                            echo "Rollback also failed!"
+                        fi
+
                         exit 1
-                    } &&
+                    fi
+
+                    # Clean up unused containers
                     docker container prune -f
                 '
             """
         }
     }
 }
+
 
 
 
