@@ -89,41 +89,23 @@ pipeline {
             }
         }
 
-stage('Deploy / Update Service') {
-    steps {
-        withCredentials([
-            usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKERHUB_USERNAME', passwordVariable: 'DOCKERHUB_PASSWORD'),
-            string(credentialsId: 'pepproduction2', variable: 'SERVER_PASSWORD')
-        ]) {
-            sh """
-                sshpass -p '${SERVER_PASSWORD}' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} bash -s <<'ENDSSH'
-                    set -e
-
-                    # Login to DockerHub
-                    echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
-
-                    # Pull the latest image
-                    docker pull ${env.DOCKERHUB_REPO}:${env.BRANCH_NAME}
-
-                    # Update the service and handle failures
-                    if ! docker service update --image ${env.DOCKERHUB_REPO}:${env.BRANCH_NAME} ${env.SERVICE_NAME}; then
-                        echo "Deployment failed, rolling back..."
-                        docker service rollback ${env.SERVICE_NAME}
-
-                        if [ \$? -ne 0 ]; then
-                            echo "Rollback also failed!"
-                        fi
-
-                        exit 1
-                    fi
-
-                    # Clean up unused containers
-                    docker container prune -f
-ENDSSH
-            """
+        stage('Deploy / Update Service') {
+            steps {
+                withCredentials([
+                    usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKERHUB_USERNAME', passwordVariable: 'DOCKERHUB_PASSWORD'),
+                    string(credentialsId: 'pepproduction2', variable: 'SERVER_PASSWORD')
+                ]) {
+                    sh """
+                        sshpass -p '${SERVER_PASSWORD}' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} '
+                            echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin &&
+                            docker pull ${env.DOCKERHUB_REPO}:${env.BRANCH_NAME} &&
+                            docker stack deploy -c docker-compose.yml pep
+                            docker container prune -f
+                        '
+                    """
+                }
+            }
         }
-    }
-}
 
 
 
