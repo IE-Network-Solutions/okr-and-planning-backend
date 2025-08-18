@@ -110,7 +110,7 @@ stage('Deploy / Update Service') {
                         echo "Deployment failed, rolling back..."
                         docker service rollback ${env.SERVICE_NAME}
 
-                        if [ $? -ne 0 ]; then
+                        if [ \$? -ne 0 ]; then
                             echo "Rollback also failed!"
                         fi
 
@@ -124,6 +124,7 @@ ENDSSH
         }
     }
 }
+
 
 
     }
