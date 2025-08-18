@@ -1,3 +1,4 @@
+
 pipeline {
     agent any
 
@@ -96,30 +97,20 @@ stage('Deploy / Update Service') {
         ]) {
             sh """
                 sshpass -p '${SERVER_PASSWORD}' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} '
-                    set -e
-
-                    echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
-                    docker pull ${env.DOCKERHUB_REPO}:${env.BRANCH_NAME}
-
-                    docker service update --image ${env.DOCKERHUB_REPO}:${env.BRANCH_NAME} --force ${env.SERVICE_NAME} || true
-
-                    # Check for rollback after update
-                    STATE=\$(docker service inspect ${env.SERVICE_NAME} --format "{{.UpdateStatus.State}}")
-                    echo "Service update state: \$STATE"
-                    if [[ "\$STATE" == "rollback_started" || "\$STATE" == "rollback_completed" ]]; then
-                        echo "Rollback detected! Aborting Jenkins pipeline."
+                    echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin &&
+                    docker pull ${env.DOCKERHUB_REPO}:${env.BRANCH_NAME} &&
+                    docker service update --image ${env.DOCKERHUB_REPO}:${env.BRANCH_NAME} ${env.SERVICE_NAME} ||
+                    {
+                        echo "Deployment failed, rolling back..."
+                        docker service rollback ${env.SERVICE_NAME}
                         exit 1
-                    fi
-
+                    } &&
                     docker container prune -f
                 '
             """
         }
     }
 }
-
-
-
 
     }
 
