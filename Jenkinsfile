@@ -89,23 +89,49 @@ pipeline {
             }
         }
 
-        stage('Deploy / Update Service') {
-            steps {
-                withCredentials([
-                    usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKERHUB_USERNAME', passwordVariable: 'DOCKERHUB_PASSWORD'),
-                    string(credentialsId: 'pepproduction2', variable: 'SERVER_PASSWORD')
-                ]) {
-                    sh """
-                        sshpass -p '${SERVER_PASSWORD}' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} '
-                            echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin &&
-                            docker pull ${env.DOCKERHUB_REPO}:${env.BRANCH_NAME} &&
-                            docker stack deploy -c docker-compose.yml pep &&
-                            docker container prune -f
-                        '
-                    """
-                }
-            }
+stage('Deploy / Update Service') {
+    steps {
+        withCredentials([
+            usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKERHUB_USERNAME', passwordVariable: 'DOCKERHUB_PASSWORD'),
+            string(credentialsId: 'pepproduction2', variable: 'SERVER_PASSWORD')
+        ]) {
+            sh """
+                sshpass -p '${SERVER_PASSWORD}' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} '
+                    echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin &&
+                    docker pull ${env.DOCKERHUB_REPO}:${env.BRANCH_NAME} &&
+                    docker stack deploy -c docker-compose.yml pep
+                '
+            """
+
+            // Wait and check if service is rolling back
+            sh """
+                sshpass -p '${SERVER_PASSWORD}' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} '
+                    SERVICE_NAME=pep_your_service_name
+                    for i in {1..10}; do
+                        STATUS=$(docker service inspect --format "{{.UpdateStatus.State}}" $SERVICE_NAME)
+                        echo "Current update status: $STATUS"
+                        if [ "$STATUS" == "rollback_started" ] || [ "$STATUS" == "rollback_completed" ]; then
+                            echo "Service is rolling back!"
+                            exit 1
+                        fi
+                        if [ "$STATUS" == "completed" ]; then
+                            break
+                        fi
+                        sleep 5
+                    done
+                '
+            """
+
+            // Clean up old containers if deploy was successful
+            sh """
+                sshpass -p '${SERVER_PASSWORD}' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} '
+                    docker container prune -f
+                '
+            """
         }
+    }
+}
+
 
 
 
