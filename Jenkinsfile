@@ -106,11 +106,10 @@ stage('Deploy / Update Service') {
             """
 
             // Wait and check for rollback
-            sh """
-sshpass -p '${SERVER_PASSWORD}' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} bash -c '
-SERVICE_NAME="${SERVICE_NAME}"
+           sh """
+sshpass -p '${SERVER_PASSWORD}' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} bash -s <<'ENDSSH'
 for i in {1..10}; do
-    STATUS=\$(docker service inspect --format "{{.UpdateStatus.State}}" "\$SERVICE_NAME")
+    STATUS=\$(docker service inspect --format '{{if .UpdateStatus}}{{.UpdateStatus.State}}{{else}}none{{end}}' "$SERVICE_NAME")
     echo "Current update status: \$STATUS"
 
     if [ "\$STATUS" = "rollback_started" ] || [ "\$STATUS" = "rollback_completed" ]; then
@@ -124,8 +123,9 @@ for i in {1..10}; do
 
     sleep 5
 done
-'
-            """
+ENDSSH
+"""
+
 
             // Clean up old containers
             sh """
