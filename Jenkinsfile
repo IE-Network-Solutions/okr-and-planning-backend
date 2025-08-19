@@ -104,18 +104,18 @@ stage('Deploy / Update Service') {
         ]) {
 
             // 1️⃣ Deploy stack
-            sh """
-sshpass -p '${SERVER_PASSWORD}' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} bash -s <<'ENDSSH'
+            sh '''
+sshpass -p "${SERVER_PASSWORD}" ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} bash -s <<'ENDSSH'
 echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
 docker pull ${env.DOCKERHUB_REPO}:${env.BRANCH_NAME}
 docker stack deploy -c docker-compose.yml pep
 ENDSSH
-"""
+'''
 
             // 2️⃣ Wait for deployment / check rollback
-            sh """
-sshpass -p '${SERVER_PASSWORD}' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} \
-    SERVICE_NAME="${env.SERVICE_NAME}" bash -s <<'ENDSSH'
+            sh '''
+sshpass -p "${SERVER_PASSWORD}" ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} \
+    SERVICE_NAME="${SERVICE_NAME}" bash -s <<'ENDSSH'
 for i in {1..10}; do
     STATUS=$(docker service inspect --format '{{if .UpdateStatus}}{{.UpdateStatus.State}}{{else}}none{{end}}' "$SERVICE_NAME")
     echo "Current update status: $STATUS"
@@ -133,17 +133,18 @@ for i in {1..10}; do
     sleep 5
 done
 ENDSSH
-"""
+'''
 
             // 3️⃣ Clean up old containers if deploy was successful
-            sh """
-sshpass -p '${SERVER_PASSWORD}' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} bash -s <<'ENDSSH'
+            sh '''
+sshpass -p "${SERVER_PASSWORD}" ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} bash -s <<'ENDSSH'
 docker container prune -f
 ENDSSH
-"""
+'''
         }
     }
 }
+
 
 
     }
