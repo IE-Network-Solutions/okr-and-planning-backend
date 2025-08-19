@@ -109,8 +109,14 @@ sshpass -p '${SERVER_PASSWORD}' ssh -o StrictHostKeyChecking=no ${remoteServer} 
     # Pull the latest image
     docker pull ${dockerHubRepo}:${branchName}
 
-    # Force update service
-    docker service update --image ${dockerHubRepo}:${branchName} --with-registry-auth ${serviceName} || true
+if docker service inspect "${serviceName}" >/dev/null 2>&1; then
+    echo "Service exists. Updating..."
+    docker service update --image ${dockerHubRepo}:${branchName} --with-registry-auth ${serviceName}
+else
+    echo "Service does not exist. Creating..."
+    docker stack deploy -c docker-compose.yml pep
+fi
+
 
     # Wait for service update to complete and check for rollback
     for i in {1..20}; do
