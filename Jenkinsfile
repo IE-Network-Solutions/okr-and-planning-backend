@@ -95,46 +95,46 @@ stage('Deploy / Update Service') {
             usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKERHUB_USERNAME', passwordVariable: 'DOCKERHUB_PASSWORD'),
             string(credentialsId: 'pepproduction2', variable: 'SERVER_PASSWORD')
         ]) {
+            script {
+                def serviceName = env.SERVICE_NAME
+                def remoteServer = env.REMOTE_SERVER_1
+                def dockerHubRepo = env.DOCKERHUB_REPO
+                def branchName = env.BRANCH_NAME
 
-            // Deploy stack
-            sh """
-                sshpass -p '${SERVER_PASSWORD}' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} '
-                    echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin &&
-                    docker pull ${env.DOCKERHUB_REPO}:${env.BRANCH_NAME} &&
-                    docker stack deploy -c docker-compose.yml pep
-                '
-            """
+                // Deploy stack and handle rollback properly
+                sh """
+sshpass -p '${SERVER_PASSWORD}' ssh -o StrictHostKeyChecking=no ${remoteServer} bash -c '
+    echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
 
-            // Wait and check for rollback
-            sh """
-sshpass -p '${SERVER_PASSWORD}' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} bash -c '
-SERVICE_NAME="${SERVICE_NAME}"
-for i in {1..10}; do
-    STATUS=$(docker service inspect --format "{{ if .UpdateStatus }}{{.UpdateStatus.State}}{{ else }}none{{ end }}" "$SERVICE_NAME")
-    echo "Current update status: $STATUS"
+    # Pull the latest image
+    docker pull ${dockerHubRepo}:${branchName}
 
-    if [ "$STATUS" = "rollback_started" ] || [ "$STATUS" = "rollback_completed" ]; then
-        echo "Service is rolling back!"
-        exit 1
-    fi
+    # Deploy stack
+    docker stack deploy -c docker-compose.yml pep
 
-    if [ "$STATUS" = "completed" ]; then
-        echo "Update completed successfully!"
-        break
-    fi
+    # Wait for service update to complete and check for rollback
+    for i in {1..20}; do
+        STATUS=\$(docker service inspect --format "{{ if .UpdateStatus }}{{.UpdateStatus.State}}{{ else }}none{{ end }}" "${serviceName}")
+        echo "Current update status: \$STATUS"
 
-    sleep 5
-done
+        if [ "\$STATUS" = "rollback_started" ] || [ "\$STATUS" = "rollback_completed" ]; then
+            echo "Service is rolling back! Deployment failed."
+            exit 1
+        fi
+
+        if [ "\$STATUS" = "completed" ]; then
+            echo "Service update completed successfully."
+            break
+        fi
+
+        sleep 5
+    done
+
+    # Clean up old containers
+    docker container prune -f
 '
-
-            """
-
-            // Clean up old containers
-            sh """
-                sshpass -p '${SERVER_PASSWORD}' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} '
-                    docker container prune -f
-                '
-            """
+                """
+            }
         }
     }
 }
