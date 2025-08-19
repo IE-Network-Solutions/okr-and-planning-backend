@@ -122,7 +122,7 @@ sshpass -p '${SERVER_PASSWORD}' ssh -o StrictHostKeyChecking=no ${remoteServer} 
             exit 1
         fi
 
-        if [ "\$STATUS" = "completed" ]; then
+        if [ "\$STATUS" = "completed" ] || [ "\$STATUS" = "none" ]; then
             echo "Service update completed successfully."
             break
         fi
