@@ -96,48 +96,51 @@ stage('Deploy / Update Service') {
             string(credentialsId: 'pepproduction2', variable: 'SERVER_PASSWORD')
         ]) {
 
-            // Deploy the stack
-            sh '''
-            sshpass -p "${SERVER_PASSWORD}" ssh -o StrictHostKeyChecking=no ''' + env.REMOTE_SERVER_1 + ''' '
-                echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin &&
-                docker pull ${env.DOCKERHUB_REPO}:${env.BRANCH_NAME} &&
-                docker stack deploy -c docker-compose.yml pep
-            '
-            '''
+            // Deploy stack
+            sh """
+                sshpass -p '${SERVER_PASSWORD}' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} '
+                    echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin &&
+                    docker pull ${env.DOCKERHUB_REPO}:${env.BRANCH_NAME} &&
+                    docker stack deploy -c docker-compose.yml pep
+                '
+            """
 
-            // Wait for service update and check rollback
-            sh '''
-            sshpass -p "${SERVER_PASSWORD}" ssh -o StrictHostKeyChecking=no ''' + env.REMOTE_SERVER_1 + ''' bash -s <<'ENDSSH'
-SERVICE_NAME="''' + env.SERVICE_NAME + '''"
-
+            // Wait and check for rollback
+            sh """
+sshpass -p '${SERVER_PASSWORD}' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} bash -c '
+SERVICE_NAME="${SERVICE_NAME}"
 for i in {1..10}; do
-    STATUS=$(docker service inspect --format '{{if .UpdateStatus}}{{.UpdateStatus.State}}{{else}}none{{end}}' "$SERVICE_NAME")
-    echo "Current update status: $STATUS"
+    STATUS=\$(docker service inspect --format "{{.UpdateStatus.State}}" "\$SERVICE_NAME")
+    echo "Current update status: \$STATUS"
 
-    if [ "$STATUS" = "rollback_started" ] || [ "$STATUS" = "rollback_completed" ]; then
+    if [ "\$STATUS" = "rollback_started" ] || [ "\$STATUS" = "rollback_completed" ]; then
         echo "Service is rolling back!"
         exit 1
     fi
 
-    if [ "$STATUS" = "completed" ]; then
-        echo "Deployment completed successfully"
+    if [ "\$STATUS" = "completed" ]; then
         break
     fi
 
     sleep 5
 done
-ENDSSH
-            '''
+'
+            """
 
             // Clean up old containers
-            sh '''
-            sshpass -p "${SERVER_PASSWORD}" ssh -o StrictHostKeyChecking=no ''' + env.REMOTE_SERVER_1 + ''' '
-                docker container prune -f
-            '
-            '''
+            sh """
+                sshpass -p '${SERVER_PASSWORD}' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} '
+                    docker container prune -f
+                '
+            """
         }
     }
 }
+
+
+
+
+
     }
 
     post {
