@@ -105,10 +105,9 @@ stage('Deploy / Update Service') {
 ENDSSH
             """
 
-            // Wait for service update and check for rollback
+            // Wait for service update and check for rollback, using existing env.SERVICE_NAME
             sh """
-                sshpass -p "${SERVER_PASSWORD}" ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} "bash -s" <<'ENDSSH'
-                    SERVICE_NAME="${env.SERVICE_NAME}"
+                sshpass -p "${SERVER_PASSWORD}" ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} "SERVICE_NAME=${env.SERVICE_NAME} bash -s" <<'ENDSSH'
                     for i in {1..10}; do
                         STATUS=$(docker service inspect --format '{{if .UpdateStatus}}{{.UpdateStatus.State}}{{else}}none{{end}}' "$SERVICE_NAME")
                         echo "Current update status: $STATUS"
