@@ -102,11 +102,12 @@ stage('Deploy / Update Service') {
                     docker stack deploy -c docker-compose.yml pep
                 '
             """
-
+env.SERVICE_NAME = serviceName
             // Wait and check if service is rolling back
 sh """
     sshpass -p '${SERVER_PASSWORD}' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} '
-        SERVICE_NAME=\${SERVICE_NAME}
+    
+        SERVICE_NAME=\${serviceName}
         for i in {1..10}; do
             STATUS=\$(docker service inspect --format "{{.UpdateStatus.State}}" \$SERVICE_NAME)
             echo "Current update status: \$STATUS"
