@@ -109,20 +109,20 @@ sshpass -p '${SERVER_PASSWORD}' ssh -o StrictHostKeyChecking=no ${remoteServer} 
     # Pull the latest image
     docker pull ${dockerHubRepo}:${branchName}
 
-    # Deploy stack
-    docker stack deploy -c docker-compose.yml pep
+    # Force update service to ensure UpdateStatus exists
+    docker service update --image ${dockerHubRepo}:${branchName} --with-registry-auth ${serviceName} || true
 
     # Wait for service update to complete and check for rollback
     for i in {1..20}; do
-        STATUS=\$(docker service inspect --format "{{ if .UpdateStatus }}{{.UpdateStatus.State}}{{ else }}none{{ end }}" "${serviceName}")
-        echo "Current update status: \$STATUS"
+        STATUS=$(docker service inspect --format "{{ if .UpdateStatus }}{{.UpdateStatus.State}}{{ else }}none{{ end }}" "${serviceName}")
+        echo "Current update status: $STATUS"
 
-        if [ "\$STATUS" = "rollback_started" ] || [ "\$STATUS" = "rollback_completed" ]; then
+        if [ "$STATUS" = "rollback_started" ] || [ "$STATUS" = "rollback_completed" ]; then
             echo "Service is rolling back! Deployment failed."
             exit 1
         fi
 
-        if [ "\$STATUS" = "completed" ]; then
+        if [ "$STATUS" = "completed" ]; then
             echo "Service update completed successfully."
             break
         fi
@@ -132,6 +132,7 @@ sshpass -p '${SERVER_PASSWORD}' ssh -o StrictHostKeyChecking=no ${remoteServer} 
 
     # Clean up old containers
     docker container prune -f
+
 '
                 """
             }
