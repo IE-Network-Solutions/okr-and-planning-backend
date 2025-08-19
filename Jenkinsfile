@@ -117,12 +117,12 @@ sshpass -p '${SERVER_PASSWORD}' ssh -o StrictHostKeyChecking=no ${remoteServer} 
         STATUS=\$(docker service inspect --format "{{ if .UpdateStatus }}{{.UpdateStatus.State}}{{ else }}none{{ end }}" "${serviceName}")
         echo "Current update status: \$STATUS"
 
-        if [ "\$STATUS" = "rollback_started" ] || [ "\$STATUS" = "rollback_completed" ]; then
+        if [ "\$STATUS" = "rollback_started" ] || [ "\$STATUS" = "rollback_completed" ]  || [ "\$STATUS" = "none" ]; then
             echo "Service is rolling back! Deployment failed."
             exit 1
         fi
 
-        if [ "\$STATUS" = "completed" ] || [ "\$STATUS" = "none" ]; then
+        if [ "\$STATUS" = "completed" ] || [ "\$STATUS" = "nsone" ]; then
             echo "Service update completed successfully."
             break
         fi
