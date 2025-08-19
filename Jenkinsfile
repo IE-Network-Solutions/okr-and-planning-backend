@@ -95,6 +95,7 @@ stage('Deploy / Update Service') {
             usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKERHUB_USERNAME', passwordVariable: 'DOCKERHUB_PASSWORD'),
             string(credentialsId: 'pepproduction2', variable: 'SERVER_PASSWORD')
         ]) {
+
             // Deploy stack
             sh """
                 sshpass -p '${SERVER_PASSWORD}' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} '
@@ -105,25 +106,26 @@ stage('Deploy / Update Service') {
             """
 
             // Wait and check for rollback
-            sh '''
-sshpass -p '${SERVER_PASSWORD}' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} 'bash -s' <<'ENDSSH'
+            sh """
+sshpass -p '${SERVER_PASSWORD}' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} bash -c '
+SERVICE_NAME="${SERVICE_NAME}"
 for i in {1..10}; do
-    STATUS=$(docker service inspect --format "{{.UpdateStatus.State}}" $SERVICE_NAME)
-    echo "Current update status: $STATUS"
+    STATUS=\$(docker service inspect --format "{{.UpdateStatus.State}}" "\$SERVICE_NAME")
+    echo "Current update status: \$STATUS"
 
-    if [ "$STATUS" == "rollback_started" ] || [ "$STATUS" == "rollback_completed" ]; then
+    if [ "\$STATUS" = "rollback_started" ] || [ "\$STATUS" = "rollback_completed" ]; then
         echo "Service is rolling back!"
         exit 1
     fi
 
-    if [ "$STATUS" == "completed" ]; then
+    if [ "\$STATUS" = "completed" ]; then
         break
     fi
 
     sleep 5
 done
-ENDSSH
-'''
+'
+            """
 
             // Clean up old containers
             sh """
@@ -134,6 +136,7 @@ ENDSSH
         }
     }
 }
+
 
 
 
