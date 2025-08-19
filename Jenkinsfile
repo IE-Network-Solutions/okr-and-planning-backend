@@ -99,7 +99,7 @@ pipeline {
                         sshpass -p '${SERVER_PASSWORD}' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} '
                             echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin &&
                             docker pull ${env.DOCKERHUB_REPO}:${env.BRANCH_NAME} &&
-                            docker stack deploy -c docker-compose.yml pep
+                            docker stack deploy -c docker-compose.yml pep &&
                             docker container prune -f
                         '
                     """
