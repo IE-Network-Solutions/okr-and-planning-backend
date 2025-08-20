@@ -8,6 +8,7 @@ import {
   TypeOrmHealthIndicator,
 } from '@nestjs/terminus';
 import { ThrottlerGuard } from '@nestjs/throttler';
+import { ExcludeAuthGuard, ExcludeTenantGuard } from '@root/src/core/guards/exclud.guard';
 
 /** The HealthController class checks the health of various components including the database, memory,
  and disk. */
@@ -31,6 +32,8 @@ export class HealthController {
    * representing the results of each check
    */
   @Get()
+    @ExcludeAuthGuard()
+@ExcludeTenantGuard()
   async check(): Promise<HealthCheckResult> {
     return this.health.check([
       /* istanbul ignore next */
