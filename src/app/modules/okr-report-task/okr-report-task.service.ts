@@ -105,6 +105,12 @@ export class OkrReportTaskService {
         throw new Error('Plan not found for the given planning period user');
       }
       const planningDataId = planningId ?? planId;
+      const childPlanId = await this.getPlanByParentId(planningDataId);
+      if (childPlanId) {
+        throw new Error(
+          `This plan has ${childPlanId?.description} plans, Please report the ${childPlanId?.description} plans first`,
+        );
+      }
       const reportScore = await this.calculateReportScore(createReportDto);
 
       const reportData = this.createReportData({
@@ -567,6 +573,19 @@ export class OkrReportTaskService {
         },
       });
       return plan ? plan.id : null; // Retur  n the id or null if not found
+    } catch (error) {
+      throw new Error(`Error fetching plan ID: ${error.message}`);
+    }
+  }
+  async getPlanByParentId(parentId: string): Promise<Plan> {
+    try {
+      const plan = await this.planRepository.findOne({
+        where: {
+          parentPlanId: parentId,
+          isReported: false,
+        },
+      });
+      return plan ? plan : null;
     } catch (error) {
       throw new Error(`Error fetching plan ID: ${error.message}`);
     }
