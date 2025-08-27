@@ -11,7 +11,7 @@ import { CarbonCopyLogService } from '../carbonCopyLlog/carbon-copy-log.service'
 import { FilterAppreciationLogDto } from './dto/filter.appreciation-log.dto';
 import { ReprimandLog } from '../reprimandLog/entities/reprimand.entity';
 import { RockStarDto } from '../okr-report/dto/report-rock-star.dto';
-import { ReprimandLogService } from '../reprimandLog/setrvices/reprimand-log.service';
+import { ReprimandLogServiceee } from '../reprimandLog/setrvices/reprimand-log.service';
 
 @Injectable()
 export class AppreciationService {
