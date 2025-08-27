@@ -8,6 +8,7 @@ import {
   TypeOrmHealthIndicator,
 } from '@nestjs/terminus';
 import { ThrottlerGuard } from '@nestjs/throttler';
+import { ExcludeAuthGuard, ExcludeTenantGuard } from '@root/src/core/guards/exclud.guard';
 
 /** The HealthController class checks the health of various components including the database, memory,
  and disk. */
@@ -31,14 +32,16 @@ export class HealthController {
    * representing the results of each check
    */
   @Get()
+    @ExcludeAuthGuard()
+@ExcludeTenantGuard()
   async check(): Promise<HealthCheckResult> {
     return this.health.check([
       /* istanbul ignore next */
       () => this.db.pingCheck('database', { timeout: 300 }),
       /* istanbul ignore next */
-      () => this.memory.checkHeap('memory_heap', 150 * 1024 * 1024),
-      /* istanbul ignore next */
-      () => this.memory.checkRSS('memory_rss', 150 * 1024 * 1024),
+      // () => this.memory.checkHeap('memory_heap', 150 * 1024 * 1024),
+      // /* istanbul ignore next */
+      // () => this.memory.checkRSS('memory_rss', 150 * 1024 * 1024),
       /* istanbul ignore next */
       // () => this.disk.checkStorage('storage', { thresholdPercent: 0.8, path: 'C:\\' }),
     ]);

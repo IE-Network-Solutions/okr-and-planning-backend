@@ -5,7 +5,7 @@
 export const configuration = () => ({
   NODE_ENV: process.env.NODE_ENV,
   app: {
-    port: parseInt(process.env.APP_PORT, 10) || 3000,
+    port: parseInt(process.env.APP_PORT, 10) || 8007,
     name: process.env.APP_NAME,
     description: process.env.APP_DESCRIPTION,
     version: process.env.APP_VERSION,
