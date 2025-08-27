@@ -25,7 +25,7 @@ vault kv get -format=json env/okr \
     formatted_value=$(echo -e "$value")
 
     # For .env, escape actual newlines into \n form (dotenv expects single-line)
-    # But write both versions: .env-safe and real PEM file if needed
+    # But write both versions: .env-safe and realkjh PEM file if needed
     escaped_for_env=$(printf "%s" "$formatted_value" | sed ':a;N;$!ba;s/\n/\\n/g')
 
     # Write to .env
