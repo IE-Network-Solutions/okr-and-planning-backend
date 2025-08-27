@@ -128,7 +128,7 @@ fi
             exit 1
         fi
 
-        if [ "\$STATUS" = "completed" ] || [ "\$STATUS" = "nsone" ]; then
+        if [ "\$STATUS" = "completed" ] || [ "\$STATUS" = "none" ]; then
             echo "Service update completed successfully."
             break
         fi
