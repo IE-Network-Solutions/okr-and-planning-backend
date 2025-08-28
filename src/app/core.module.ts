@@ -21,6 +21,7 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { VariablePayModule } from './modules/variable_pay/variable-pay.module';
 import { PlanCommentsModule } from './modules/plan-comments/plan-comments.module';
 import { WeeklyPrioritiesModule } from './modules/weekly-priorities/weekly-priorities.module';
+import { CheckInRuleModule } from './modules/check-in-rule/check-in-rule.module';
 @Global()
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { WeeklyPrioritiesModule } from './modules/weekly-priorities/weekly-prior
     DashboardModule,
     VariablePayModule,
     WeeklyPrioritiesModule,
+    CheckInRuleModule,
   ],
 })
 export class CoreModule {}
