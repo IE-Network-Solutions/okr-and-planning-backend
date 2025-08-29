@@ -49,6 +49,8 @@ export class EncryptionInterceptor implements NestInterceptor {
               // console.error("❌ Failed to decrypt object property:", error.message);
               throw new BadRequestException('Invalid encrypted data format');
             }
+
+            
           } else {
             //console.log("ℹ️ Value is not encrypted, using as is");
           }
