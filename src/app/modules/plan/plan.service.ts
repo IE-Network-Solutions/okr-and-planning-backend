@@ -154,7 +154,6 @@ export class PlanService {
           );
         }
       }
-      
 
       const boolValue = forPlan === '1' ? false : true;
       const planningUser = await this.planningUserRepository.findOne({
@@ -187,6 +186,48 @@ export class PlanService {
           'tasks', // Tasks related to the plan
           'tasks.keyResult', // KeyResult related to tasks
           'tasks.keyResult.objective', // Objective related to KeyResult
+        ],
+      });
+
+      if (!plans || plans.length === 0) {
+        return []; // Return an empty array if no plans exist
+      }
+
+      return plans;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async findAllUsersChildPlans(
+    tenantId: string,
+    planId: string,
+    sessionId?: string,
+  ): Promise<Plan[]> {
+    try {
+      let activeSessionId = sessionId;
+
+      if (!activeSessionId) {
+        try {
+          const activeSession =
+            await this.getFromOrganizatiAndEmployeInfoService.getActiveSession(
+              tenantId,
+            );
+          activeSessionId = activeSession.id;
+        } catch (error) {
+          throw new NotFoundException(
+            'There is no active Session for this tenant',
+          );
+        }
+      }
+      const plans = await this.planRepository.find({
+        where: {
+          parentPlanId: planId,
+          sessionId: activeSessionId,
+        },
+        relations: [
+          'plan', // Child plans
+          'tasks', // Tasks related to the plan
         ],
       });
 
@@ -312,19 +353,21 @@ export class PlanService {
       }
       // Step 2: Fetch All Plans for the User
       const plans = await this.planRepository
-  .createQueryBuilder('plan')
-  .leftJoinAndSelect('plan.plan', 'childPlans') // Child plans
-  .leftJoinAndSelect('plan.parentPlan', 'parentPlan') // Parent plans
-  .leftJoinAndSelect('plan.tasks', 'tasks') // Tasks related to the plan
-  .leftJoinAndSelect('tasks.keyResult', 'keyResult') // KeyResult related to tasks
-    .leftJoinAndSelect('keyResult.metricType', 'metricType') // KeyResult related to tasks
+        .createQueryBuilder('plan')
+        .leftJoinAndSelect('plan.plan', 'childPlans') // Child plans
+        .leftJoinAndSelect('plan.parentPlan', 'parentPlan') // Parent plans
+        .leftJoinAndSelect('plan.tasks', 'tasks') // Tasks related to the plan
+        .leftJoinAndSelect('tasks.keyResult', 'keyResult') // KeyResult related to tasks
+        .leftJoinAndSelect('keyResult.metricType', 'metricType') // KeyResult related to tasks
 
-    .leftJoinAndSelect('tasks.milestone', 'milestone') // KeyResult related to tasks
+        .leftJoinAndSelect('tasks.milestone', 'milestone') // KeyResult related to tasks
 
-  .leftJoinAndSelect('keyResult.objective', 'objective') // Objective related to KeyResult
-  .where('plan.planningUserId = :planningUserId', { planningUserId: planningUser.id })
-  .andWhere('plan.sessionId = :sessionId', { sessionId: activeSessionId })
-  .getMany();
+        .leftJoinAndSelect('keyResult.objective', 'objective') // Objective related to KeyResult
+        .where('plan.planningUserId = :planningUserId', {
+          planningUserId: planningUser.id,
+        })
+        .andWhere('plan.sessionId = :sessionId', { sessionId: activeSessionId })
+        .getMany();
       // const plans = await this.planRepository.find({
       //   where: { planningUserId: planningUser.id, sessionId: activeSessionId },
       //   relations: [

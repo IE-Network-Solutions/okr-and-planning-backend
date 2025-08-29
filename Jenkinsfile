@@ -1,265 +1,234 @@
 pipeline {
     agent any
 
+    options {
+        timeout(time: 5, unit: 'MINUTES')
+    }
+
     stages {
+
         stage('Select Environment') {
             steps {
                 script {
                     withCredentials([
                         string(credentialsId: 'REMOTE_SERVER_TEST', variable: 'REMOTE_SERVER_TEST'),
-                        string(credentialsId: 'REMOTE_SERVER_PROD', variable: 'REMOTE_SERVER_PROD'),
-                        string(credentialsId: 'REMOTE_SERVER_PROD2', variable: 'REMOTE_SERVER_PROD2')
+                        string(credentialsId: 'REMOTE_SERVER_PROD', variable: 'REMOTE_SERVER_PROD')
                     ]) {
-                        def branchName = env.GIT_BRANCH ?: sh(script: "git rev-parse --abbrev-ref HEAD", returnStdout: true).trim()
-                        env.BRANCH_NAME = branchName
+                        def branchName = env.GIT_BRANCH ?: sh(
+                            script: "git rev-parse --abbrev-ref HEAD",
+                            returnStdout: true
+                        ).trim()
 
                         if (branchName.contains('develop')) {
-                            env.SSH_CREDENTIALS_ID_1 = 'peptest'
-                            env.REMOTE_SERVER_1 = REMOTE_SERVER_TEST
-                            env.REMOTE_SERVER_2 = REMOTE_SERVER_PROD2
+                            env.REMOTE_SERVER = REMOTE_SERVER_TEST
                             env.SECRETS_PATH = '/home/ubuntu/secrets/.okr-env'
-                            env.BACKEND_ENV_PATH = '/home/ubuntu/backend-env'
-                        } else if (branchName.contains('production')) {
-                            env.SSH_CREDENTIALS_ID_1 = 'pepproduction'
-                            env.REMOTE_SERVER_1 = REMOTE_SERVER_PROD
-                            env.SECRETS_PATH = '/home/ubuntu/secrets/.okr-env'
-                            env.BACKEND_ENV_PATH = '/home/ubuntu/backend-env'
                         } else if (branchName.contains('staging')) {
-                            env.SSH_CREDENTIALS_ID_1 = 'pepproduction'
-                            env.REMOTE_SERVER_1 = REMOTE_SERVER_PROD
-                            env.SECRETS_PATH = '/home/ubuntu/staging-secrets/.okr-env'
-                            env.BACKEND_ENV_PATH = '/home/ubuntu/backend-env/staging-env'
+                            env.REMOTE_SERVER = REMOTE_SERVER_PROD
+                            env.SECRETS_PATH = '/home/ubuntu/secrets/staging/.okr-env'
+                        } else if (branchName.contains('production')) {
+                            env.REMOTE_SERVER = REMOTE_SERVER_PROD
+                            env.SECRETS_PATH = '/home/ubuntu/secrets/.okr-env'
                         }
                     }
                 }
             }
         }
 
-        stage('Fetch Environment Variables') {
-            parallel {
-                stage('Fetch Variables from Server 1') {
-                    steps {
-                        script {
-                            sshagent([env.SSH_CREDENTIALS_ID_1]) {
-                                def secretsPath = env.SECRETS_PATH
-                                env.REPO_URL = sh(script: "ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} 'grep REPO_URL ${secretsPath} | cut -d= -f2'", returnStdout: true).trim()
-                                env.BRANCH_NAME = sh(script: "ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} 'grep BRANCH_NAME ${secretsPath} | cut -d= -f2'", returnStdout: true).trim()
-                                env.REPO_DIR = sh(script: "ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} 'grep REPO_DIR ${secretsPath} | cut -d= -f2'", returnStdout: true).trim()
-                            }
-                        }
-                    }
-                }
-                stage('Fetch Variables from Server 2') {
-                    when {
-                        expression { env.REMOTE_SERVER_2 != null }
-                    }
-                    steps {
-                        script {
-                            withCredentials([string(credentialsId: 'pepproduction2', variable: 'SERVER_PASSWORD')]) {
-                                def secretsPath = env.SECRETS_PATH
-                                env.REPO_URL = sh(script: "sshpass -p '$SERVER_PASSWORD' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_2} 'grep REPO_URL ${secretsPath} | cut -d= -f2'", returnStdout: true).trim()
-                                env.BRANCH_NAME = sh(script: "sshpass -p '$SERVER_PASSWORD' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_2} 'grep BRANCH_NAME ${secretsPath} | cut -d= -f2'", returnStdout: true).trim()
-                                env.REPO_DIR = sh(script: "sshpass -p '$SERVER_PASSWORD' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_2} 'grep REPO_DIR ${secretsPath} | cut -d= -f2'", returnStdout: true).trim()
-                            }
-                        }
+        stage('Fetch Application Variables') {
+            steps {
+                script {
+                    withCredentials([string(credentialsId: 'sshpassword', variable: 'SERVER_PASSWORD')]) {
+                        def secretsFile = env.SECRETS_PATH
+
+                        env.REPO_URL = sh(
+                            script: "sshpass -p '${SERVER_PASSWORD}' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER} 'grep REPO_URL ${secretsFile} | cut -d= -f2'",
+                            returnStdout: true
+                        ).trim()
+
+                        env.BRANCH_NAME = sh(
+                            script: "sshpass -p '${SERVER_PASSWORD}' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER} 'grep BRANCH_NAME ${secretsFile} | cut -d= -f2'",
+                            returnStdout: true
+                        ).trim()
+
+                        env.REPO_DIR = sh(
+                            script: "sshpass -p '${SERVER_PASSWORD}' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER} 'grep REPO_DIR ${secretsFile} | cut -d= -f2'",
+                            returnStdout: true
+                        ).trim()
+
+                        env.DOCKERHUB_REPO = sh(
+                            script: "sshpass -p '${SERVER_PASSWORD}' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER} 'grep DOCKERHUB_REPO ${secretsFile} | cut -d= -f2'",
+                            returnStdout: true
+                        ).trim()
+
+                        env.SERVICE_NAME = sh(
+                            script: "sshpass -p '${SERVER_PASSWORD}' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER} 'grep SERVICE_NAME ${secretsFile} | cut -d= -f2'",
+                            returnStdout: true
+                        ).trim()
                     }
                 }
             }
         }
 
         stage('Prepare Repository') {
-            parallel {
-                stage('Prepare Repository on Server 1') {
-                    steps {
-                        sshagent([env.SSH_CREDENTIALS_ID_1]) {
-                            sh """
-                                ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} '
-                                if [ -d "$REPO_DIR" ]; then
-                                    sudo chown -R \$USER:\$USER $REPO_DIR
-                                    sudo chmod -R 755 $REPO_DIR
-                                fi'
-                            """
-                        }
-                    }
-                }
-                stage('Prepare Repository on Server 2') {
-                    when {
-                        expression { env.REMOTE_SERVER_2 != null }
-                    }
-                    steps {
-                        withCredentials([string(credentialsId: 'pepproduction2', variable: 'SERVER_PASSWORD')]) {
-                            sh """
-                                sshpass -p '$SERVER_PASSWORD' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_2} '
-                                if [ -d "$REPO_DIR" ]; then
-                                    sudo chown -R \$USER:\$USER $REPO_DIR
-                                    sudo chmod -R 755 $REPO_DIR
-                                fi'
-                            """
-                        }
-                    }
+            steps {
+                withCredentials([string(credentialsId: 'sshpassword', variable: 'SERVER_PASSWORD')]) {
+                    sh """
+                        sshpass -p '${SERVER_PASSWORD}' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER} '
+                            if [ -d "${env.REPO_DIR}" ]; then
+                                sudo chown -R \$USER:\$USER ${env.REPO_DIR}
+                                sudo chmod -R 755 ${env.REPO_DIR}
+                            fi
+                        '
+                    """
                 }
             }
         }
 
         stage('Pull Latest Changes') {
-            parallel {
-                stage('Pull Latest Changes from Server 1') {
-                    steps {
-                        sshagent([env.SSH_CREDENTIALS_ID_1]) {
-                            sh """
-                                ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} '
-                                if [ ! -d "$REPO_DIR/.git" ]; then
-                                    git clone $REPO_URL -b $BRANCH_NAME $REPO_DIR
-                                else
-                                    cd $REPO_DIR && git reset --hard HEAD && git pull origin $BRANCH_NAME
-                                fi'
-                            """
-                        }
-                    }
-                }
-                stage('Pull Latest Changes from Server 2') {
-                    when {
-                        expression { env.REMOTE_SERVER_2 != null }
-                    }
-                    steps {
-                        withCredentials([string(credentialsId: 'pepproduction2', variable: 'SERVER_PASSWORD')]) {
-                            sh """
-                                sshpass -p '$SERVER_PASSWORD' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_2} '
-                                if [ ! -d "$REPO_DIR/.git" ]; then
-                                    git clone $REPO_URL -b $BRANCH_NAME $REPO_DIR
-                                else
-                                    cd $REPO_DIR && git reset --hard HEAD && git pull origin $BRANCH_NAME
-                                fi'
-                            """
-                        }
-                    }
-                }
-            }
-        }
-
-        stage('Install Dependencies') {
-            parallel {
-                stage('Install Dependencies on Server 1') {
-                    steps {
-                        script {
-                            def envPath = env.BACKEND_ENV_PATH
-                            sshagent([env.SSH_CREDENTIALS_ID_1]) {
-                                sh """
-                                    ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} 'cp ${envPath}/.okr-env ~/$REPO_DIR/.env'
-                                    ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} 'cd ~/$REPO_DIR && npm install'
-                                """
-                            }
-                        }
-                    }
-                }
-                stage('Install Dependencies on Server 2') {
-                    when {
-                        expression { env.REMOTE_SERVER_2 != null }
-                    }
-                    steps {
-                        script {
-                            def envPath = env.BACKEND_ENV_PATH
-                            withCredentials([string(credentialsId: 'pepproduction2', variable: 'SERVER_PASSWORD')]) {
-                                sh """
-                                    sshpass -p '$SERVER_PASSWORD' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_2} 'cp ${envPath}/.okr-env ~/$REPO_DIR/.env'
-                                    sshpass -p '$SERVER_PASSWORD' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_2} 'cd ~/$REPO_DIR && npm install'
-                                """
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        stage('Run Migrations') {
             steps {
-                sshagent (credentials: [SSH_CREDENTIALS_ID_1]) {
+                withCredentials([string(credentialsId: 'sshpassword', variable: 'SERVER_PASSWORD')]) {
+                    sh """
+                        sshpass -p '${SERVER_PASSWORD}' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER} '
+                            if [ ! -d "${env.REPO_DIR}/.git" ]; then
+                                git clone ${env.REPO_URL} -b ${env.BRANCH_NAME} ${env.REPO_DIR}
+                            else
+                                cd ${env.REPO_DIR} && git reset --hard HEAD && git pull origin ${env.BRANCH_NAME}
+                            fi
+                        '
+                    """
+                }
+            }
+        }
+
+        stage('Clean Old Migrations') {
+            steps {
+                withCredentials([string(credentialsId: 'sshpassword', variable: 'SERVER_PASSWORD')]) {
+                    sh """
+                        sshpass -p '${SERVER_PASSWORD}' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER} '
+                            if [ -d "${env.REPO_DIR}/src/app/migrations" ]; then
+                                echo "Removing old migration files..."
+                                rm -f ${env.REPO_DIR}/src/app/migrations/*.ts
+                            else
+                                echo "No migrations folder found, skipping cleanup."
+                            fi
+                        '
+                    """
+                }
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                withCredentials([
+                    usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKERHUB_USERNAME', passwordVariable: 'DOCKERHUB_PASSWORD'),
+                    string(credentialsId: 'sshpassword', variable: 'SERVER_PASSWORD')
+                ]) {
+                    sh """
+                        sshpass -p '${SERVER_PASSWORD}' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER} '
+                            cd ${env.REPO_DIR} &&
+                            docker build -t ${env.DOCKERHUB_REPO}:${env.BRANCH_NAME} . &&
+                            echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin &&
+                            docker push ${env.DOCKERHUB_REPO}:${env.BRANCH_NAME} &&
+                            docker image prune -f
+                        '
+                    """
+                }
+            }
+        }
+
+        stage('Deploy Service') {
+            steps {
+                withCredentials([
+                    usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKERHUB_USERNAME', passwordVariable: 'DOCKERHUB_PASSWORD'),
+                    string(credentialsId: 'sshpassword', variable: 'SERVER_PASSWORD')
+                ]) {
                     script {
-                        def output = sh(
-                            script: """
-                                ssh -o StrictHostKeyChecking=no $REMOTE_SERVER_1 '
-                                cd $REPO_DIR && npm run migration:generate-run || true'
-                            """,
-                            returnStdout: true
-                        ).trim()
-                        echo "Migration Output: ${output}"
-                        if (output.contains('No changes in database schema were found')) {
-                            echo 'No database schema changes found, skipping migration.'
-                        } else {
-                            sh """
-                                ssh -o StrictHostKeyChecking=no $REMOTE_SERVER_1 '
-                                cd $REPO_DIR && npm run migration:run'
-                            """
-                        }
+                        sh """
+                            sshpass -p '${SERVER_PASSWORD}' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER} "
+                                echo '${DOCKERHUB_PASSWORD}' | docker login -u '${DOCKERHUB_USERNAME}' --password-stdin
+                                
+                                if ! docker pull ${env.DOCKERHUB_REPO}:${env.BRANCH_NAME}; then
+                                    echo 'ERROR: Failed to pull Docker image'
+                                    exit 1
+                                fi
+                                
+                                if docker service inspect ${env.SERVICE_NAME} >/dev/null 2>&1; then
+                                    echo 'Updating existing service...'
+                                    if ! docker service update --image ${env.DOCKERHUB_REPO}:${env.BRANCH_NAME} --with-registry-auth ${env.SERVICE_NAME}; then
+                                        echo 'ERROR: Failed to update service'
+                                        exit 1
+                                    fi
+                                else
+                                    echo 'Creating new service...'
+                                    if [ '${env.BRANCH_NAME}' = 'staging' ]; then
+                                        if ! docker stack deploy -c stage-docker-compose.yml staging; then
+                                            echo 'ERROR: Failed to deploy stack'
+                                            exit 1
+                                        fi
+                                    else
+                                        if ! docker stack deploy -c docker-compose.yml pep; then
+                                            echo 'ERROR: Failed to deploy stack'
+                                            exit 1
+                                        fi
+                                    fi
+                                fi
+                            "
+                        """
                     }
                 }
             }
         }
 
-      stage('Run Nest.js App') {
-    parallel {
-        stage('Start App on Server 1') {
-            when {
-                expression { env.BRANCH_NAME == "'develop'" || env.BRANCH_NAME == "'production'" }
-            }
+        stage('Verify Deployment') {
             steps {
-                sshagent([env.SSH_CREDENTIALS_ID_1]) {
-                    sh """
-                        ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} '
-                            cd $REPO_DIR &&
-                            npm run build &&
-                            sudo pm2 delete okr-backend || true &&
-                            sudo npm run start:prod
-                        '
-                    """
-                }
-            }
-        }
+                withCredentials([string(credentialsId: 'sshpassword', variable: 'SERVER_PASSWORD')]) {
+                    script {
+                        sh """
+                            sshpass -p '${SERVER_PASSWORD}' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER} '
+                                echo "Verifying deployment status..."
 
-        stage('Start App on Server 1-staging') {
-            when {
-                expression { env.BRANCH_NAME == "'staging'" }
-            }
-            steps {
-                sshagent([env.SSH_CREDENTIALS_ID_1]) {
-                    sh """
-                        ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_1} '
-                            cd $REPO_DIR &&
-                            npm run build &&
-                            sudo pm2 delete okr-backend-staging || true &&
-                            sudo npm run start:stage
-                        '
-                    """
-                }
-            }
-        }
+                                for i in {1..20}; do
+                                    STATUS=\$(docker service inspect --format "{{ if .UpdateStatus }}{{ .UpdateStatus.State }}{{ else }}none{{ end }}" ${env.SERVICE_NAME} 2>/dev/null)
 
-        stage('Start App on Server 2') {
-            when {
-                expression { env.REMOTE_SERVER_2 != null }
-            }
-            steps {
-                withCredentials([string(credentialsId: 'pepproduction2', variable: 'SERVER_PASSWORD')]) {
-                    sh """
-                        sshpass -p '$SERVER_PASSWORD' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER_2} '
-                            cd $REPO_DIR &&
-                            npm run build &&
-                            sudo pm2 delete okr-backend || true &&
-                            sudo npm run start:prod
-                        '
-                    """
+                                    if [ -z "\$STATUS" ]; then
+                                        STATUS="none"
+                                    fi
+
+                                    echo "Current update status: \$STATUS"
+
+                                    if [ "\$STATUS" = "rollback_started" ] || [ "\$STATUS" = "rollback_completed" ] || [ "\$STATUS" = "rollback_paused" ]; then
+                                        echo "Service is rolling back! Deployment failed."
+                                        exit 1
+                                    fi
+
+                                    if [ "\$STATUS" = "completed" ] || [ "\$STATUS" = "none" ]; then
+                                        echo "Service update completed successfully."
+                                        break
+                                    fi
+
+                                    sleep 5
+                                done
+                            '
+                        """
+                    }
                 }
             }
         }
-    }
-}
 
     }
 
     post {
         success {
-            echo 'Nest.js application deployed successfully!'
+            withCredentials([string(credentialsId: 'sshpassword', variable: 'SERVER_PASSWORD')]) {
+                sh """
+                    sshpass -p '${SERVER_PASSWORD}' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER} '
+                        echo "Cleaning up stopped containers..."
+                        docker container prune -f
+                    '
+                """
+            }
         }
+
         failure {
             echo 'Deployment failed.'
             emailext(
@@ -306,7 +275,7 @@ pipeline {
                 """,
                 from: 'selamnew@ienetworksolutions.com',
                 recipientProviders: [[$class: 'DevelopersRecipientProvider']],
-                to: 'yonas.t@ienetworksolutions.com, surafel@ienetworks.co, abeselom.g@ienetworksolutions.com'
+                to: 'yonas.t@ienetworks.co, surafel@ienetworks.co, abeselom.g@ienetworksolutions.com, yohannes.t@ienetworks.co'
             )
         }
     }

@@ -20,7 +20,7 @@ import { CreateObjectiveDto } from './dto/create-objective.dto';
 import { UpdateObjectiveDto } from './dto/update-objective.dto';
 import { Objective } from './entities/objective.entity';
 import { PaginationDto } from '@root/src/core/commonDto/pagination-dto';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { FilterObjectiveDto } from './dto/filter-objective.dto';
 import { OKRDashboardService } from './services/okr-dashbord.service';
 import { ExcludeAuthGuard } from '@root/src/core/guards/exclud.guard';
@@ -28,7 +28,6 @@ import { OKRCalculationService } from './services/okr-calculation.service';
 import { UpdateObjectiveStatusDto } from './dto/update-objective-status.dto';
 import { FilterObjectiveOfAllEmployeesDto } from './dto/filter-objective-byemployees.dto';
 import { FilterVPRecognitionDTo } from '../variable_pay/dtos/vp-score-instance-dto/filter-vp-recognition.dto';
-import { EncryptionService } from '@root/src/core/services/encryption.service';
 
 @Controller('objective')
 @ApiTags('Objective')
@@ -37,31 +36,7 @@ export class ObjectiveController {
     private readonly objectiveService: ObjectiveService,
     private readonly okrDashboardService: OKRDashboardService,
     private readonly oKRCalculationService: OKRCalculationService,
-    private readonly encryptionService: EncryptionService,
   ) {}
-
-  @Post('test-encryption')
-  async testEncryption(@Body() data: any) {
-    // console.log('Received data in controller:', data);
-  }
-  @Post('encrypt-text')
-  async encryptText(@Body() body: { text: string | any }) {
-    // console.log('Original data to encrypt:', body.text);
-    
-    let encryptedText;
-    if (typeof body.text === 'string') {
-      encryptedText = this.encryptionService.encryptText(body.text);
-    } else {
-      // If it's an object, use encryptObject instead
-      encryptedText = this.encryptionService.encryptObject(body.text); 
-    }
-   // console.log('Encrypted text:', encryptedText);
-    // return {
-    //   originalData: body.text,
-    //   encryptedText: encryptedText,
-    //   timestamp: new Date().toISOString()
-    // };
-  }
 
   @Post()
   async createObjective(
@@ -74,6 +49,12 @@ export class ObjectiveController {
       tenantId,
     );
   }
+
+  /**
+   * Get team members OKR visibility based on user role
+   * Team leads see all their team members and child department members' OKRs
+   * Regular users only see their own OKR
+   */
 
   @Get(':userId')
   async findAllObjectives(
@@ -143,14 +124,13 @@ export class ObjectiveController {
   @Post('/team')
   @ExcludeAuthGuard()
   getTeamOkr(
-    @Req() req: Request,
-    @Body() filterDto?: FilterObjectiveDto,
+    @Headers('tenantId') tenantId: string,
+    @Headers('userId') userId: string,
     @Query() paginationOptions?: PaginationDto,
   ) {
-    const tenantId = req['tenantId'];
-    return this.objectiveService.getTeamOkr(
+    return this.okrDashboardService.getOkrOfTeam(
+      userId,
       tenantId,
-      filterDto,
       paginationOptions,
     );
   }
@@ -207,6 +187,20 @@ export class ObjectiveController {
     @Query() paginationOptions?: PaginationDto,
   ) {
     return this.okrDashboardService.getOkrOfTeam(
+      userId,
+      tenantId,
+      paginationOptions,
+    );
+  }
+
+  @Post('/team-okr/vp')
+  @ExcludeAuthGuard()
+  getOkrOfTeamVp(
+    @Headers('tenantId') tenantId: string,
+    @Headers('userId') userId: string,
+    @Query() paginationOptions?: PaginationDto,
+  ) {
+    return this.okrDashboardService.getOkrOfTeamVp(
       userId,
       tenantId,
       paginationOptions,
@@ -281,16 +275,14 @@ export class ObjectiveController {
     );
   }
 
-    @Post('/get-okr-score/to-recognize/all-employees/score')
+  @Post('/get-okr-score/to-recognize/all-employees/score')
   async getOkrScoreInTimeRange(
-  
-     @Headers('tenantId') tenantId: string,
-       @Body() filterVpRecognitionDTo: FilterVPRecognitionDTo,
+    @Headers('tenantId') tenantId: string,
+    @Body() filterVpRecognitionDTo: FilterVPRecognitionDTo,
   ) {
-      return this.oKRCalculationService.getOkrScoreInTimeRange(
+    return this.oKRCalculationService.getOkrScoreInTimeRange(
       filterVpRecognitionDTo,
       tenantId,
-  
     );
   }
 }

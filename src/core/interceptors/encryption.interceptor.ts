@@ -1,7 +1,7 @@
 import { Injectable, NestInterceptor, ExecutionContext, CallHandler, BadRequestException } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { EncryptionService } from '../services/encryption.service';
+import { EncryptionService } from '../../core/services/encryption.service';
 
 @Injectable()
 export class EncryptionInterceptor implements NestInterceptor {

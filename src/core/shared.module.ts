@@ -2,8 +2,8 @@ import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
 import { LoggerService } from './middlewares/logger.middleware';
 import { MorganMiddleware } from './middlewares/morgan.middleware';
 import { ConfigModule } from '@nestjs/config';
-import { EncryptionService } from './services/encryption.service';
 import { EncryptionInterceptor } from './interceptors/encryption.interceptor';
+import { EncryptionService } from './services/encryption.service';
 
 @Module({
   imports: [ConfigModule],

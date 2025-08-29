@@ -29,7 +29,7 @@ async function bootstrap() {
   // Set up global encryption interceptor
   const encryptionService = app.get(EncryptionService);
   app.useGlobalInterceptors(new EncryptionInterceptor(encryptionService));
-
+  
   app.useGlobalPipes(new ValidationPipe());
   app.use(helmet());
   app.enableCors();
