@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     options {
-        timeout(time: 5, unit: 'MINUTES')
+        timeout(time: 15, unit: 'MINUTES')
     }
 
     stages {
@@ -221,10 +221,14 @@ pipeline {
         success {
             withCredentials([string(credentialsId: 'sshpassword', variable: 'SERVER_PASSWORD')]) {
                 sh """
-                    sshpass -p '${SERVER_PASSWORD}' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER} '
-                        echo "Cleaning up stopped containers..."
-                        docker container prune -f
-                    '
+                   sshpass -p '${SERVER_PASSWORD}' ssh -o StrictHostKeyChecking=no ${env.REMOTE_SERVER} '
+                    if docker service inspect ${env.SERVICE_NAME} >/dev/null 2>&1; then
+                        echo "Cleaning up stopped containers for service ${env.SERVICE_NAME}..."
+                        docker ps -a \
+                            --filter "label=com.docker.swarm.service.name=${env.SERVICE_NAME}" \
+                            --filter "status=exited" -q | xargs -r docker rm -f
+                    fi
+                '
                 """
             }
         }
