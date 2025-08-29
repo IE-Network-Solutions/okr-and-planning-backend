@@ -2,7 +2,6 @@ import { BaseModel } from '@root/src/database/base.model';
 import { Column, Entity, ManyToOne, JoinColumn } from 'typeorm';
 import { AppliesTo } from '../enum/applies-to.enum';
 import { Operation } from '../enum/operation.enum';
-import { Action } from '../enum/action.enum';
 
 @Entity()
 export class CheckInRule extends BaseModel {
@@ -46,9 +45,12 @@ export class CheckInRule extends BaseModel {
   @Column({ type: 'uuid' })
   categoryId: string;
 
-  @Column({
-    type: 'enum',
-    enum: Action,
-  })
-  action: Action;
+  @Column({ type: 'uuid' })
+  feedbackId: string;
+
+  @Column({ type: 'decimal', nullable: true })
+  target: number;
+
+  @Column({ type: 'json', nullable: true })
+  targetDate: Array<{ date: string; time: string }>;
 } 
