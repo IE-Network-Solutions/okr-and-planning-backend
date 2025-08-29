@@ -1,14 +1,15 @@
-import { applyDecorators } from '@nestjs/common';
+import { applyDecorators, HttpCode, HttpStatus } from '@nestjs/common';
 import { ApiOperation, ApiQuery, ApiResponse } from '@nestjs/swagger';
 import { CheckInRuleResponseDto } from '../dto/check-in-rule-response.dto';
 
-export function ApiGetCheckInRules() {
+export function apiGetCheckInRules() {
   return applyDecorators(
-    ApiOperation({ summary: 'Get all check-in rules for a tenant' }),
+    HttpCode(HttpStatus.OK),
+    ApiOperation({ summary: 'Get all check-in rules' }),
     ApiQuery({ name: 'tenantId', description: 'Tenant ID', type: 'string' }),
     ApiResponse({
-      status: 200,
-      description: 'List of check-in rules retrieved successfully',
+      status: HttpStatus.OK,
+      description: 'Check-in rules retrieved successfully',
       type: [CheckInRuleResponseDto],
     }),
   );

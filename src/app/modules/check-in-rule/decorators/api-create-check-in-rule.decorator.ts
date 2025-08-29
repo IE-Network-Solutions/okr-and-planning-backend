@@ -2,7 +2,7 @@ import { applyDecorators, HttpCode, HttpStatus } from '@nestjs/common';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { CheckInRuleResponseDto } from '../dto/check-in-rule-response.dto';
 
-export function ApiCreateCheckInRule() {
+export function apiCreateCheckInRule() {
   return applyDecorators(
     HttpCode(HttpStatus.CREATED),
     ApiOperation({ summary: 'Create a new check-in rule' }),

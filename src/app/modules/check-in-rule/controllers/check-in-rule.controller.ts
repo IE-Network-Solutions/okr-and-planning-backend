@@ -14,10 +14,10 @@ import { CreateCheckInRuleDto } from '../dto/create-check-in-rule.dto';
 import { UpdateCheckInRuleDto } from '../dto/update-check-in-rule.dto';
 
 import {
-  ApiCreateCheckInRule,
-  ApiGetCheckInRules,
-  ApiUpdateCheckInRule,
-  ApiDeleteCheckInRule,
+  apiCreateCheckInRule,
+  apiGetCheckInRules,
+  apiUpdateCheckInRule,
+  apiDeleteCheckInRule,
 } from '../decorators';
 
 @ApiTags('Check-in Rules')
@@ -26,21 +26,19 @@ export class CheckInRuleController {
   constructor(private readonly checkInRuleService: CheckInRuleService) {}
 
   @Post()
-  @ApiCreateCheckInRule()
+  @apiCreateCheckInRule()
   async create(@Body() createCheckInRuleDto: CreateCheckInRuleDto) {
     return this.checkInRuleService.create(createCheckInRuleDto);
   }
 
   @Get()
-  @ApiGetCheckInRules()
+  @apiGetCheckInRules()
   async findAll(@Query('tenantId') tenantId: string) {
     return this.checkInRuleService.findAll(tenantId);
   }
 
-
-
   @Patch(':id')
-  @ApiUpdateCheckInRule()
+  @apiUpdateCheckInRule()
   async update(
     @Param('id') id: string,
     @Body() updateCheckInRuleDto: UpdateCheckInRuleDto,
@@ -50,7 +48,7 @@ export class CheckInRuleController {
   }
 
   @Delete(':id')
-  @ApiDeleteCheckInRule()
+  @apiDeleteCheckInRule()
   async remove(
     @Param('id') id: string,
     @Query('tenantId') tenantId: string,
