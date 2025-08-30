@@ -56,6 +56,7 @@ export class CheckInRuleService {
       throw new NotFoundException(`Check-in rule with ID ${id} not found`);
     }
 
+    
     await this.checkInRuleRepository.softDelete(id);
   }
 
