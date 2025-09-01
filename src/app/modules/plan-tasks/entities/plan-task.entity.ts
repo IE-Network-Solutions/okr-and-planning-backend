@@ -54,7 +54,7 @@ export class PlanTask extends BaseModel {
   })
   targetValue: number;
 
-  @Column({ type: 'decimal', precision: 16, scale: 3, default: 5 })
+  @Column({ type: 'decimal', precision: 16, scale: 3, default: 0 })
   weight: number;
 
   @TreeParent()
@@ -79,7 +79,7 @@ export class PlanTask extends BaseModel {
   @Column({ type: 'boolean', default: false })
   achieveMK: boolean;
 
-  @Column({ type: 'int', default: 0 })
+  @Column({ type: 'decimal', precision: 16, scale: 3, default: 0 })
   actualValue: number;
 
   ///////////////////////////////
