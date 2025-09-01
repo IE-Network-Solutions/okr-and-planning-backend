@@ -154,7 +154,7 @@ pipeline {
                                 
                                 if docker service inspect ${env.SERVICE_NAME} >/dev/null 2>&1; then
                                     echo 'Updating existing service...'
-                                    if ! docker service update --image ${env.DOCKERHUB_REPO}:${env.BRANCH_NAME} --with-registry-auth ${env.SERVICE_NAME}; then
+                                    if ! docker service update --image ${env.DOCKERHUB_REPO}:${env.BRANCH_NAME} --with-registry-auth --force ${env.SERVICE_NAME}; then
                                         echo 'ERROR: Failed to update service'
                                         exit 1
                                     fi
