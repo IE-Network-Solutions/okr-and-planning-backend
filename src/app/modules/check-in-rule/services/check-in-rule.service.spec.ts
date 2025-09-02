@@ -57,7 +57,7 @@ describe('CheckInRuleService', () => {
       operation: Operation.GREATER_THAN,
       tenantId: 'tenant-1',
       categoryId: 'category-uuid-1',
-      action: Action.APPRECIATION,
+      feedbackId: 'feedback-uuid-1',
     };
 
     it('should create a check-in rule successfully', async () => {
