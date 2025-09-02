@@ -6,7 +6,7 @@ import {
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { PlanTask } from './entities/plan-task.entity';
 import { Plan } from '../plan/entities/plan.entity';
-import { DataSource, In, Repository, TreeRepository } from 'typeorm';
+import { DataSource, In, IsNull, Repository, TreeRepository } from 'typeorm';
 import { KeyResultsService } from '../key-results/key-results.service';
 import { MilestonesService } from '../milestones/milestones.service';
 import { PaginationService } from '@root/src/core/pagination/pagination.service';
@@ -65,6 +65,18 @@ export class PlanTasksService {
       const result: any = [];
       if (!createPlanTasksDto || createPlanTasksDto.length === 0) {
         throw new BadRequestException('No tasks provided');
+      }
+
+      if (!createPlanTasksDto[0].parentPlanId) {
+        const previousParentPlan = await this.findParentOpenPlan(
+          createPlanTasksDto[0].userId,
+          tenantId,
+        );
+        if (previousParentPlan) {
+          throw new BadRequestException(
+            `Before reporting this plan, you must report the ${previousParentPlan.description} plan first`,
+          );
+        }
       }
 
       const planningUser = await this.planningUserRepository.findOne({
@@ -174,6 +186,17 @@ export class PlanTasksService {
       throw error;
     } finally {
       await queryRunner.release();
+    }
+  }
+
+  async findParentOpenPlan(userId: string, tenantId: string): Promise<Plan> {
+    try {
+      const plan = await this.planRepository.findOne({
+        where: { userId, tenantId, parentPlanId: IsNull(), isReported: false },
+      });
+      return plan ? plan : null;
+    } catch (error) {
+      throw new NotFoundException('Error fetching parent open plan');
     }
   }
 
