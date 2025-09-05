@@ -1,17 +1,43 @@
-import { IsString, IsEnum, IsUUID, IsBoolean, IsInt, IsOptional, Min, MaxLength, IsNumber, IsArray, ValidateNested } from 'class-validator';
-import { Type } from 'class-transformer';
+import { IsString, IsEnum, IsUUID, IsBoolean, IsInt, IsOptional, Min, MaxLength, IsNumber, IsArray, ValidateNested, ValidateIf } from 'class-validator';
+import { Type, Transform } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { AppliesTo } from '../enum/applies-to.enum';
 import { Operation } from '../enum/operation.enum';
 
 export class TargetDateDto {
-  @ApiProperty({ description: 'Day of the week', example: 'monday' })
+  @ApiProperty({ description: 'Day of the week', example: 'Monday' })
   @IsString()
   date: string;
 
-  @ApiProperty({ description: 'Time of day', example: '9:00' })
+  @ApiProperty({ description: 'Day ID', example: '9001b1a8-786e-4707-932e-40277df869d9', required: false })
+  @IsOptional()
   @IsString()
-  time: string;
+  dayId?: string;
+
+  @ApiProperty({ description: 'Start time of day', example: '07:30', required: false })
+  @ValidateIf((o) => !o.time)
+  @IsString()
+  startTime?: string;
+
+  @ApiProperty({ description: 'End time of day', example: '17:30', required: false })
+  @ValidateIf((o) => !o.time)
+  @IsString()
+  endTime?: string;
+
+  @ApiProperty({ description: 'Start time of day (alternative field)', example: '07:30', required: false })
+  @ValidateIf((o) => !o.startTime && !o.time)
+  @IsString()
+  start?: string;
+
+  @ApiProperty({ description: 'End time of day (alternative field)', example: '17:30', required: false })
+  @ValidateIf((o) => !o.endTime && !o.time)
+  @IsString()
+  end?: string;
+
+  @ApiProperty({ description: 'Time of day (legacy field)', example: '9:00', required: false })
+  @ValidateIf((o) => !o.startTime && !o.endTime && !o.start && !o.end)
+  @IsString()
+  time?: string;
 }
 
 export class CreateCheckInRuleDto {
@@ -46,13 +72,19 @@ export class CreateCheckInRuleDto {
   @Min(1)
   frequency: number;
 
-  @ApiProperty({ description: 'Operation to perform', enum: Operation })
+  @ApiProperty({ description: 'Operation to perform', enum: Operation, required: false })
+  @IsOptional()
   @IsEnum(Operation)
-  operation: Operation;
+  operation?: Operation;
 
   @ApiProperty({ description: 'Tenant ID' })
   @IsUUID()
   tenantId: string;
+
+  @ApiProperty({ description: 'Work schedule ID', required: false })
+  @IsOptional()
+  @IsUUID()
+  workScheduleId?: string;
 
   @ApiProperty({ description: 'Category ID' })
   @IsUUID()
@@ -74,8 +106,10 @@ export class CreateCheckInRuleDto {
     items: {
       type: 'object',
       properties: {
-        date: { type: 'string', example: 'monday' },
-        time: { type: 'string', example: '9:00' }
+        date: { type: 'string', example: 'Monday' },
+        dayId: { type: 'string', example: '9001b1a8-786e-4707-932e-40277df869d9' },
+        startTime: { type: 'string', example: '07:30' },
+        endTime: { type: 'string', example: '17:30' }
       }
     }
   })

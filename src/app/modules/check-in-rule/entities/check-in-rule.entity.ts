@@ -36,11 +36,15 @@ export class CheckInRule extends BaseModel {
   @Column({
     type: 'enum',
     enum: Operation,
+    nullable: true,
   })
-  operation: Operation;
+  operation?: Operation;
 
   @Column({ type: 'uuid' })
   tenantId: string;
+
+  @Column({ type: 'uuid', nullable: true })
+  workScheduleId?: string;
 
   @Column({ type: 'uuid' })
   categoryId: string;
@@ -52,5 +56,5 @@ export class CheckInRule extends BaseModel {
   target: number;
 
   @Column({ type: 'json', nullable: true })
-  targetDate: Array<{ date: string; time: string }>;
+  targetDate: Array<{ date: string; start: string; end: string }>;
 } 

@@ -15,7 +15,10 @@ export class CheckInRuleService {
   ) {}
 
   async create(createCheckInRuleDto: CreateCheckInRuleDto): Promise<CheckInRuleResponseDto> {
-    const checkInRule = this.checkInRuleRepository.create(createCheckInRuleDto);
+    // Transform legacy time field to start/end format
+    const transformedDto = this.transformLegacyTimeFormat(createCheckInRuleDto);
+    
+    const checkInRule = this.checkInRuleRepository.create(transformedDto);
     const savedCheckInRule = await this.checkInRuleRepository.save(checkInRule);
     
     return this.mapToResponseDto(savedCheckInRule);
@@ -30,6 +33,14 @@ export class CheckInRuleService {
     return checkInRules.map(rule => this.mapToResponseDto(rule));
   }
 
+  async findAllActiveRules(): Promise<CheckInRule[]> {
+    const checkInRules = await this.checkInRuleRepository.find({
+      where: { deletedAt: null },
+    });
+    
+    return checkInRules;
+  }
+
 
 
   async update(id: string, updateCheckInRuleDto: UpdateCheckInRuleDto, tenantId: string): Promise<CheckInRuleResponseDto> {
@@ -41,7 +52,10 @@ export class CheckInRuleService {
       throw new NotFoundException(`Check-in rule with ID ${id} not found`);
     }
 
-    Object.assign(checkInRule, updateCheckInRuleDto);
+    // Transform legacy time field to start/end format
+    const transformedDto = this.transformLegacyTimeFormat(updateCheckInRuleDto as CreateCheckInRuleDto);
+    
+    Object.assign(checkInRule, transformedDto);
     const updatedCheckInRule = await this.checkInRuleRepository.save(checkInRule);
     
     return this.mapToResponseDto(updatedCheckInRule);
@@ -62,6 +76,44 @@ export class CheckInRuleService {
 
 
 
+  private transformLegacyTimeFormat(dto: CreateCheckInRuleDto): CreateCheckInRuleDto {
+    if (!dto.targetDate) {
+      return dto;
+    }
+
+    const transformedTargetDate = dto.targetDate.map(target => {
+      // If frontend format (startTime/endTime) exists, convert to backend format (start/end)
+      if (target.startTime && target.endTime) {
+        return {
+          date: target.date,
+          start: target.startTime,
+          end: target.endTime,
+        };
+      }
+      
+      // If legacy time field exists, convert it to start and end
+      if (target.time && !target.start && !target.end) {
+        return {
+          date: target.date,
+          start: target.time,
+          end: target.time, // Use same time for both start and end
+        };
+      }
+      
+      // If new format already exists, keep it as is
+      return {
+        date: target.date,
+        start: target.start,
+        end: target.end,
+      };
+    });
+
+    return {
+      ...dto,
+      targetDate: transformedTargetDate,
+    };
+  }
+
   private mapToResponseDto(checkInRule: CheckInRule): CheckInRuleResponseDto {
     return {
       id: checkInRule.id,
@@ -74,6 +126,7 @@ export class CheckInRuleService {
       frequency: checkInRule.frequency,
       operation: checkInRule.operation,
       tenantId: checkInRule.tenantId,
+      workScheduleId: checkInRule.workScheduleId,
       categoryId: checkInRule.categoryId,
       feedbackId: checkInRule.feedbackId,
       target: checkInRule.target,

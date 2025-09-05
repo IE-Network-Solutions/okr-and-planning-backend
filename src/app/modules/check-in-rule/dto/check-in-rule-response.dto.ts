@@ -3,11 +3,17 @@ import { AppliesTo } from '../enum/applies-to.enum';
 import { Operation } from '../enum/operation.enum';
 
 export class TargetDateResponseDto {
-  @ApiProperty({ description: 'Day of the week', example: 'monday' })
+  @ApiProperty({ description: 'Day of the week', example: 'Monday' })
   date: string;
 
-  @ApiProperty({ description: 'Time of day', example: '9:00' })
-  time: string;
+  @ApiProperty({ description: 'Day ID', example: '9001b1a8-786e-4707-932e-40277df869d9', required: false })
+  dayId?: string;
+
+  @ApiProperty({ description: 'Start time of day', example: '07:30' })
+  start: string;
+
+  @ApiProperty({ description: 'End time of day', example: '17:30' })
+  end: string;
 }
 
 export class CheckInRuleResponseDto {
@@ -35,11 +41,14 @@ export class CheckInRuleResponseDto {
   @ApiProperty({ description: 'Frequency of the check-in' })
   frequency: number;
 
-  @ApiProperty({ description: 'Operation to perform', enum: Operation })
-  operation: Operation;
+  @ApiProperty({ description: 'Operation to perform', enum: Operation, required: false })
+  operation?: Operation;
 
   @ApiProperty({ description: 'Tenant ID' })
   tenantId: string;
+
+  @ApiProperty({ description: 'Work schedule ID', required: false })
+  workScheduleId?: string;
 
   @ApiProperty({ description: 'Category ID' })
   categoryId: string;
@@ -57,8 +66,10 @@ export class CheckInRuleResponseDto {
     items: {
       type: 'object',
       properties: {
-        date: { type: 'string', example: 'monday' },
-        time: { type: 'string', example: '9:00' }
+        date: { type: 'string', example: 'Monday' },
+        dayId: { type: 'string', example: '9001b1a8-786e-4707-932e-40277df869d9' },
+        start: { type: 'string', example: '07:30' },
+        end: { type: 'string', example: '17:30' }
       }
     }
   })
