@@ -1,5 +1,5 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { Cron, CronExpression } from '@nestjs/schedule';
+import { Cron } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CheckInRuleService } from './check-in-rule.service';
@@ -30,6 +30,7 @@ export class CheckInRuleCronService implements OnModuleInit {
   ) {}
 
   onModuleInit() {
+    this.logger.debug('CheckInRuleCronService initialized');
   }
 
   // Run once per day at 11:59 PM to check all rule compliance for the day
