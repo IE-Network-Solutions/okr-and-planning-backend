@@ -25,11 +25,11 @@ async function bootstrap() {
   const httpAdapterHost = app.get(HttpAdapterHost);
   const loggerService = app.get(LoggerService);
   app.useGlobalFilters(new AllExceptionsFilter(httpAdapterHost, loggerService));
-
+  if(process.env.NODE_ENV !== 'development'){
   // Set up global encryption interceptor
   const encryptionService = app.get(EncryptionService);
   app.useGlobalInterceptors(new EncryptionInterceptor(encryptionService));
-  
+  }
   app.useGlobalPipes(new ValidationPipe());
   app.use(helmet());
   app.enableCors();
