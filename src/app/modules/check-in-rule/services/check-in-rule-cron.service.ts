@@ -174,7 +174,7 @@ export class CheckInRuleCronService implements OnModuleInit {
       
       // Check what type of rule this is (Plan or Report)
       if (rule.appliesTo === 'Plan') {
-        // await this.evaluatePlanCompliance(rule, userId, tenantId);
+         await this.evaluatePlanCompliance(rule, userId, tenantId);
       } else if (rule.appliesTo === 'Report') {
         await this.evaluateReportCompliance(rule, userId, tenantId);
       } else {
@@ -696,18 +696,18 @@ export class CheckInRuleCronService implements OnModuleInit {
       
       this.logger.debug(`User ${userId} attended on ${currentDate}, proceeding with appreciation feedback`);
       
-      // Create feedback record using FeedbackService - use exact working Postman payload
+      // Create feedback record using FeedbackService 
       await this.feedbackService.createFeedback({
         issuerId: 'a4adaf3d-3baa-4456-9b5e-c156117497c0',
         recipientId: userId,
         feedbackTypeId: '2f65958e-efac-411a-80db-b0cf30812f78',
-        feedbackId: '48af9d4e-47c4-4208-b93a-95a2dc1fdaed', // Use working feedbackId from Postman
+        feedbackId: '48af9d4e-47c4-4208-b93a-95a2dc1fdaed', 
         monthId: 'a4d7077a-b14b-4c6d-a23d-f088cedc7d22',
         reason: `User complied with check-in rule: ${rule.name}. ${reason}`,
-        action: 'Recognized for exceeding sales targets by 25%', // Use working action from Postman
-        points: 15, // Use working points from Postman
-        carbonCopy: ['user1@company.com', 'user2@company.com'], // Use working carbonCopy from Postman
-        cc: ['manager@company.com', 'hr@company.com'], // Use working cc from Postman
+        action: 'Recognized for exceeding sales targets by 25%', 
+        points: 15, 
+        carbonCopy: ['user1@company.com', 'user2@company.com'],
+        cc: ['manager@company.com', 'hr@company.com'],
         tenantId: tenantId,
       });
       
@@ -726,18 +726,18 @@ export class CheckInRuleCronService implements OnModuleInit {
       this.logger.debug(`Giving reprimand feedback to user ${userId} for ${reason}`);
       
   
-      // Create feedback record using FeedbackService - use exact working Postman payload
+      // Create feedback record using FeedbackService - use exact working  payload
       await this.feedbackService.createFeedback({
         issuerId: 'a4adaf3d-3baa-4456-9b5e-c156117497c0',
         recipientId: userId,
         feedbackTypeId: '2f65958e-efac-411a-80db-b0cf30812f78',
-        feedbackId: '48af9d4e-47c4-4208-b93a-95a2dc1fdaed', // Use working feedbackId from Postman
+        feedbackId: '48af9d4e-47c4-4208-b93a-95a2dc1fdaed', 
         monthId: 'a4d7077a-b14b-4c6d-a23d-f088cedc7d22',
         reason: `User failed to comply with check-in rule: ${rule.name}. ${reason}`,
-        action: 'Recognized for exceeding sales targets by 25%', // Use working action from Postman
-        points: 15, // Use working points from Postman
-        carbonCopy: ['user1@company.com', 'user2@company.com'], // Use working carbonCopy from Postman
-        cc: ['manager@company.com', 'hr@company.com'], // Use working cc from Postman
+        action: 'Recognized for exceeding sales targets by 25%', 
+        points: 15, 
+        carbonCopy: ['user1@company.com', 'user2@company.com'],
+        cc: ['manager@company.com', 'hr@company.com'], 
         tenantId: tenantId,
       });
       
