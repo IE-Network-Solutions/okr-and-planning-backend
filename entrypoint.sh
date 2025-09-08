@@ -14,7 +14,7 @@ ENV_FILE="/app/.env"
 : > "$ENV_FILE"  # empty or create the file
 
 # Fetch secrets and write to .env
-vault kv get -format=json env/okr \
+vault kv get -format=json env/backend \
 | jq -r '.data.data | to_entries[] | @base64' \
 | while IFS= read -r entry; do
     decoded=$(echo "$entry" | base64 -d)
