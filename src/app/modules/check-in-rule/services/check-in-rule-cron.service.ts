@@ -35,7 +35,7 @@ export class CheckInRuleCronService implements OnModuleInit {
 
   // Run once per day at 11:59 PM to check all rule compliance for the day
   // @Cron('0 59 23 * * *')
-  @Cron('0 22 17 * * *') // Every day at 1:35 PM (current time)
+  @Cron('0 2 8 * * *') // Every day at 8:01 AM (current time)
   async handleCheckInRuleCron() {
     try {
       this.logger.debug('Starting daily check-in rule compliance check...');

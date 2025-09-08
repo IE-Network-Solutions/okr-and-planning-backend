@@ -16,10 +16,12 @@ export class CheckInRuleService {
 
   async create(createCheckInRuleDto: CreateCheckInRuleDto): Promise<CheckInRuleResponseDto> {
     // Transform legacy time field to start/end format
+    
     const transformedDto = this.transformLegacyTimeFormat(createCheckInRuleDto);
     
     const checkInRule = this.checkInRuleRepository.create(transformedDto);
     const savedCheckInRule = await this.checkInRuleRepository.save(checkInRule);
+    
     
     return this.mapToResponseDto(savedCheckInRule);
   }
@@ -82,29 +84,38 @@ export class CheckInRuleService {
     }
 
     const transformedTargetDate = dto.targetDate.map(target => {
-      // If frontend format (startTime/endTime) exists, convert to backend format (start/end)
+      // Priority 1: If frontend sends start/end directly, use them (already in 24-hour format from DTO transform)
+      if (target.start && target.end) {
+        return {
+          date: target.date,
+          start: this.ensure24HourFormat(target.start),
+          end: this.ensure24HourFormat(target.end),
+        };
+      }
+      
+      // Priority 2: If frontend format (startTime/endTime) exists, convert to backend format (start/end)
       if (target.startTime && target.endTime) {
         return {
           date: target.date,
-          start: target.startTime,
-          end: target.endTime,
+          start: this.ensure24HourFormat(target.startTime),
+          end: this.ensure24HourFormat(target.endTime),
         };
       }
       
-      // If legacy time field exists, convert it to start and end
+      // Priority 3: If legacy time field exists, convert it to start and end
       if (target.time && !target.start && !target.end) {
         return {
           date: target.date,
-          start: target.time,
-          end: target.time, // Use same time for both start and end
+          start: this.ensure24HourFormat(target.time),
+          end: this.ensure24HourFormat(target.time), // Use same time for both start and end
         };
       }
       
-      // If new format already exists, keep it as is
+      // Priority 4: If new format already exists, keep it as is but ensure 24-hour format
       return {
         date: target.date,
-        start: target.start,
-        end: target.end,
+        start: target.start ? this.ensure24HourFormat(target.start) : target.start,
+        end: target.end ? this.ensure24HourFormat(target.end) : target.end,
       };
     });
 
@@ -112,6 +123,41 @@ export class CheckInRuleService {
       ...dto,
       targetDate: transformedTargetDate,
     };
+  }
+
+  private ensure24HourFormat(time: string): string {
+    if (!time) return time;
+    
+    // If already in 24-hour format (HH:MM), return as is
+    if (/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(time)) {
+      // Pad single digit hours with zero
+      const [hours, minutes] = time.split(':');
+      return `${hours.padStart(2, '0')}:${minutes}`;
+    }
+    
+    // If in 12-hour format (H:MM AM/PM), convert to 24-hour
+    const match = time.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+    if (match) {
+      let hours = parseInt(match[1]);
+      const minutes = match[2];
+      const period = match[3].toUpperCase();
+      
+      if (period === 'AM' && hours === 12) {
+        hours = 0;
+      } else if (period === 'PM' && hours !== 12) {
+        hours += 12;
+      }
+      
+      return `${hours.toString().padStart(2, '0')}:${minutes}`;
+    }
+    
+    // If single digit hour, pad with zero
+    if (/^\d{1,2}:\d{2}$/.test(time)) {
+      const [hours, minutes] = time.split(':');
+      return `${hours.padStart(2, '0')}:${minutes}`;
+    }
+    
+    return time;
   }
 
   private mapToResponseDto(checkInRule: CheckInRule): CheckInRuleResponseDto {

@@ -14,30 +14,68 @@ export class TargetDateDto {
   @IsString()
   dayId?: string;
 
-  @ApiProperty({ description: 'Start time of day', example: '07:30', required: false })
-  @ValidateIf((o) => !o.time)
-  @IsString()
-  startTime?: string;
-
-  @ApiProperty({ description: 'End time of day', example: '17:30', required: false })
-  @ValidateIf((o) => !o.time)
-  @IsString()
-  endTime?: string;
-
-  @ApiProperty({ description: 'Start time of day (alternative field)', example: '07:30', required: false })
+  @ApiProperty({ description: 'Start time in 24-hour format (HH:MM)', example: '07:00', required: false })
   @ValidateIf((o) => !o.startTime && !o.time)
   @IsString()
+  @Transform(({ value }) => value ? TargetDateDto.formatTo24Hour(value) : value)
   start?: string;
 
-  @ApiProperty({ description: 'End time of day (alternative field)', example: '17:30', required: false })
+  @ApiProperty({ description: 'End time in 24-hour format (HH:MM)', example: '17:30', required: false })
   @ValidateIf((o) => !o.endTime && !o.time)
   @IsString()
+  @Transform(({ value }) => value ? TargetDateDto.formatTo24Hour(value) : value)
   end?: string;
 
-  @ApiProperty({ description: 'Time of day (legacy field)', example: '9:00', required: false })
-  @ValidateIf((o) => !o.startTime && !o.endTime && !o.start && !o.end)
+  @ApiProperty({ description: 'Start time of day (alternative field)', example: '07:30', required: false })
+  @ValidateIf((o) => !o.start && !o.time)
   @IsString()
+  @Transform(({ value }) => value ? TargetDateDto.formatTo24Hour(value) : value)
+  startTime?: string;
+
+  @ApiProperty({ description: 'End time of day (alternative field)', example: '17:30', required: false })
+  @ValidateIf((o) => !o.end && !o.time)
+  @IsString()
+  @Transform(({ value }) => value ? TargetDateDto.formatTo24Hour(value) : value)
+  endTime?: string;
+
+  @ApiProperty({ description: 'Time of day (legacy field)', example: '9:00', required: false })
+  @ValidateIf((o) => !o.start && !o.end && !o.startTime && !o.endTime)
+  @IsString()
+  @Transform(({ value }) => value ? TargetDateDto.formatTo24Hour(value) : value)
   time?: string;
+
+  private static formatTo24Hour(time: string): string {
+    if (!time) return time;
+    
+    // If already in 24-hour format (HH:MM), return as is
+    if (/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(time)) {
+      return time;
+    }
+    
+    // If in 12-hour format (H:MM AM/PM), convert to 24-hour
+    const match = time.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+    if (match) {
+      let hours = parseInt(match[1]);
+      const minutes = match[2];
+      const period = match[3].toUpperCase();
+      
+      if (period === 'AM' && hours === 12) {
+        hours = 0;
+      } else if (period === 'PM' && hours !== 12) {
+        hours += 12;
+      }
+      
+      return `${hours.toString().padStart(2, '0')}:${minutes}`;
+    }
+    
+    // If single digit hour, pad with zero
+    if (/^\d{1,2}:\d{2}$/.test(time)) {
+      const [hours, minutes] = time.split(':');
+      return `${hours.padStart(2, '0')}:${minutes}`;
+    }
+    
+    return time;
+  }
 }
 
 export class CreateCheckInRuleDto {
