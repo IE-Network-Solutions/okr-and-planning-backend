@@ -13,7 +13,7 @@ export const validationSchema = Joi.object({
   APP_NAME: Joi.string().required(),
   APP_DESCRIPTION: Joi.string().required(),
   APP_VERSION: Joi.string().required(),
-  APP_PORT: Joi.number().default(3000),
+  APP_PORT: Joi.number().default(8007),
   APP_IS_PRODUCTION: Joi.boolean().required(),
   DB_HOST: Joi.string().required(),
   DB_PORT: Joi.number().default(5432),
