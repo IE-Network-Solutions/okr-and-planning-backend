@@ -115,7 +115,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 withCredentials([
-                    usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKERHUB_USERNAME', passwordVariable: 'DOCKERHUB_PASSWORD'),
+                    usernamePassword(credentialsId: 'test-dockerhub', usernameVariable: 'DOCKERHUB_USERNAME', passwordVariable: 'DOCKERHUB_PASSWORD'),
                     string(credentialsId: 'sshpassword', variable: 'SERVER_PASSWORD')
                 ]) {
                     sh """
@@ -134,7 +134,7 @@ pipeline {
         stage('Deploy Service') {
             steps {
                 withCredentials([
-                    usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKERHUB_USERNAME', passwordVariable: 'DOCKERHUB_PASSWORD'),
+                    usernamePassword(credentialsId: 'test-dockerhub', usernameVariable: 'DOCKERHUB_USERNAME', passwordVariable: 'DOCKERHUB_PASSWORD'),
                     string(credentialsId: 'sshpassword', variable: 'SERVER_PASSWORD')
                 ]) {
                     script {
