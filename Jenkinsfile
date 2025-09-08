@@ -12,7 +12,7 @@ pipeline {
             steps {
                 script {
                     withCredentials([
-                        string(credentialsId: 'REMOTE_SERVER_TEST', variable: 'REMOTE_SERVER_TEST'),
+                        string(credentialsId: 'REMOTE_SERVER_TEST_LAB', variable: 'REMOTE_SERVER_TEST'),
                         string(credentialsId: 'REMOTE_SERVER_PROD', variable: 'REMOTE_SERVER_PROD')
                     ]) {
                         def branchName = env.GIT_BRANCH ?: sh(
