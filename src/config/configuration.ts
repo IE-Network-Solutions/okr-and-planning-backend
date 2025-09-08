@@ -41,7 +41,7 @@ export const configuration = () => ({
     orgStructureUrl: process.env.ORG_AND_EMP_URL,
     cfrUrl: process.env.CFR_URL,
     fileServerUrl: process.env.FILE_SERVER_URL,
-    attendanceUrl: process.env.ATTENDANCE_URL || 'http://localhost:8011',
+    attendanceUrl: process.env.ATTENDANCE_URL ,
   },
   encryption: {
     algorithm: process.env.ENCRYPTION_ALGORITHM || 'aes-256-gcm',

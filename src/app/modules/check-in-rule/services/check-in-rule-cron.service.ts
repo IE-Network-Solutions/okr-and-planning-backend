@@ -35,11 +35,11 @@ export class CheckInRuleCronService implements OnModuleInit {
 
   // Run once per day at 11:59 PM to check all rule compliance for the day
   // @Cron('0 59 23 * * *')
-  @Cron('0 2 8 * * *') // Every day at 8:01 AM (current time)
+  @Cron('0 28 12 * * *') // Every day at 8:01 AM (current time)
   async handleCheckInRuleCron() {
     try {
       this.logger.debug('Starting daily check-in rule compliance check...');
-      
+  
       // Step 1: Get all active check-in rules
       const checkInRules = await this.getAllActiveCheckInRules();
       
@@ -174,7 +174,7 @@ export class CheckInRuleCronService implements OnModuleInit {
       
       // Check what type of rule this is (Plan or Report)
       if (rule.appliesTo === 'Plan') {
-        await this.evaluatePlanCompliance(rule, userId, tenantId);
+        // await this.evaluatePlanCompliance(rule, userId, tenantId);
       } else if (rule.appliesTo === 'Report') {
         await this.evaluateReportCompliance(rule, userId, tenantId);
       } else {
@@ -232,6 +232,18 @@ export class CheckInRuleCronService implements OnModuleInit {
       
       if (!userReport) {
         this.logger.debug(`User ${userId} has no report for planning period ${rule.planningPeriodId}`);
+        
+        // Check if user attended today - if they attended but didn't report, give reprimand
+        const currentDate = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+        const didAttend = await this.attendanceService.didUserAttend(userId, currentDate, tenantId);
+        
+        if (didAttend) {
+          this.logger.log(`User ${userId} attended on ${currentDate} but did not report - giving reprimand`);
+          await this.giveReprimandFeedback(userId, tenantId, rule, 'Attended but did not report');
+        } else {
+          this.logger.debug(`User ${userId} did not attend on ${currentDate} and did not report - no action needed`);
+        }
+        
         return;
       }
       
@@ -297,8 +309,7 @@ export class CheckInRuleCronService implements OnModuleInit {
         const reportTime = reportDate.toTimeString().slice(0, 5);
         
         // Compare actual date (year, month, day) and time
-        if (this.isSameDateOnly(reportDate, currentTime) && 
-            reportTime === currentTimeString) {
+        if (this.isSameDateOnly(reportDate, currentTime) ) {
           this.logger.debug(`Found report for user ${userId} created at current time: ${reportDate.toDateString()} at ${reportTime}`);
           userReport = report;
           break;
@@ -459,6 +470,19 @@ export class CheckInRuleCronService implements OnModuleInit {
         return true; // No target for current day means compliant
       }
 
+      // For time-based rules, check if plan creation time is within the start/end interval
+      if (rule.timeBased) {
+        const isWithinInterval = this.checkTimeIntervalCompliance(planTime, currentDayTarget.start, currentDayTarget.end);
+        if (isWithinInterval) {
+          this.logger.debug(`Plan creation time is within rule ${rule.name} interval on ${currentDayOfWeek}: ${planTime} between ${currentDayTarget.start} and ${currentDayTarget.end}`);
+          return true;
+        } else {
+          this.logger.debug(`Plan creation time is NOT within rule ${rule.name} interval on ${currentDayOfWeek}: ${planTime} not between ${currentDayTarget.start} and ${currentDayTarget.end}`);
+          return false;
+        }
+      }
+
+      // For achievement-based and "both" rule types, use the operation field
       const targetTime = currentDayTarget.start;
       this.logger.debug(`Checking plan creation time against rule target for current day: ${currentDayOfWeek} at ${targetTime}`);
 
@@ -508,6 +532,19 @@ export class CheckInRuleCronService implements OnModuleInit {
         return true; // No target for current day means compliant
       }
 
+      // For time-based rules, check if report creation time is within the start/end interval
+      if (rule.timeBased) {
+        const isWithinInterval = this.checkTimeIntervalCompliance(reportTime, currentDayTarget.start, currentDayTarget.end);
+        if (isWithinInterval) {
+          this.logger.debug(`Report creation time is within rule ${rule.name} interval on ${currentDayOfWeek}: ${reportTime} between ${currentDayTarget.start} and ${currentDayTarget.end}`);
+          return true;
+        } else {
+          this.logger.debug(`Report creation time is NOT within rule ${rule.name} interval on ${currentDayOfWeek}: ${reportTime} not between ${currentDayTarget.start} and ${currentDayTarget.end}`);
+          return false;
+        }
+      }
+
+      // For achievement-based and "both" rule types, use the operation field
       const targetTime = currentDayTarget.start;
       this.logger.debug(`Checking report creation time against rule target for current day: ${currentDayOfWeek} at ${targetTime}`);
 
@@ -629,6 +666,19 @@ export class CheckInRuleCronService implements OnModuleInit {
   }
 
   /**
+   * Check if a time falls within a start/end interval (for time-based rules)
+   */
+  private checkTimeIntervalCompliance(planTime: string, startTime: string, endTime: string): boolean {
+    // Convert time strings (HH:MM) to minutes for comparison
+    const planMinutes = this.parseTimeString(planTime);
+    const startMinutes = this.parseTimeString(startTime);
+    const endMinutes = this.parseTimeString(endTime);
+    
+    // Check if plan time is within the interval (inclusive)
+    return planMinutes >= startMinutes && planMinutes <= endMinutes;
+  }
+
+  /**
    * Give appreciation feedback for compliance
    */
   private async giveAppreciationFeedback(userId: string, tenantId: string, rule: CheckInRule, reason: string): Promise<void> {
@@ -675,17 +725,7 @@ export class CheckInRuleCronService implements OnModuleInit {
     try {
       this.logger.debug(`Giving reprimand feedback to user ${userId} for ${reason}`);
       
-      // Check if user attended before giving reprimand
-      const currentDate = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
-      const didAttend = await this.attendanceService.didUserAttend(userId, currentDate, tenantId);
-      
-      if (!didAttend) {
-        this.logger.debug(`User ${userId} did not attend on ${currentDate}, skipping reprimand feedback`);
-        return;
-      }
-      
-      this.logger.debug(`User ${userId} attended on ${currentDate}, proceeding with reprimand feedback`);
-      
+  
       // Create feedback record using FeedbackService - use exact working Postman payload
       await this.feedbackService.createFeedback({
         issuerId: 'a4adaf3d-3baa-4456-9b5e-c156117497c0',

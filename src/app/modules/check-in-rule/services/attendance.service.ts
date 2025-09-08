@@ -3,13 +3,27 @@ import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 export interface AttendanceRecord {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+  tenantId: string;
+  createdBy: string;
+  updatedBy: string | null;
+  deletedBy: string | null;
   userId: string;
-  date: string;
-  checkInTime?: string;
-  checkOutTime?: string;
-  status: 'present' | 'absent' | 'late' | 'half-day';
-  hoursWorked?: number;
-  notes?: string;
+  monthId: string;
+  startAt: string;
+  endAt: string | null;
+  lateByMinutes: number;
+  earlyByMinutes: number;
+  sessionId: string;
+  overTimeMinutes: number;
+  isAbsent: boolean;
+  isOnGoing: boolean;
+  geolocations: any[];
+  attendanceBreaks: any[];
+  attendanceImportId: string;
 }
 
 export interface AttendanceResponse {
@@ -37,14 +51,16 @@ export class AttendanceService {
     try {
       this.logger.debug(`Getting attendance records for date: ${date}`);
 
-      // Convert date to ISO format with timezone
+      // Convert date to ISO format with timezone - from start of day to end of day
       const fromDate = new Date(date + 'T00:00:00.000Z').toISOString();
+      const toDate = new Date(date + 'T23:59:59.999Z').toISOString();
       
       const response = await this.httpService
         .post(`${this.attendanceUrl}/attendance`, {
           filter: {
             date: {
-              from: fromDate
+              from: fromDate,
+              to: toDate
             }
           }
         }, {
@@ -55,9 +71,9 @@ export class AttendanceService {
         })
         .toPromise();
 
-      if (response.data.success && response.data.data) {
-        this.logger.debug(`Found ${response.data.data.length} attendance records for date: ${date}`);
-        return response.data.data;
+      if (response.data && response.data.items) {
+        this.logger.debug(`Found ${response.data.items.length} attendance records for date: ${date}`);
+        return response.data.items;
       }
 
       this.logger.debug(`No attendance records found for date: ${date}`);
@@ -87,8 +103,9 @@ export class AttendanceService {
         return false;
       }
 
-      const attended = userAttendanceRecord.status === 'present' || userAttendanceRecord.status === 'late' || userAttendanceRecord.status === 'half-day';
-      this.logger.debug(`User ${userId} attendance status for date ${date}: ${userAttendanceRecord.status} (attended: ${attended})`);
+      // User attended if they have a record and are not marked as absent
+      const attended = !userAttendanceRecord.isAbsent;
+      this.logger.debug(`User ${userId} attendance status for date ${date}: isAbsent=${userAttendanceRecord.isAbsent} (attended: ${attended})`);
       
       return attended;
     } catch (error) {
@@ -107,7 +124,7 @@ export class AttendanceService {
       // Find the user's attendance record
       const userAttendanceRecord = attendanceRecords.find(record => record.userId === userId);
       
-      return userAttendanceRecord ? userAttendanceRecord.status : null;
+      return userAttendanceRecord ? (userAttendanceRecord.isAbsent ? 'absent' : 'present') : null;
     } catch (error) {
       this.logger.error(`Error getting attendance status for user ${userId}: ${error.message}`);
       return null;
