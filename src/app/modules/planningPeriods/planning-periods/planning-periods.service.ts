@@ -20,12 +20,15 @@ import { IntervalHierarchy } from './enum/interval-type.enum';
 import { PlanService } from '../../plan/plan.service';
 import { addDays, formatISO } from 'date-fns';
 import { GetFromOrganizatiAndEmployeInfoService } from '../../objective/services/get-data-from-org.service';
+import { Plan } from '../../plan/entities/plan.entity';
 
 @Injectable()
 export class PlanningPeriodsService {
   constructor(
     @InjectRepository(PlanningPeriod)
     private planningPeriodRepository: Repository<PlanningPeriod>,
+    @InjectRepository(Plan)
+    private planRepository: Repository<Plan>,
     @InjectRepository(PlanningPeriodUser)
     private planningUserRepository: Repository<PlanningPeriodUser>,
     private readonly paginationService: PaginationService,
@@ -220,6 +223,19 @@ export class PlanningPeriodsService {
   ): Promise<PlanningPeriodUser[]> {
     return await this.dataSource.transaction(async (manager) => {
       try {
+        const plans = await this.planRepository.find({
+          where: {
+            userId,
+            isReported: false,
+          },
+        });
+
+        if (plans.length > 0) {
+          const descriptions = plans.map((p) => p.description);
+          throw new BadRequestException(
+            `please report the ${descriptions.join(', ')} plans first`,
+          );
+        }
         const existingUsers = await manager.find(PlanningPeriodUser, {
           where: { userId },
         });
