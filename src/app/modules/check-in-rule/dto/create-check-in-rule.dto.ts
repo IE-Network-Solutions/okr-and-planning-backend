@@ -1,81 +1,29 @@
 import { IsString, IsEnum, IsUUID, IsBoolean, IsInt, IsOptional, Min, MaxLength, IsNumber, IsArray, ValidateNested, ValidateIf } from 'class-validator';
-import { Type, Transform } from 'class-transformer';
+import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { AppliesTo } from '../enum/applies-to.enum';
 import { Operation } from '../enum/operation.enum';
 
 export class TargetDateDto {
-  @ApiProperty({ description: 'Day of the week', example: 'Monday' })
+  @ApiProperty({ description: 'Day this rule applies to', example: 'monday' })
   @IsString()
   date: string;
 
-  @ApiProperty({ description: 'Day ID', example: '9001b1a8-786e-4707-932e-40277df869d9', required: false })
-  @IsOptional()
+  @ApiProperty({ description: 'Start day of the week', example: 'monday' })
   @IsString()
-  dayId?: string;
+  startDay: string;
 
-  @ApiProperty({ description: 'Start time in 24-hour format (HH:MM)', example: '07:00', required: false })
-  @ValidateIf((o) => !o.startTime && !o.time)
+  @ApiProperty({ description: 'Start time in 24-hour format (HH:MM)', example: '03:00' })
   @IsString()
-  @Transform(({ value }) => value ? TargetDateDto.formatTo24Hour(value) : value)
-  start?: string;
+  startTime: string;
 
-  @ApiProperty({ description: 'End time in 24-hour format (HH:MM)', example: '17:30', required: false })
-  @ValidateIf((o) => !o.endTime && !o.time)
+  @ApiProperty({ description: 'End day of the week', example: 'monday' })
   @IsString()
-  @Transform(({ value }) => value ? TargetDateDto.formatTo24Hour(value) : value)
-  end?: string;
+  endDay: string;
 
-  @ApiProperty({ description: 'Start time of day (alternative field)', example: '07:30', required: false })
-  @ValidateIf((o) => !o.start && !o.time)
+  @ApiProperty({ description: 'End time in 24-hour format (HH:MM)', example: '03:00' })
   @IsString()
-  @Transform(({ value }) => value ? TargetDateDto.formatTo24Hour(value) : value)
-  startTime?: string;
-
-  @ApiProperty({ description: 'End time of day (alternative field)', example: '17:30', required: false })
-  @ValidateIf((o) => !o.end && !o.time)
-  @IsString()
-  @Transform(({ value }) => value ? TargetDateDto.formatTo24Hour(value) : value)
-  endTime?: string;
-
-  @ApiProperty({ description: 'Time of day (legacy field)', example: '9:00', required: false })
-  @ValidateIf((o) => !o.start && !o.end && !o.startTime && !o.endTime)
-  @IsString()
-  @Transform(({ value }) => value ? TargetDateDto.formatTo24Hour(value) : value)
-  time?: string;
-
-  private static formatTo24Hour(time: string): string {
-    if (!time) return time;
-    
-    // If already in 24-hour format (HH:MM), return as is
-    if (/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(time)) {
-      return time;
-    }
-    
-    // If in 12-hour format (H:MM AM/PM), convert to 24-hour
-    const match = time.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
-    if (match) {
-      let hours = parseInt(match[1]);
-      const minutes = match[2];
-      const period = match[3].toUpperCase();
-      
-      if (period === 'AM' && hours === 12) {
-        hours = 0;
-      } else if (period === 'PM' && hours !== 12) {
-        hours += 12;
-      }
-      
-      return `${hours.toString().padStart(2, '0')}:${minutes}`;
-    }
-    
-    // If single digit hour, pad with zero
-    if (/^\d{1,2}:\d{2}$/.test(time)) {
-      const [hours, minutes] = time.split(':');
-      return `${hours.padStart(2, '0')}:${minutes}`;
-    }
-    
-    return time;
-  }
+  endTime: string;
 }
 
 export class CreateCheckInRuleDto {
@@ -119,11 +67,6 @@ export class CreateCheckInRuleDto {
   @IsUUID()
   tenantId: string;
 
-  @ApiProperty({ description: 'Work schedule ID', required: false })
-  @IsOptional()
-  @IsUUID()
-  workScheduleId?: string;
-
   @ApiProperty({ description: 'Category ID' })
   @IsUUID()
   categoryId: string;
@@ -138,16 +81,26 @@ export class CreateCheckInRuleDto {
   target?: number;
 
   @ApiProperty({ 
+    description: 'Array of user IDs to apply this rule to',
+    type: [String],
+    example: ['user1', 'user2', 'user3']
+  })
+  @IsArray()
+  @IsString({ each: true })
+  userIds?: string[];
+
+  @ApiProperty({ 
     description: 'Target dates and times for time-based rules', 
     required: false, 
     type: 'array',
     items: {
       type: 'object',
       properties: {
-        date: { type: 'string', example: 'Monday' },
-        dayId: { type: 'string', example: '9001b1a8-786e-4707-932e-40277df869d9' },
-        startTime: { type: 'string', example: '07:30' },
-        endTime: { type: 'string', example: '17:30' }
+        date: { type: 'string', example: 'monday' },
+        startDay: { type: 'string', example: 'monday' },
+        startTime: { type: 'string', example: '03:00' },
+        endDay: { type: 'string', example: 'monday' },
+        endTime: { type: 'string', example: '03:00' }
       }
     }
   })

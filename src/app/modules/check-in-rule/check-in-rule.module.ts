@@ -7,6 +7,7 @@ import { CheckInRule } from './entities/check-in-rule.entity';
 import { CheckInRuleService } from './services/check-in-rule.service';
 import { CheckInRuleController } from './controllers/check-in-rule.controller';
 import { CheckInRuleCronService } from './services/check-in-rule-cron.service';
+import { CheckInRuleHelpersService } from './services/check-in-rule-helpers.service';
 import { FeedbackService } from './services/feedback.service';
 import { AttendanceService } from './services/attendance.service';
 import { Plan } from '../plan/entities/plan.entity';
@@ -28,7 +29,7 @@ import { AppreciationLog } from '../appreciationLog/entities/appreciation-log.en
     ConfigModule, // Required for FeedbackService
   ],
   controllers: [CheckInRuleController],
-  providers: [CheckInRuleService, CheckInRuleCronService, FeedbackService, AttendanceService],
+  providers: [CheckInRuleService, CheckInRuleCronService, CheckInRuleHelpersService, FeedbackService, AttendanceService],
   exports: [CheckInRuleService],
 })
 export class CheckInRuleModule {} 

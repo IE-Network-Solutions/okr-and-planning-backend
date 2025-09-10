@@ -43,9 +43,6 @@ export class CheckInRule extends BaseModel {
   @Column({ type: 'uuid' })
   tenantId: string;
 
-  @Column({ type: 'uuid', nullable: true })
-  workScheduleId?: string;
-
   @Column({ type: 'uuid' })
   categoryId: string;
 
@@ -56,5 +53,14 @@ export class CheckInRule extends BaseModel {
   target: number;
 
   @Column({ type: 'json', nullable: true })
-  targetDate: Array<{ date: string; start: string; end: string }>;
+  targetDate: Array<{
+    date: string;          // "monday" - the day this rule applies to
+    startDay: string;      // "monday"
+    startTime: string;     // "03:00"
+    endDay: string;        // "monday" or "saturday"
+    endTime: string;       // "03:00" or "16:00"
+  }>;
+
+  @Column({ type: 'json', nullable: true })
+  userIds: string[];
 } 

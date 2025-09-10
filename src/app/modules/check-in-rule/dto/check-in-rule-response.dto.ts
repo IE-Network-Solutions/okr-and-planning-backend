@@ -3,17 +3,20 @@ import { AppliesTo } from '../enum/applies-to.enum';
 import { Operation } from '../enum/operation.enum';
 
 export class TargetDateResponseDto {
-  @ApiProperty({ description: 'Day of the week', example: 'Monday' })
+  @ApiProperty({ description: 'Day this rule applies to', example: 'monday' })
   date: string;
 
-  @ApiProperty({ description: 'Day ID', example: '9001b1a8-786e-4707-932e-40277df869d9', required: false })
-  dayId?: string;
+  @ApiProperty({ description: 'Start day of the week', example: 'monday' })
+  startDay: string;
 
-  @ApiProperty({ description: 'Start time of day', example: '07:30' })
-  start: string;
+  @ApiProperty({ description: 'Start time of day', example: '03:00' })
+  startTime: string;
 
-  @ApiProperty({ description: 'End time of day', example: '17:30' })
-  end: string;
+  @ApiProperty({ description: 'End day of the week', example: 'monday' })
+  endDay: string;
+
+  @ApiProperty({ description: 'End time of day', example: '03:00' })
+  endTime: string;
 }
 
 export class CheckInRuleResponseDto {
@@ -47,9 +50,6 @@ export class CheckInRuleResponseDto {
   @ApiProperty({ description: 'Tenant ID' })
   tenantId: string;
 
-  @ApiProperty({ description: 'Work schedule ID', required: false })
-  workScheduleId?: string;
-
   @ApiProperty({ description: 'Category ID' })
   categoryId: string;
 
@@ -60,16 +60,24 @@ export class CheckInRuleResponseDto {
   target?: number;
 
   @ApiProperty({ 
+    description: 'Array of user IDs this rule applies to',
+    type: [String],
+    example: ['user1', 'user2', 'user3']
+  })
+  userIds?: string[];
+
+  @ApiProperty({ 
     description: 'Target dates and times for time-based rules', 
     required: false, 
     type: 'array',
     items: {
       type: 'object',
       properties: {
-        date: { type: 'string', example: 'Monday' },
-        dayId: { type: 'string', example: '9001b1a8-786e-4707-932e-40277df869d9' },
-        start: { type: 'string', example: '07:30' },
-        end: { type: 'string', example: '17:30' }
+        date: { type: 'string', example: 'monday' },
+        startDay: { type: 'string', example: 'monday' },
+        startTime: { type: 'string', example: '03:00' },
+        endDay: { type: 'string', example: 'monday' },
+        endTime: { type: 'string', example: '03:00' }
       }
     }
   })
