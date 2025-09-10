@@ -37,7 +37,7 @@ export class CheckInRuleCronService implements OnModuleInit {
 
   // Run once per day at 11:59 PM to check all rule compliance for the day
   // @Cron('0 59 23 * * *')
-  @Cron('0 35 9 * * *') // Every day at 8:01 AM (current time)
+  @Cron('0 09 10 * * *') // Every day at 8:01 AM (current time)
   async handleCheckInRuleCron() {
     try {
       this.logger.debug('Starting daily check-in rule compliance check...');
@@ -156,29 +156,7 @@ export class CheckInRuleCronService implements OnModuleInit {
     }));
   }
 
-  /**
-   * Get all users assigned to a specific planning period
-   */
-  private async getPlanningPeriodUsers(planningPeriodId: string, tenantId: string): Promise<PlanningPeriodUser[]> {
-    try {
-      this.logger.debug(`Getting users for planning period: ${planningPeriodId}, tenant: ${tenantId}`);
-      
-      const planningPeriodUsers = await this.planningPeriodUserRepository.find({
-        where: { 
-          planningPeriodId, 
-          tenantId,
-          deletedAt: null  // Only get active assignments
-        },
-        relations: ['planningPeriod'], // Also get the planning period info
-      });
-      
-      return planningPeriodUsers;
-      
-    } catch (error) {
-      this.logger.error(`Error getting planning period users: ${error.message}`);
-      return [];
-    }
-  }
+
 
   /**
    * Step 3: Evaluate compliance for a specific user
@@ -208,15 +186,24 @@ export class CheckInRuleCronService implements OnModuleInit {
   private async evaluatePlanCompliance(rule: CheckInRule, userId: string, tenantId: string): Promise<void> {
     try {
       this.logger.debug(`Evaluating plan compliance for user: ${userId}`);
-      // get the plan for the user for the planning period at the time of the rule
-
-      // compare the plan time with the rule time
+      
+      // First check if user attended today
+      const currentDate = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+      const didAttend = await this.attendanceService.didUserAttend(userId, currentDate, tenantId);
+      
+      if (!didAttend) {
+        this.logger.debug(`User ${userId} did not attend on ${currentDate} - no action needed for plan compliance`);
+        return;
+      }
+      
+      this.logger.debug(`User ${userId} attended on ${currentDate} - checking plan compliance`);
       
       // Get user's plan for this planning period
       const userPlan = await this.getUserPlan(userId, tenantId, rule.planningPeriodId);
       
       if (!userPlan) {
-        this.logger.debug(`User ${userId} has no plan for planning period ${rule.planningPeriodId}`);
+        this.logger.log(`User ${userId} attended on ${currentDate} but did not plan - giving reprimand`);
+        await this.giveReprimandFeedback(userId, tenantId, rule, 'Attended but did not plan');
         return;
       }
       
@@ -243,23 +230,23 @@ export class CheckInRuleCronService implements OnModuleInit {
     try {
       this.logger.debug(`Evaluating report compliance for user: ${userId}`);
       
+      // First check if user attended today
+      const currentDate = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+      const didAttend = await this.attendanceService.didUserAttend(userId, currentDate, tenantId);
+      
+      if (!didAttend) {
+        this.logger.debug(`User ${userId} did not attend on ${currentDate} - no action needed for report compliance`);
+        return;
+      }
+      
+      this.logger.debug(`User ${userId} attended on ${currentDate} - checking report compliance`);
+      
       // Get user's report for this planning period
       const userReport = await this.getUserReport(userId, tenantId, rule.planningPeriodId);
       
       if (!userReport) {
-        this.logger.debug(`User ${userId} has no report for planning period ${rule.planningPeriodId}`);
-        
-        // Check if user attended today - if they attended but didn't report, give reprimand
-        const currentDate = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
-        const didAttend = await this.attendanceService.didUserAttend(userId, currentDate, tenantId);
-        
-        if (didAttend) {
-          this.logger.log(`User ${userId} attended on ${currentDate} but did not report - giving reprimand`);
-          await this.giveReprimandFeedback(userId, tenantId, rule, 'Attended but did not report');
-        } else {
-          this.logger.debug(`User ${userId} did not attend on ${currentDate} and did not report - no action needed`);
-        }
-        
+        this.logger.log(`User ${userId} attended on ${currentDate} but did not report - giving reprimand`);
+        await this.giveReprimandFeedback(userId, tenantId, rule, 'Attended but did not report');
         return;
       }
       
@@ -370,38 +357,7 @@ export class CheckInRuleCronService implements OnModuleInit {
       return null;
     }
   }
-  /**
-   * Check if plan timing meets rule requirements
-   * A plan must satisfy ALL rules that apply to plans (creates an interval)
-   */
-  private async checkPlanTimingCompliance(userPlan: Plan, planningPeriodId: string, tenantId: string): Promise<boolean> {
-    try {
-      this.logger.debug(`Checking timing compliance for plan created at: ${userPlan.createdAt}`);
-      
-      // Get all rules that apply to plans for this planning period and tenant
-      const allPlanRules = await this.getAllPlanRulesForCompliance(planningPeriodId, tenantId);
-      
-      if (allPlanRules.length === 0) {
-        this.logger.debug('No plan rules found for compliance check');
-        return true; // No rules means no compliance requirements
-      }
-      
-      // Check if plan satisfies ALL plan rules (creates an interval)
-      const isCompliant = this.doesPlanSatisfyAllRules(userPlan, allPlanRules);
-      
-      if (isCompliant) {
-        this.logger.debug(`Plan satisfies all ${allPlanRules.length} plan rules`);
-      } else {
-        this.logger.debug(`Plan does NOT satisfy all plan rules`);
-      }
-      
-      return isCompliant;
-      
-    } catch (error) {
-      this.logger.error(`Error checking plan timing compliance: ${error.message}`);
-      return false;
-    }
-  }
+
   /**
    * Get all rules that apply to plans for a specific planning period and tenant
    */
@@ -423,29 +379,6 @@ export class CheckInRuleCronService implements OnModuleInit {
     } catch (error) {
       this.logger.error(`Error getting plan rules for compliance: ${error.message}`);
       return [];
-    }
-  }
-
-  /**
-   * Check if plan satisfies all plan rules (creates compliance interval)
-   */
-  private doesPlanSatisfyAllRules(userPlan: Plan, planRules: CheckInRule[]): boolean {
-    try {
-      for (const rule of planRules) {
-        if (rule.timeBased) {
-          if (!this.checkInRuleHelpers.checkPlanTimeCompliance(userPlan, rule)) {
-            this.logger.debug(`Plan does NOT satisfy rule: ${rule.name}`);
-            return false;
-          }
-        }
-      }
-      
-      this.logger.debug(`Plan satisfies all ${planRules.length} plan rules`);
-      return true;
-      
-    } catch (error) {
-      this.logger.error(`Error checking if plan satisfies all rules: ${error.message}`);
-      return false;
     }
   }
 
